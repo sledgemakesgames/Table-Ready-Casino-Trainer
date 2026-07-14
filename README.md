@@ -1,4 +1,4 @@
-# House Edge
+# Table Ready
 
 A free, browser-based blackjack strategy trainer — built to help new players get comfortable with real casino blackjack, one hand at a time.
 
@@ -26,7 +26,7 @@ Please enjoy!
 
 ## Getting started
 
-House Edge is a single self-contained HTML file — no installs, no build step, and no dependencies beyond one Google Fonts link.
+Table Ready is a single self-contained HTML file — no installs, no build step, and no dependencies beyond one Google Fonts link.
 
 - **Play online:** *(link coming soon)*
 - **Run it locally:** download `index.html` and open it in any browser
