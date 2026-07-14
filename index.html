@@ -1,5 +1,5 @@
 <!--
-  Table Ready — a free blackjack strategy trainer.
+  House Edge — a free blackjack strategy trainer.
   © 2026 SledgeMakesGames. All rights reserved to the extent permitted by applicable law.
 -->
 <!DOCTYPE html>
@@ -7,7 +7,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Table Ready — blackjack trainer</title>
+<title>House Edge — blackjack trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -146,7 +146,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
 
 <header>
   <div>
-    <h1>Table Ready</h1>
+    <h1>House Edge</h1>
     <p class="tagline">A blackjack decision trainer — free play, no real money, built to teach correct strategy.</p>
   </div>
   <button id="btn-toggle-settings">Table settings</button>
@@ -238,7 +238,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     </div>
     <div>
       <p class="side-note" style="margin:0 0 8px;color:var(--text);font-weight:600;">Table</p>
-      <div class="check-row"><input type="checkbox" id="set-multiplayer"><label for="set-multiplayer">Play with bot players (up to 6 seats)</label></div>
+      <div class="check-row"><input type="checkbox" id="set-multiplayer" checked><label for="set-multiplayer">Play with bot players (up to 6 seats)</label></div>
       <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablereactions" checked><label for="set-tablereactions">Table reactions — jokes on hot/cold streaks</label></div>
     </div>
   </div>
@@ -538,7 +538,7 @@ var G={
   decks:2, payout:1.5, variant:'standard', hitSoft17:true,
   sidebets:{pp:false,tp:false,tl:false,bb:false},
   showCount:true, showSeen:false, turbo:false, insuranceEnabled:false, insuranceBet:0, showOdds:true, surrenderEnabled:false, drillsMode:false, soundOn:true, showDeviations:false, needsReshuffle:false, cutCardThreshold:0,
-  multiplayerEnabled:false, numBots:0, userSeatIndex:0, bots:[], dealerHadNaturalBJ:false, dealerStreak:0, tableReactionsEnabled:true, userWinStreak:0,
+  multiplayerEnabled:true, numBots:0, userSeatIndex:0, bots:[], dealerHadNaturalBJ:false, dealerStreak:0, tableReactionsEnabled:true, userWinStreak:0,
   shoe:[], runningCount:0, seenTally:{},
   bankroll:1000, phase:'betting',
   dealer:{cards:[]}, hands:[], activeIdx:0,
