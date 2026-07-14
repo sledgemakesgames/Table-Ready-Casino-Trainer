@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Craps — coming soon | House Edge</title>
+<meta name="description" content="Craps strategy trainer — coming soon to House Edge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --felt:#0C0D10; --felt-dark:#08090B; --panel:#15171B; --panel-2:#1D2025;
+  --card-face:#F4F5F7; --ink:#15171B;
+  --brass:#D6A94B; --brass-bright:#F0C46B;
+  --coral:#E15D45; --sage:#3FA484; --sage-bright:#65C7A3; --dusty-blue:#5B8DE0; --violet:#9C82E0;
+  --text:#EDEEF0; --text-muted:#8A8F98; --line:rgba(237,238,240,0.09);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;width:100%;}
+a{color:inherit;}
+
+header.site{display:flex;align-items:center;justify-content:space-between;padding:26px 0 0;}
+.wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.3px;display:flex;align-items:center;gap:8px;text-decoration:none;}
+.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--brass);box-shadow:0 0 10px 1px rgba(214,169,75,0.6);}
+.bankroll-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 10px;}
+.bankroll-pill .chip{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 70%);border:2px solid rgba(8,9,11,0.35);flex-shrink:0;}
+.bankroll-pill .label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-right:2px;}
+.bankroll-pill .amount{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 0;}
+.locked-card{text-align:center;max-width:460px;opacity:0;transform:translateY(16px);transition:opacity 620ms cubic-bezier(.16,1,.3,1),transform 620ms cubic-bezier(.16,1,.3,1);}
+.locked-card.show{opacity:1;transform:translateY(0);}
+.motif-wrap{display:flex;justify-content:center;margin-bottom:22px;filter:saturate(0.55);opacity:0.85;}
+.badge{display:inline-block;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:5px 11px;border-radius:999px;background:rgba(237,238,240,0.08);color:var(--text-muted);margin-bottom:16px;}
+.locked-card h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(26px,4vw,36px);margin:0 0 12px;letter-spacing:-0.6px;}
+.locked-card p{font-size:14.5px;color:var(--text-muted);line-height:1.6;margin:0 0 30px;}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{font-family:'Inter',sans-serif;font-weight:600;font-size:14px;border-radius:11px;padding:12px 20px;cursor:pointer;text-decoration:none;transition:background 160ms ease,transform 100ms ease,border-color 160ms ease;display:inline-flex;align-items:center;gap:7px;}
+.btn.primary{background:var(--brass);color:#20160A;border:none;}
+.btn.primary:hover{background:var(--brass-bright);transform:translateY(-1px);}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+.btn.ghost:hover{border-color:rgba(237,238,240,0.24);}
+
+footer{padding:24px 0 40px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--text-muted);}
+footer a{text-decoration:none;color:var(--text-muted);transition:color 140ms ease;}
+footer a:hover{color:var(--brass-bright);}
+
+@media (prefers-reduced-motion: reduce){
+  .locked-card{transition:none !important;opacity:1 !important;transform:none !important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <a class="wordmark" href="/"><span class="dot"></span>House Edge</a>
+    <div class="bankroll-pill"><span class="chip"></span><span class="label">Bankroll</span><span class="amount" id="bankroll-amount">$1,000</span></div>
+  </header>
+
+  <div class="stage">
+    <div class="locked-card" id="locked-card">
+      <div class="motif-wrap">
+        <svg width="88" height="72" viewBox="0 0 64 52" fill="none">
+          <rect x="8" y="12" width="24" height="24" rx="5" fill="none" stroke="#8A8F98" stroke-width="2" transform="rotate(-10 20 24)"/>
+          <circle cx="14" cy="18" r="1.8" fill="#8A8F98" transform="rotate(-10 20 24)"/>
+          <circle cx="26" cy="30" r="1.8" fill="#8A8F98" transform="rotate(-10 20 24)"/>
+          <circle cx="20" cy="24" r="1.8" fill="#8A8F98" transform="rotate(-10 20 24)"/>
+          <rect x="32" y="14" width="24" height="24" rx="5" fill="none" stroke="#8A8F98" stroke-width="2" transform="rotate(9 44 26)"/>
+          <circle cx="38" cy="20" r="1.8" fill="#8A8F98" transform="rotate(9 44 26)"/>
+          <circle cx="50" cy="20" r="1.8" fill="#8A8F98" transform="rotate(9 44 26)"/>
+          <circle cx="38" cy="32" r="1.8" fill="#8A8F98" transform="rotate(9 44 26)"/>
+          <circle cx="50" cy="32" r="1.8" fill="#8A8F98" transform="rotate(9 44 26)"/>
+        </svg>
+      </div>
+      <span class="badge">Coming soon</span>
+      <h1>Craps is being built.</h1>
+      <p>The loudest table on the floor. Knowing which bets are actually worth making — and which ones quietly bleed your bankroll — is most of the game.</p>
+      <div class="actions">
+        <a class="btn primary" href="/blackjack/">Play Blackjack instead</a>
+        <a class="btn ghost" href="/">Back to the floor</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2026 SledgeMakesGames. All rights reserved.</span>
+    <a href="https://github.com/sledgemakesgames" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+</div>
+
+<script>
+var BANKROLL_KEY = 'house_edge_bankroll_v1';
+function formatMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+try{
+  var raw = localStorage.getItem(BANKROLL_KEY);
+  var balance = 1000;
+  if(raw){
+    var parsed = JSON.parse(raw);
+    if(typeof parsed.balance === 'number' && !isNaN(parsed.balance)) balance = parsed.balance;
+  } else {
+    localStorage.setItem(BANKROLL_KEY, JSON.stringify({balance:1000, lastUpdated:new Date().toISOString()}));
+  }
+  document.getElementById('bankroll-amount').textContent = formatMoney(balance);
+}catch(e){}
+setTimeout(function(){ document.getElementById('locked-card').classList.add('show'); }, 60);
+</script>
+</body>
+</html>
