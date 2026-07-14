@@ -41,10 +41,4 @@ Soft 17 is a single self-contained HTML file — no installs, no build step, and
 
 Found a bug, or does a piece of basic strategy look off somewhere? Please open an [issue](../../issues) — that's the fastest way to get it looked at. Feature ideas are always welcome too.
 
-## License
-
-Released under the [MIT License](LICENSE). Free to use, modify, and share — just keep the original copyright notice intact.
-
----
-
 © 2026 SledgeMakesGames. All rights reserved to the extent permitted by applicable law.
