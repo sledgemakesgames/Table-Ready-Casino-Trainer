@@ -37,8 +37,16 @@ Soft 17 is a single self-contained HTML file — no installs, no build step, and
 - Ongoing accuracy improvements to strategy and odds calculations
 - Open to feature requests — see below
 
-## Feedback and contributing
+## Feedback
 
 Found a bug, or does a piece of basic strategy look off somewhere? Please open an [issue](../../issues) — that's the fastest way to get it looked at. Feature ideas are always welcome too.
+
+All fixes and features are implemented by the maintainer directly — pull requests aren't accepted, but every issue gets read.
+
+## License
+
+All rights reserved — see [LICENSE]. You're welcome to play the hosted version and report issues here; the source isn't licensed for reuse, modification, or redistribution.
+
+---
 
 © 2026 SledgeMakesGames. All rights reserved to the extent permitted by applicable law.
