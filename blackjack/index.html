@@ -51,6 +51,13 @@ select,input[type=number]{font-family:'Inter',sans-serif;background:var(--panel-
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:16px;box-shadow:0 1px 0 rgba(255,255,255,0.02) inset,0 12px 24px -16px rgba(0,0,0,0.5);}
 .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
 .check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);}
+.term{border-bottom:1px dotted var(--text-muted);cursor:help;position:relative;}
+.term .tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--brass);border-radius:8px;padding:9px 12px;font-size:11.5px;line-height:1.45;color:var(--text);width:210px;z-index:40;box-shadow:0 10px 22px -8px rgba(0,0,0,0.55);pointer-events:none;font-weight:400;text-align:left;}
+.term:hover .tip,.term.open .tip{display:block;}
+body.tooltips-off .term{border-bottom:none;cursor:inherit;}
+body.tooltips-off .term .tip{display:none !important;}
+.hint-line{font-size:12px;color:var(--brass-bright);font-style:italic;margin:6px 0 0;opacity:0;transition:opacity 400ms ease;}
+.hint-line.show{opacity:1;}
 .check-row input{accent-color:var(--brass);}
 .side-note{font-size:11.5px;color:var(--text-muted);margin-top:10px;line-height:1.55;}
 .table-felt{position:relative;background:radial-gradient(ellipse 110% 60% at 50% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 55%),radial-gradient(ellipse 130% 90% at 50% 100%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 62%),linear-gradient(180deg, #131519 0%, var(--felt) 100%);border:1px solid var(--line);border-radius:20px;padding:26px 22px;box-shadow:0 1px 0 rgba(255,255,255,0.03) inset,0 20px 40px -24px rgba(0,0,0,0.6);}
@@ -166,7 +173,10 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     <h1>Blackjack</h1>
     <p class="tagline">A blackjack decision trainer — free play, no real money, built to teach correct strategy.</p>
   </div>
-  <button id="btn-toggle-settings">Table settings</button>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+    <button id="btn-toggle-settings">Table settings</button>
+    <a href="#" id="btn-manners" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Table manners</a>
+  </div>
 </header>
 
 <div class="panel" id="settings-panel" style="display:none;">
@@ -193,7 +203,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
         <option value="freebet">Free Bet Blackjack</option>
       </select>
     </label>
-    <label class="field">Dealer on soft 17
+    <label class="field">Dealer on <span class="term">soft 17<span class="tip">A hand totaling 17 that includes an Ace counted as 11 — it can't bust on the next card.</span></span>
       <select id="set-hitsoft17">
         <option value="stand">Stands (S17)</option>
         <option value="hit" selected>Hits (H17)</option>
@@ -223,11 +233,11 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     </div>
     <div>
       <p class="side-note" style="margin:0 0 8px;color:var(--text);font-weight:600;">Insurance</p>
-      <div class="check-row"><input type="checkbox" id="set-insurance"><label for="set-insurance">Offer insurance when dealer shows an ace</label></div>
+      <div class="check-row"><input type="checkbox" id="set-insurance"><label for="set-insurance">Offer <span class="term">insurance<span class="tip">A side bet you can make when the dealer shows an Ace, betting that they have blackjack.</span></span> when dealer shows an ace</label></div>
     </div>
     <div>
       <p class="side-note" style="margin:0 0 8px;color:var(--text);font-weight:600;">Surrender</p>
-      <div class="check-row"><input type="checkbox" id="set-surrender"><label for="set-surrender">Allow late surrender (forfeit half your bet)</label></div>
+      <div class="check-row"><input type="checkbox" id="set-surrender"><label for="set-surrender">Allow late <span class="term">surrender<span class="tip">Give up your hand immediately and get half your bet back, before playing it out.</span></span> (forfeit half your bet)</label></div>
     </div>
     <div>
       <p class="side-note" style="margin:0 0 8px;color:var(--text);font-weight:600;">Odds</p>
@@ -257,6 +267,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
       <p class="side-note" style="margin:0 0 8px;color:var(--text);font-weight:600;">Table</p>
       <div class="check-row"><input type="checkbox" id="set-multiplayer" checked><label for="set-multiplayer">Play with bot players (up to 6 seats)</label></div>
       <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablereactions" checked><label for="set-tablereactions">Table reactions — jokes on hot/cold streaks</label></div>
+      <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tooltips" checked><label for="set-tooltips">Term tooltips — hover jargon for a quick definition</label></div>
     </div>
   </div>
   <p class="side-note">Multiplayer: bots always play textbook basic strategy (no splitting, surrender, or insurance) and never wager — they're there purely to fill seats and consume the shoe realistically. When enabled, choosing a fresh shoe first asks how many bots to seat and where you'd like to sit before the cut-card prompt.</p>
@@ -273,6 +284,18 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     <div id="seat-picker" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:320px;margin-bottom:8px;"></div>
     <p id="seat-readout" style="font-size:12px;color:var(--brass-bright);min-height:16px;margin:6px 0 14px;"></p>
     <button id="btn-tablesetup-continue" class="primary">Sit down</button>
+  </div>
+  <div id="manners-overlay" style="display:none;position:absolute;inset:0;background:rgba(6,7,8,0.94);border-radius:20px;z-index:22;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+    <p style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin:0 0 6px;">Table manners</p>
+    <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 18px;max-width:340px;">The strategy matters, but so does not looking like a first-timer. A few real-table habits worth knowing.</p>
+    <ul style="text-align:left;max-width:360px;margin:0 0 20px;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:var(--text);">
+      <li>Use hand signals along with talking — tap the felt for hit, wave your hand for stand. Dealers rely on the gesture, not just the word.</li>
+      <li>Once your cards are dealt face up, don't touch them. The dealer moves everything; you only touch chips.</li>
+      <li>Chips go in the betting circle in front of you — never handed straight to the dealer.</li>
+      <li>Tipping the dealer (called a "toke") is optional, but common after a win.</li>
+      <li>Keep drinks and phones off the felt — most dealers will ask you to move them.</li>
+    </ul>
+    <button id="btn-manners-close" class="primary">Got it</button>
   </div>
   <div id="cutcard-overlay" style="display:none;position:absolute;inset:0;background:rgba(6,7,8,0.92);border-radius:20px;z-index:20;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
     <p style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin:0 0 6px;">Fresh shoe — place the cut card</p>
@@ -298,6 +321,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
       <p class="hand-total" id="dealer-sub"></p>
     </div>
   </div>
+  <p class="hint-line" id="hint-holecard" style="display:none;">Hidden until the end — that's normal.</p>
 
   <div id="bots-wrap" style="display:none;position:relative;">
     <p class="zone-label" style="margin-top:14px;">Table</p>
@@ -357,6 +381,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
 
   <div class="hands-row" id="hands-row"></div>
   <div class="actions-row" id="actions-row"></div>
+  <p class="hint-line" id="hint-chart" style="display:none;">Not sure what to do? The chart below always has the right play.</p>
   <div id="odds-panel" style="display:none;margin:0 0 10px;"></div>
   <div id="feedback-zone"></div>
   <div id="result-zone"></div>
@@ -555,7 +580,7 @@ var G={
   decks:2, payout:1.5, variant:'standard', hitSoft17:true,
   sidebets:{pp:false,tp:false,tl:false,bb:false},
   showCount:true, showSeen:false, turbo:false, insuranceEnabled:false, insuranceBet:0, showOdds:true, surrenderEnabled:false, drillsMode:false, soundOn:true, showDeviations:false, needsReshuffle:false, cutCardThreshold:0,
-  multiplayerEnabled:true, numBots:0, userSeatIndex:0, bots:[], dealerHadNaturalBJ:false, dealerStreak:0, tableReactionsEnabled:true, userWinStreak:0,
+  multiplayerEnabled:true, numBots:0, userSeatIndex:0, bots:[], dealerHadNaturalBJ:false, dealerStreak:0, tableReactionsEnabled:true, tooltipsEnabled:true, userWinStreak:0, seenFirstHandHints:false,
   shoe:[], runningCount:0, seenTally:{},
   bankroll:1000, phase:'betting',
   dealer:{cards:[]}, hands:[], activeIdx:0,
@@ -637,6 +662,7 @@ function showCutCardPrompt(){
   var overlay=document.getElementById('cutcard-overlay');
   if(!overlay) return;
   hideTableSetupPrompt();
+  hideMannersOverlay();
   buildCutCardBars();
   var readout=document.getElementById('cutcard-readout');
   if(readout) readout.textContent='Move across the back half to preview a spot.';
@@ -645,6 +671,34 @@ function showCutCardPrompt(){
 function hideCutCardPrompt(){
   var overlay=document.getElementById('cutcard-overlay');
   if(overlay) overlay.style.display='none';
+}
+
+function showMannersOverlay(){
+  var overlay=document.getElementById('manners-overlay');
+  if(!overlay) return;
+  hideCutCardPrompt();
+  hideTableSetupPrompt();
+  overlay.style.display='flex';
+}
+function hideMannersOverlay(){
+  var overlay=document.getElementById('manners-overlay');
+  if(overlay) overlay.style.display='none';
+}
+
+function fadeOutHint(el, delay){
+  setTimeout(function(){
+    el.classList.remove('show');
+    setTimeout(function(){ el.style.display='none'; }, 400);
+  }, delay);
+}
+function maybeShowFirstHandHints(){
+  if(G.seenFirstHandHints || G.history.length>0) return;
+  G.seenFirstHandHints = true;
+  var h1 = document.getElementById('hint-holecard');
+  var h2 = document.getElementById('hint-chart');
+  if(h1){ h1.style.display='block'; h1.classList.add('show'); fadeOutHint(h1, 5000); }
+  if(h2){ h2.style.display='block'; h2.classList.add('show'); fadeOutHint(h2, 6500); }
+  saveSession();
 }
 
 function placeCutCard(frac){
@@ -721,6 +775,7 @@ function showTableSetupPrompt(){
   var overlay=document.getElementById('tablesetup-overlay');
   if(!overlay) return;
   hideCutCardPrompt();
+  hideMannersOverlay();
   renderBotCountPicker();
   renderSeatPicker();
   overlay.style.display='flex';
@@ -1010,6 +1065,8 @@ function readSettings(){
   G.showDeviations=document.getElementById('set-showdeviations').checked;
   G.multiplayerEnabled=document.getElementById('set-multiplayer').checked;
   G.tableReactionsEnabled=document.getElementById('set-tablereactions').checked;
+  G.tooltipsEnabled=document.getElementById('set-tooltips').checked;
+  document.body.classList.toggle('tooltips-off', !G.tooltipsEnabled);
   document.getElementById('sb-pp-amt-wrap').style.display=G.sidebets.pp?'flex':'none';
   document.getElementById('sb-tp-amt-wrap').style.display=G.sidebets.tp?'flex':'none';
   document.getElementById('sb-tl-amt-wrap').style.display=G.sidebets.tl?'flex':'none';
@@ -1018,7 +1075,7 @@ function readSettings(){
   renderCountBar();
 }
 
-['set-decks','set-payout','set-variant','set-hitsoft17','sb-pp','sb-tp','sb-tl','sb-bb','set-showcount','set-showseen','set-turbo','set-insurance','set-surrender','set-showodds','set-drills','set-sound','set-showdeviations','set-multiplayer','set-tablereactions'].forEach(function(id){
+['set-decks','set-payout','set-variant','set-hitsoft17','sb-pp','sb-tp','sb-tl','sb-bb','set-showcount','set-showseen','set-turbo','set-insurance','set-surrender','set-showodds','set-drills','set-sound','set-showdeviations','set-multiplayer','set-tablereactions','set-tooltips'].forEach(function(id){
   document.getElementById(id).addEventListener('change', function(){
     readSettings();
     if(id==='set-decks'){ buildShoe(); }
@@ -1058,11 +1115,12 @@ function saveSession(){
       bankroll:G.bankroll,
       history:G.history,
       theme:G_theme,
+      seenFirstHandHints:G.seenFirstHandHints,
       settings:{
         decks:G.decks, payout:G.payout, variant:G.variant, hitSoft17:G.hitSoft17,
         sidebets:G.sidebets, showCount:G.showCount, showSeen:G.showSeen, turbo:G.turbo,
         insuranceEnabled:G.insuranceEnabled, showOdds:G.showOdds, surrenderEnabled:G.surrenderEnabled,
-        drillsMode:G.drillsMode, soundOn:G.soundOn, showDeviations:G.showDeviations, multiplayerEnabled:G.multiplayerEnabled, tableReactionsEnabled:G.tableReactionsEnabled
+        drillsMode:G.drillsMode, soundOn:G.soundOn, showDeviations:G.showDeviations, multiplayerEnabled:G.multiplayerEnabled, tableReactionsEnabled:G.tableReactionsEnabled, tooltipsEnabled:G.tooltipsEnabled
       }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1088,6 +1146,7 @@ function applyLoadedSession(){
   saveSharedBankroll();
   if(!data) return;
   if(Array.isArray(data.history)) G.history=data.history;
+  if(typeof data.seenFirstHandHints==='boolean') G.seenFirstHandHints=data.seenFirstHandHints;
   if(data.settings){
     var s=data.settings;
     if(s.decks) document.getElementById('set-decks').value=String(s.decks);
@@ -1111,6 +1170,7 @@ function applyLoadedSession(){
     document.getElementById('set-showdeviations').checked=!!s.showDeviations;
     document.getElementById('set-multiplayer').checked=!!s.multiplayerEnabled;
     document.getElementById('set-tablereactions').checked = s.tableReactionsEnabled!==false;
+    document.getElementById('set-tooltips').checked = s.tooltipsEnabled!==false;
   }
   readSettings();
   if(data.theme && THEMES[data.theme]){
@@ -1138,6 +1198,13 @@ function fullReshuffle(){
 document.getElementById('btn-toggle-settings').addEventListener('click', function(){
   var p=document.getElementById('settings-panel');
   p.style.display = p.style.display==='none' ? 'block' : 'none';
+});
+document.getElementById('btn-manners').addEventListener('click', function(e){
+  e.preventDefault();
+  showMannersOverlay();
+});
+document.getElementById('btn-manners-close').addEventListener('click', function(){
+  hideMannersOverlay();
 });
 
 function setBet(amount){
@@ -1309,10 +1376,10 @@ function renderCountBar(){
   var pen = Math.round((1 - G.shoe.length/(G.decks*52))*100);
   var cutPct = Math.round((1 - G.cutCardThreshold/(G.decks*52))*100);
   el.innerHTML =
-    '<div><span class="k">Running count</span><span class="v">'+G.runningCount+'</span></div>'+
-    '<div><span class="k">True count</span><span class="v">'+trueCount()+'</span></div>'+
+    '<div><span class="k"><span class="term">Running count<span class="tip">A live tally that goes up or down as cards are dealt, based on the Hi-Lo counting system.</span></span></span><span class="v">'+G.runningCount+'</span></div>'+
+    '<div><span class="k"><span class="term">True count<span class="tip">The running count adjusted for how many decks are left — a more reliable signal than the running count alone.</span></span></span><span class="v">'+trueCount()+'</span></div>'+
     '<div><span class="k">Cards left</span><span class="v">'+G.shoe.length+' / '+(G.decks*52)+'</span></div>'+
-    '<div style="flex:1;min-width:180px;"><span class="k">Shoe penetration</span><span class="v">'+pen+'%</span><div class="shoe-bar" style="position:relative;"><div class="shoe-fill" style="width:'+pen+'%;"></div><div style="position:absolute;top:-2px;left:'+cutPct+'%;width:2px;height:10px;background:var(--brass-bright);border-radius:1px;" title="Cut card"></div></div></div>'+
+    '<div style="flex:1;min-width:180px;"><span class="k"><span class="term">Shoe penetration<span class="tip">How far into the shoe the dealer deals before reshuffling — set by where you placed the cut card.</span></span></span><span class="v">'+pen+'%</span><div class="shoe-bar" style="position:relative;"><div class="shoe-fill" style="width:'+pen+'%;"></div><div style="position:absolute;top:-2px;left:'+cutPct+'%;width:2px;height:10px;background:var(--brass-bright);border-radius:1px;" title="Cut card"></div></div></div>'+
     '<div><button id="btn-shuffle-now">Shuffle now</button></div>';
   var sb=document.getElementById('btn-shuffle-now');
   if(sb) sb.addEventListener('click', fullReshuffle);
@@ -1584,6 +1651,7 @@ function startDeal(){
     resolveBotsBefore(G.dealer.cards[0].r);
     G.locked=false; G.phase='player';
     renderAll();
+    maybeShowFirstHandHints();
     syncChartTabToHand();
     offerInsuranceOrProceed();
   });
@@ -2178,6 +2246,16 @@ document.getElementById('cutcard-preset-90').addEventListener('click', function(
 document.getElementById('btn-tablesetup-continue').addEventListener('click', function(){
   hideTableSetupPrompt();
   showCutCardPrompt();
+});
+
+document.addEventListener('click', function(e){
+  var openTerms = document.querySelectorAll('.term.open');
+  var clickedTerm = e.target.closest ? e.target.closest('.term') : null;
+  openTerms.forEach(function(t){ if(t!==clickedTerm) t.classList.remove('open'); });
+  if(clickedTerm){
+    e.preventDefault();
+    clickedTerm.classList.toggle('open');
+  }
 });
 
 readSettings();
