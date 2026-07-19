@@ -8,9 +8,21 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Table Ready — blackjack trainer</title>
+<meta name="description" content="Play real blackjack hands and get graded against correct basic strategy in real time — free, no real money, ever.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Table Ready">
+<meta property="og:title" content="Table Ready — blackjack trainer">
+<meta property="og:description" content="Play real blackjack hands and get graded against correct basic strategy in real time — free, no real money, ever.">
+<meta property="og:url" content="https://tableready.xyz/blackjack/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Table Ready — blackjack trainer">
+<meta name="twitter:description" content="Play real blackjack hands and get graded against correct basic strategy in real time — free, no real money, ever.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+@view-transition { navigation: auto; }
 :root{
   --felt:#0C0D10; --felt-dark:#08090B; --panel:#15171B; --panel-2:#1D2025;
   --card-face:#F4F5F7; --ink:#15171B;
@@ -20,6 +32,7 @@
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;padding:28px 16px 64px;-webkit-font-smoothing:antialiased;}
+:focus-visible{outline:2px solid var(--brass-bright);outline-offset:2px;border-radius:4px;}
 .wrap{max-width:900px;margin:0 auto;}
 h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:30px;margin:0;letter-spacing:-0.4px;}
 .tagline{color:var(--text-muted);font-size:13.5px;margin:5px 0 0;letter-spacing:0.1px;}
