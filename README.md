@@ -28,7 +28,7 @@ Please enjoy!
 
 Table Ready is a single self-contained HTML file — no installs, no build step, and no dependencies beyond one Google Fonts link.
 
-- **Play online:** [https://table-ready-xi.vercel.app/](https://table-ready-xi.vercel.app/)
+- **Play online:** (https://tableready.xyz/)](https://tableready.xyz/)
 - **Run it locally:** download `index.html` and open it in any browser
 
 ## Roadmap
