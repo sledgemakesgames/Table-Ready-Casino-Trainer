@@ -1,20 +1,24 @@
+<!--
+  Table Ready — Baccarat.
+  © 2026 SledgeMakesGames. All rights reserved to the extent permitted by applicable law.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Baccarat — coming soon | Table Ready</title>
-<meta name="description" content="Baccarat strategy trainer — coming soon to Table Ready.">
+<title>Table Ready — Baccarat</title>
+<meta name="description" content="Play real Baccarat hands and finally understand when and why each side draws a third card. Free, no real money, ever.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Table Ready">
-<meta property="og:title" content="Baccarat — coming soon | Table Ready">
-<meta property="og:description" content="Baccarat strategy trainer — coming soon to Table Ready.">
+<meta property="og:title" content="Table Ready — Baccarat">
+<meta property="og:description" content="Play real Baccarat hands and finally understand when and why each side draws a third card. Free, no real money, ever.">
 <meta property="og:url" content="https://tableready.xyz/baccarat/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Baccarat — coming soon | Table Ready">
-<meta name="twitter:description" content="Baccarat strategy trainer — coming soon to Table Ready.">
+<meta name="twitter:title" content="Table Ready — Baccarat">
+<meta name="twitter:description" content="Play real Baccarat hands and finally understand when and why each side draws a third card. Free, no real money, ever.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -27,91 +31,1245 @@
   --text:#EDEEF0; --text-muted:#8A8F98; --line:rgba(237,238,240,0.09);
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px;width:100%;}
+body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;padding:28px 16px 64px;}
 a{color:inherit;}
-:focus-visible{outline:2px solid var(--brass-bright);outline-offset:3px;border-radius:4px;}
+:focus-visible{outline:2px solid var(--brass-bright);outline-offset:2px;border-radius:4px;}
+.wrap{max-width:920px;margin:0 auto;}
+button{font-family:'Inter',sans-serif;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:13px;cursor:pointer;transition:border-color 140ms ease,background 140ms ease;}
+button:hover{border-color:rgba(237,238,240,0.22);}
+button.primary{background:var(--brass);color:#20160A;border:none;font-weight:600;}
+button.primary:hover{background:var(--brass-bright);}
+button:disabled{opacity:0.4;cursor:not-allowed;}
+input[type="number"]{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12.5px;width:60px;font-family:'Inter',sans-serif;}
+select{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12.5px;font-family:'Inter',sans-serif;}
 
-header.site{display:flex;align-items:center;justify-content:space-between;padding:26px 0 0;}
-.wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.3px;display:flex;align-items:center;gap:8px;text-decoration:none;}
-.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--brass);box-shadow:0 0 10px 1px rgba(214,169,75,0.6);}
-.bankroll-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 10px;}
-.bankroll-pill .chip{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 70%);border:2px solid rgba(8,9,11,0.35);flex-shrink:0;}
+.back-link{display:inline-flex;align-items:center;gap:7px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;letter-spacing:-0.1px;text-decoration:none;color:var(--text-muted);margin-bottom:14px;transition:color 140ms ease;}
+.back-link:hover{color:var(--brass-bright);}
+.back-link .back-dot{width:7px;height:7px;border-radius:50%;background:var(--brass);flex-shrink:0;}
+
+header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.6px;margin:0 0 4px;}
+.tagline{font-size:13px;color:var(--text-muted);margin:0;max-width:420px;}
+.bankroll-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px 8px 12px;flex-shrink:0;}
 .bankroll-pill .label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-right:2px;}
-.bankroll-pill .amount{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;}
+.bankroll-pill .pill-chip-stack{display:flex;align-items:center;}
+.bankroll-pill .amount{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
 
-.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 0;}
-.locked-card{text-align:center;max-width:460px;opacity:0;transform:translateY(16px);transition:opacity 620ms cubic-bezier(.16,1,.3,1),transform 620ms cubic-bezier(.16,1,.3,1);}
-.locked-card.show{opacity:1;transform:translateY(0);}
-.motif-wrap{display:flex;justify-content:center;margin-bottom:22px;filter:saturate(0.55);opacity:0.85;}
-.badge{display:inline-block;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:5px 11px;border-radius:999px;background:rgba(237,238,240,0.08);color:var(--text-muted);margin-bottom:16px;}
-.badge.up-next{background:rgba(214,169,75,0.16);color:var(--brass-bright);}
-.locked-card h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(26px,4vw,36px);margin:0 0 12px;letter-spacing:-0.6px;}
-.locked-card p{font-size:14.5px;color:var(--text-muted);line-height:1.6;margin:0 0 30px;}
-.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.btn{font-family:'Inter',sans-serif;font-weight:600;font-size:14px;border-radius:11px;padding:12px 20px;cursor:pointer;text-decoration:none;transition:background 160ms ease,transform 100ms ease,border-color 160ms ease;display:inline-flex;align-items:center;gap:7px;}
-.btn.primary{background:var(--brass);color:#20160A;border:none;}
-.btn.primary:hover{background:var(--brass-bright);transform:translateY(-1px);}
-.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
-.btn.ghost:hover{border-color:rgba(237,238,240,0.24);}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;}
+.side-note{font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin:0 0 8px;}
+.check-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;}
+.term{border-bottom:1px dotted var(--text-muted);cursor:help;position:relative;}
+.term .tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--brass);border-radius:8px;padding:9px 12px;font-size:11.5px;line-height:1.45;color:var(--text);width:210px;z-index:40;box-shadow:0 10px 22px -8px rgba(0,0,0,0.55);pointer-events:none;font-weight:400;text-align:left;}
+.term:hover .tip,.term.open .tip{display:block;}
+body.tooltips-off .term{border-bottom:none;cursor:inherit;}
+body.tooltips-off .term .tip{display:none !important;}
 
-footer{padding:24px 0 40px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--text-muted);}
-footer a{text-decoration:none;color:var(--text-muted);transition:color 140ms ease;}
-footer a:hover{color:var(--brass-bright);}
+.table-felt{position:relative;background:radial-gradient(ellipse 110% 60% at 50% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 55%),radial-gradient(ellipse 130% 90% at 50% 100%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 62%),linear-gradient(180deg, #131519 0%, var(--felt) 100%);border:1px solid var(--line);border-radius:20px;padding:18px 18px;box-shadow:0 1px 0 rgba(255,255,255,0.03) inset,0 20px 40px -24px rgba(0,0,0,0.6);}
 
+.hands-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;}
+.hand-box{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:196px;transition:border-color 220ms ease,box-shadow 220ms ease;}
+.hand-box.your-bet{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset;}
+.hand-box .hb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.hand-box .hb-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
+.hand-box .hb-your-bet-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--brass-bright);background:rgba(214,169,75,0.14);padding:3px 8px;border-radius:999px;display:none;}
+.hand-box.your-bet .hb-your-bet-tag{display:inline-block;}
+.hand-box .hb-total{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;min-width:24px;text-align:right;}
+.hb-cards{display:flex;gap:8px;flex-wrap:wrap;min-height:112px;align-items:center;justify-content:center;}
+
+.card{width:76px;height:106px;border-radius:9px;background:var(--card-face);color:var(--ink);position:relative;font-weight:700;font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 10px -4px rgba(0,0,0,0.5);flex-shrink:0;}
+.card.red{color:var(--coral);}
+.card-idx{position:absolute;top:5px;left:5px;font-size:19px;font-weight:800;line-height:1;letter-spacing:-0.3px;display:flex;flex-direction:column;align-items:center;}
+.card-idx .pip{font-size:15px;line-height:1;margin-top:1px;}
+.card-idx.br{top:auto;left:auto;bottom:5px;right:5px;transform:rotate(180deg);}
+.card-pip{font-size:30px;}
+
+.flip-card{width:76px;height:106px;flex-shrink:0;cursor:pointer;perspective:600px;opacity:0;transform:translateY(-8px) scale(0.94);transition:opacity 220ms ease,transform 220ms ease;}
+.flip-card.show{opacity:1;transform:translateY(0) scale(1);}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform 420ms cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;}
+.flip-card.flipped .flip-inner{transform:rotateY(180deg);}
+.flip-back,.flip-front{position:absolute;inset:0;backface-visibility:hidden;border-radius:9px;}
+.flip-back{background:var(--panel-2);border:1.5px solid rgba(237,238,240,0.16);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:26px;font-family:'Space Grotesk',sans-serif;}
+.flip-back:hover{border-color:rgba(240,196,107,0.4);}
+.flip-front{transform:rotateY(180deg);}
+
+.outcome-badge{text-align:center;margin:2px 0;min-height:22px;}
+.outcome-badge span{display:inline-block;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;padding:5px 16px;border-radius:999px;}
+.outcome-badge .win{background:rgba(101,199,163,0.16);color:var(--sage-bright);}
+.outcome-badge .push{background:rgba(214,169,75,0.16);color:var(--brass-bright);}
+
+.why-panel{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;line-height:1.5;color:var(--text-muted);margin:6px 0;display:none;}
+.why-panel strong{color:var(--text);}
+
+.road-panel{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:6px 0;}
+.road-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 12px;margin-bottom:6px;}
+.road-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;}
+.road-explain{font-size:10.5px;color:var(--text-muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.road-dot-sample{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:4px;}
+.road-dot-sample.banker{background:var(--coral);}
+.road-dot-sample.player{background:var(--dusty-blue);}
+.road-dot-sample.tie{background:var(--sage-bright);}
+.road-grid{display:grid;grid-template-rows:repeat(6,1fr);grid-auto-flow:column;grid-auto-columns:20px;gap:3px;overflow-x:auto;min-height:112px;padding-bottom:2px;}
+.road-grid.mode-cols{display:flex;grid-template-rows:none;align-items:flex-start;}
+.road-dot{width:15px;height:15px;border-radius:50%;justify-self:center;align-self:center;flex-shrink:0;}
+.road-dot.banker{background:var(--coral);}
+.road-dot.player{background:var(--dusty-blue);}
+.road-dot.tie{background:transparent;border:2.5px solid var(--sage-bright);}
+.road-empty{font-size:11.5px;color:var(--text-muted);align-self:center;justify-self:start;grid-row:1/-1;}
+.board-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.board-tab{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:11.5px;color:var(--text-muted);cursor:pointer;transition:border-color 140ms ease,color 140ms ease;}
+.board-tab:hover{border-color:rgba(240,196,107,0.35);}
+.board-tab.active{border-color:var(--brass);color:var(--brass-bright);background:rgba(214,169,75,0.08);}
+.road-col{display:grid;grid-template-rows:repeat(6,1fr);gap:3px;}
+.road-dot.big-ring{background:transparent;border:2.5px solid;position:relative;}
+.road-dot.big-ring.banker{border-color:var(--coral);}
+.road-dot.big-ring.player{border-color:var(--dusty-blue);}
+.tie-badge{position:absolute;inset:-3px;border:1.5px solid var(--sage-bright);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--sage-bright);font-weight:700;}
+.road-dot.derived-mark{width:10px;height:10px;border-radius:50%;}
+.road-dot.derived-mark.red{background:var(--coral);}
+.road-dot.derived-mark.blue{background:var(--dusty-blue);}
+.road-dot,.road-col .road-dot.big-ring{cursor:pointer;transition:transform 120ms ease;}
+.road-dot:hover{transform:scale(1.2);}
+
+.hand-detail-overlay{position:fixed;inset:0;background:rgba(6,7,8,0.72);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+.hand-detail-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;max-width:380px;width:100%;position:relative;box-shadow:0 24px 60px -20px rgba(0,0,0,0.6);}
+.hd-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;line-height:1;cursor:pointer;padding:4px;}
+.hd-close:hover{color:var(--text);}
+.hd-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;margin:0 0 14px;}
+.hd-hands{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.hd-label{font-size:12px;color:var(--text-muted);margin:0 0 6px;display:flex;justify-content:space-between;}
+.hd-total{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--text);}
+.hd-cards{display:flex;gap:5px;flex-wrap:wrap;}
+.hd-cards .card{width:44px;height:60px;}
+.hd-cards .card-idx{font-size:11px;}
+.hd-cards .card-idx .pip{font-size:9px;}
+.hd-cards .card-pip{font-size:18px;}
+.hd-outcome{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;margin:0 0 8px;}
+.hd-why{font-size:12px;line-height:1.55;color:var(--text-muted);margin:0 0 10px;}
+.hd-bets{font-size:11.5px;color:var(--text-muted);margin:0;padding-top:10px;border-top:1px solid var(--line);}
+
+.betting-row{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:10px 0 8px;}
+.bet-spot{background:var(--panel-2);border:2px solid var(--line);border-radius:14px;padding:14px 20px;text-align:center;min-width:104px;cursor:pointer;transition:border-color 160ms ease,transform 120ms ease,background 160ms ease;user-select:none;}
+.bet-spot:hover{border-color:rgba(240,196,107,0.35);transform:translateY(-2px);}
+.bet-spot.has-bet{border-color:var(--brass);background:rgba(214,169,75,0.08);}
+.bet-spot .spot-label{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;margin-bottom:3px;}
+.bet-spot .spot-odds{font-size:10px;color:var(--text-muted);margin-bottom:8px;}
+.bet-spot .spot-chips{display:flex;justify-content:center;gap:2px;min-height:18px;margin-bottom:4px;}
+.bet-spot .spot-amt{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--brass-bright);min-height:17px;}
+.bet-spot .spot-hint{font-size:9.5px;color:var(--text-muted);opacity:0;margin-top:2px;}
+.bet-spot:hover .spot-hint{opacity:1;}
+
+.side-betting-row{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:2px 0 6px;}
+.side-spot{background:var(--panel-2);border:1.5px dashed var(--line);border-radius:12px;padding:10px 16px;text-align:center;min-width:90px;cursor:pointer;transition:border-color 160ms ease;}
+.side-spot:hover{border-color:rgba(240,196,107,0.35);}
+.side-spot.has-bet{border-color:var(--brass);border-style:solid;background:rgba(214,169,75,0.08);}
+.side-spot .spot-label{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;margin-bottom:2px;}
+.side-spot .spot-odds{font-size:10px;color:var(--text-muted);margin-bottom:4px;}
+.side-spot .spot-amt{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--brass-bright);}
+
+.chip-row{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.chip{width:40px;height:40px;border-radius:50%;padding:0;border:2px solid rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#fff;flex-shrink:0;box-shadow:0 3px 8px -3px rgba(0,0,0,0.5);cursor:pointer;transition:transform 120ms ease;}
+.chip:hover{transform:translateY(-3px);}
+.chip.selected{border-color:var(--brass-bright);box-shadow:0 0 0 2px rgba(240,196,107,0.35);}
+#btn-all-in.all-in-active{border-color:var(--brass-bright);color:var(--brass-bright);box-shadow:0 0 0 2px rgba(240,196,107,0.35);}
+.chip-5{background:#B33F3F;} .chip-10{background:#2F6FB0;} .chip-25{background:#2E8F63;} .chip-50{background:#3A3D44;} .chip-100{background:#7C5CC4;}
+.mini-chip{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.28);margin-left:-7px;box-shadow:0 2px 4px -2px rgba(0,0,0,0.5);}
+.mini-chip:first-child{margin-left:0;}
+.chip-hint{text-align:center;font-size:11.5px;color:var(--text-muted);margin-bottom:8px;}
+.chip-hint b{color:var(--brass-bright);}
+
+.deal-row{display:flex;justify-content:center;gap:10px;margin-bottom:6px;}
+
+.stats-flat{display:flex;flex-wrap:wrap;justify-content:center;gap:5px 18px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+.stat-item{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+.stat-item .sv{color:var(--text);font-weight:600;font-family:'Space Grotesk',sans-serif;margin-left:5px;}
+
+footer{padding:24px 0 10px;text-align:center;font-size:12px;color:var(--text-muted);}
+
+@media(max-width:560px){
+  .hands-grid{grid-template-columns:1fr;}
+  .card,.flip-card{width:66px;height:92px;}
+  .card-idx{font-size:15px;}
+  .card-idx .pip{font-size:12px;}
+  .card-pip{font-size:24px;}
+}
 @media (prefers-reduced-motion: reduce){
-  .locked-card{transition:none !important;opacity:1 !important;transform:none !important;}
+  .card,.flip-card{transition:none !important;}
+  .flip-inner{transition:none !important;}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="site">
-    <a class="wordmark" href="/"><span class="dot"></span>Table Ready</a>
-    <div class="bankroll-pill"><span class="chip"></span><span class="label">Bankroll</span><span class="amount" id="bankroll-amount">$1,000</span></div>
-  </header>
 
-  <div class="stage">
-    <div class="locked-card" id="locked-card">
-      <div class="motif-wrap">
-        <svg width="88" height="72" viewBox="0 0 64 52" fill="none">
-          <circle cx="24" cy="26" r="18" fill="none" stroke="#8A8F98" stroke-width="2"/>
-          <circle cx="42" cy="26" r="18" fill="none" stroke="#8A8F98" stroke-width="2"/>
-          <text x="16" y="32" font-family="Space Grotesk" font-size="15" font-weight="700" fill="#8A8F98">B</text>
-          <text x="46" y="32" font-family="Space Grotesk" font-size="15" font-weight="700" fill="#8A8F98">P</text>
-        </svg>
+<a class="back-link" href="/"><span class="back-dot"></span>Table Ready</a>
+<header>
+  <div>
+    <h1>Baccarat</h1>
+    <p class="tagline">Bet Banker, Player, or Tie. Cards are dealt face down — flip them yourself to see how each hand plays out.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+    <div class="bankroll-pill"><span class="label">Bankroll</span><span class="pill-chip-stack" id="bankroll-chip-stack"></span><span class="amount" id="bankroll-amount">$1,000</span></div>
+    <button id="btn-toggle-settings">Table settings</button>
+  </div>
+</header>
+
+<div class="panel" id="settings-panel" style="display:none;">
+  <div class="settings-grid">
+    <div>
+      <p class="side-note">Table rules</p>
+      <label style="display:block;font-size:13px;margin-bottom:6px;">
+        <span class="term">Commission<span class="tip">A cut the house takes from Banker wins — standard tables charge 5%.</span></span>
+      </label>
+      <select id="set-commission">
+        <option value="no" selected>No commission (Banker 3-card 7 pushes)</option>
+        <option value="yes">5% commission on Banker wins</option>
+      </select>
+      <label style="display:block;font-size:13px;margin:12px 0 6px;">Decks in the shoe</label>
+      <select id="set-decks">
+        <option value="8" selected>8 decks (standard)</option>
+        <option value="12">12 decks</option>
+        <option value="16">16 decks</option>
+      </select>
+    </div>
+    <div>
+      <p class="side-note">Side bets</p>
+      <div class="check-row"><input type="checkbox" id="sb-dragon7"><label for="sb-dragon7"><span class="term">Dragon 7<span class="tip">Pays 40:1 if Banker wins with exactly a 3-card total of 7.</span></span></label></div>
+      <div class="check-row"><input type="checkbox" id="sb-panda8"><label for="sb-panda8"><span class="term">Panda 8<span class="tip">Pays 25:1 if Player wins with exactly a 3-card total of 8.</span></span></label></div>
+      <div class="check-row"><input type="checkbox" id="sb-dragonbonus"><label for="sb-dragonbonus"><span class="term">Dragon Bonus<span class="tip">Bet on Player or Banker winning big. Any natural win pays 1:1. A non-natural win by 4+ points pays 2:1 up to 30:1 for a 9-point win.</span></span></label></div>
+      <p class="side-note" style="text-transform:none;font-weight:400;letter-spacing:0;margin-top:8px;color:var(--text-muted);">Bet on these the same way as Banker/Player/Tie — pick a chip, click the spot.</p>
+    </div>
+    <div>
+      <p class="side-note">Table</p>
+      <div class="check-row"><input type="checkbox" id="set-sound" checked><label for="set-sound">Sound effects</label></div>
+      <div class="check-row"><input type="checkbox" id="set-tooltips" checked><label for="set-tooltips">Term tooltips</label></div>
+      <div class="check-row"><input type="checkbox" id="set-showodds" checked><label for="set-showodds">Live win odds</label></div>
+      <div class="check-row"><input type="checkbox" id="set-turbo"><label for="set-turbo">Turbo — deal face up, skip flipping</label></div>
+      <label style="display:block;font-size:13px;margin:10px 0 6px;">Theme</label>
+      <select id="set-theme">
+        <option value="graphite">Graphite</option>
+        <option value="emerald" selected>Emerald Felt</option>
+        <option value="midnight">Midnight</option>
+        <option value="crimson">Crimson</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="table-felt">
+  <div class="hands-grid">
+    <div class="hand-box" id="banker-box">
+      <div class="hb-top">
+        <span class="hb-name">Banker <span class="hb-your-bet-tag">Your bet</span></span>
+        <span class="hb-total" id="banker-total"></span>
       </div>
-      <span class="badge up-next">Up next</span>
-      <h1>Baccarat is up next on the floor.</h1>
-      <p>The simplest math on the floor. No decisions once your bet is down — just knowing which bet actually gives the house the smallest edge, and why.</p>
-      <div class="actions">
-        <a class="btn primary" href="/blackjack/">Play Blackjack instead</a>
-        <a class="btn ghost" href="/">Back to the floor</a>
+      <div class="hb-cards" id="banker-cards"></div>
+    </div>
+    <div class="hand-box" id="player-box">
+      <div class="hb-top">
+        <span class="hb-name">Player <span class="hb-your-bet-tag">Your bet</span></span>
+        <span class="hb-total" id="player-total"></span>
       </div>
+      <div class="hb-cards" id="player-cards"></div>
     </div>
   </div>
 
-  <footer>
-    <span>© 2026 SledgeMakesGames. All rights reserved.</span>
-    <a href="https://github.com/sledgemakesgames" target="_blank" rel="noopener">GitHub</a>
-  </footer>
+  <div class="outcome-badge" id="outcome-badge"></div>
+  <div class="why-panel" id="why-panel"></div>
+
+  <div class="road-panel">
+    <div class="road-head">
+      <span class="road-title">The Road</span>
+      <span class="road-explain" id="road-explain-text">One dot per hand — red Banker, blue Player, hollow green Tie. Fills top to bottom, then starts a new column.</span>
+    </div>
+    <div class="board-tabs" id="board-tabs"></div>
+    <div class="road-grid" id="road-grid"></div>
+  </div>
+
+  <div class="hand-detail-overlay" id="hand-detail-overlay" style="display:none;">
+    <div class="hand-detail-card">
+      <button class="hd-close" id="btn-close-detail" aria-label="Close">&times;</button>
+      <p class="hd-title" id="hd-title">Hand</p>
+      <div class="hd-hands">
+        <div class="hd-side">
+          <p class="hd-label">Banker <span class="hd-total" id="hd-banker-total"></span></p>
+          <div class="hd-cards" id="hd-banker-cards"></div>
+        </div>
+        <div class="hd-side">
+          <p class="hd-label">Player <span class="hd-total" id="hd-player-total"></span></p>
+          <div class="hd-cards" id="hd-player-cards"></div>
+        </div>
+      </div>
+      <p class="hd-outcome" id="hd-outcome"></p>
+      <p class="hd-why" id="hd-why"></p>
+      <p class="hd-bets" id="hd-bets"></p>
+    </div>
+  </div>
+
+  <div id="odds-panel" style="display:none;text-align:center;margin:0 0 10px;font-size:12.5px;color:var(--text-muted);"></div>
+
+  <div class="betting-row" id="betting-row">
+    <div class="bet-spot" id="spot-player" data-spot="player">
+      <div class="spot-label">Player</div>
+      <div class="spot-odds">Pays 1:1</div>
+      <div class="spot-chips" id="chips-player"></div>
+      <div class="spot-amt" id="amt-player"></div>
+      <div class="spot-hint">Click to bet <span id="hint-player-chip">$25</span></div>
+    </div>
+    <div class="bet-spot" id="spot-tie" data-spot="tie">
+      <div class="spot-label">Tie</div>
+      <div class="spot-odds">Pays 8:1</div>
+      <div class="spot-chips" id="chips-tie"></div>
+      <div class="spot-amt" id="amt-tie"></div>
+      <div class="spot-hint">Click to bet <span id="hint-tie-chip">$25</span></div>
+    </div>
+    <div class="bet-spot" id="spot-banker" data-spot="banker">
+      <div class="spot-label">Banker</div>
+      <div class="spot-odds" id="banker-odds-label">Pays 1:1 (7 pushes)</div>
+      <div class="spot-chips" id="chips-banker"></div>
+      <div class="spot-amt" id="amt-banker"></div>
+      <div class="spot-hint">Click to bet <span id="hint-banker-chip">$25</span></div>
+    </div>
+  </div>
+
+  <div class="side-betting-row" id="side-betting-row" style="display:none;">
+    <div class="side-spot" id="side-spot-dragon7" data-spot="dragon7" style="display:none;">
+      <div class="spot-label">Dragon 7</div>
+      <div class="spot-odds">40:1</div>
+      <div class="spot-amt" id="amt-dragon7">$0</div>
+    </div>
+    <div class="side-spot" id="side-spot-panda8" data-spot="panda8" style="display:none;">
+      <div class="spot-label">Panda 8</div>
+      <div class="spot-odds">25:1</div>
+      <div class="spot-amt" id="amt-panda8">$0</div>
+    </div>
+    <div class="side-spot" id="side-spot-dragonP" data-spot="dragonP" style="display:none;">
+      <div class="spot-label">Dragon Bonus P</div>
+      <div class="spot-odds">Up to 30:1</div>
+      <div class="spot-amt" id="amt-dragonP">$0</div>
+    </div>
+    <div class="side-spot" id="side-spot-dragonB" data-spot="dragonB" style="display:none;">
+      <div class="spot-label">Dragon Bonus B</div>
+      <div class="spot-odds">Up to 30:1</div>
+      <div class="spot-amt" id="amt-dragonB">$0</div>
+    </div>
+  </div>
+
+  <div class="chip-row" id="chip-row">
+    <button class="chip chip-5" data-chip="5">5</button>
+    <button class="chip chip-10" data-chip="10">10</button>
+    <button class="chip chip-25 selected" data-chip="25">25</button>
+    <button class="chip chip-50" data-chip="50">50</button>
+    <button class="chip chip-100" data-chip="100">100</button>
+    <button id="btn-clear-bets">Clear bets</button>
+    <button id="btn-all-in">All in</button>
+  </div>
+  <p class="chip-hint">Pick a chip, then click a betting spot to place it. Right-click a spot to remove one chip. Currently holding <b id="active-chip-label">$25</b>.</p>
+
+  <div class="deal-row">
+    <button class="primary" id="btn-deal">Deal</button>
+  </div>
+
+  <div id="stats-grid" class="stats-flat"></div>
+</div>
+
+<footer>© 2026 SledgeMakesGames. All rights reserved.</footer>
 </div>
 
 <script>
-var BANKROLL_KEY = 'house_edge_bankroll_v1';
-function formatMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
-try{
-  var raw = localStorage.getItem(BANKROLL_KEY);
-  var balance = 1000;
-  if(raw){
-    var parsed = JSON.parse(raw);
-    if(typeof parsed.balance === 'number' && !isNaN(parsed.balance)) balance = parsed.balance;
-  } else {
-    localStorage.setItem(BANKROLL_KEY, JSON.stringify({balance:1000, lastUpdated:new Date().toISOString()}));
+/* ============ ENGINE (tested independently before integration) ============ */
+var RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+var RESULT_PAUSE=3200;
+var SUITS=['♠','♥','♦','♣'];
+
+function baccaratValue(rank){
+  if(rank==='A') return 1;
+  if(rank==='10'||rank==='J'||rank==='Q'||rank==='K') return 0;
+  return parseInt(rank,10);
+}
+function handTotal(cards){
+  var sum=cards.reduce(function(acc,c){ return acc+baccaratValue(c.r); },0);
+  return sum%10;
+}
+function drawCard(shoe){
+  if(shoe.length<20){ G.shoe=buildShoe(G.decks); shoe=G.shoe; }
+  return shoe.pop();
+}
+function drawCardSim(shoe){
+  return shoe.length>0 ? shoe.pop() : {r:'K', suit:'♠', color:'black'};
+}
+function dealInitialHands(shoe, drawFn){
+  drawFn = drawFn || drawCard;
+  var player=[drawFn(shoe)];
+  var banker=[drawFn(shoe)];
+  player.push(drawFn(shoe));
+  banker.push(drawFn(shoe));
+  return {player:player, banker:banker};
+}
+function resolveThirdCards(hands, shoe, drawFn){
+  drawFn = drawFn || drawCard;
+  var player=hands.player, banker=hands.banker;
+  var playerInitialTotal=handTotal(player);
+  var bankerInitialTotal=handTotal(banker);
+  var natural=playerInitialTotal>=8||bankerInitialTotal>=8;
+  var playerThirdCardValue=null;
+  var playerDrawnCard=null, bankerDrawnCard=null;
+  if(!natural){
+    if(playerInitialTotal<=5){
+      playerDrawnCard=drawFn(shoe);
+      player.push(playerDrawnCard);
+      playerThirdCardValue=baccaratValue(playerDrawnCard.r);
+    }
+    var bankerDraws;
+    if(playerThirdCardValue===null){
+      bankerDraws=bankerInitialTotal<=5;
+    } else {
+      if(bankerInitialTotal<=2){ bankerDraws=true; }
+      else if(bankerInitialTotal===3){ bankerDraws=playerThirdCardValue!==8; }
+      else if(bankerInitialTotal===4){ bankerDraws=playerThirdCardValue>=2&&playerThirdCardValue<=7; }
+      else if(bankerInitialTotal===5){ bankerDraws=playerThirdCardValue>=4&&playerThirdCardValue<=7; }
+      else if(bankerInitialTotal===6){ bankerDraws=playerThirdCardValue===6||playerThirdCardValue===7; }
+      else { bankerDraws=false; }
+    }
+    if(bankerDraws){ bankerDrawnCard=drawFn(shoe); banker.push(bankerDrawnCard); }
   }
-  document.getElementById('bankroll-amount').textContent = formatMoney(balance);
-}catch(e){}
-setTimeout(function(){ document.getElementById('locked-card').classList.add('show'); }, 60);
+  var playerFinal=handTotal(player);
+  var bankerFinal=handTotal(banker);
+  var outcome=playerFinal>bankerFinal?'player':(bankerFinal>playerFinal?'banker':'tie');
+  return {
+    player:player, banker:banker, playerTotal:playerFinal, bankerTotal:bankerFinal,
+    playerInitialTotal:playerInitialTotal, bankerInitialTotal:bankerInitialTotal,
+    outcome:outcome, natural:natural,
+    playerDrewThird:player.length===3, bankerDrewThird:banker.length===3,
+    playerThirdCardValue:playerThirdCardValue,
+    playerDrawnCard:playerDrawnCard, bankerDrawnCard:bankerDrawnCard
+  };
+}
+function dragonBonusPayout(result, side, betAmount){
+  var sideCards = side==='player' ? result.player : result.banker;
+  var sideTotal = side==='player' ? result.playerTotal : result.bankerTotal;
+  var otherTotal = side==='player' ? result.bankerTotal : result.playerTotal;
+  var sideIsNatural = sideCards.length===2 && sideTotal>=8;
+
+  if(result.outcome===side){
+    if(sideIsNatural) return betAmount*1; // naturals pay flat 1:1 regardless of margin
+    var margin = sideTotal - otherTotal;
+    if(margin>=9) return betAmount*30;
+    if(margin>=8) return betAmount*10;
+    if(margin>=6) return betAmount*4; // 6 or 7
+    if(margin>=4) return betAmount*2; // 4 or 5
+    return -betAmount; // non-natural win under 4 points doesn't qualify
+  }
+  if(result.outcome==='tie'){
+    var playerNatural = result.player.length===2 && result.playerTotal>=8;
+    var bankerNatural = result.banker.length===2 && result.bankerTotal>=8;
+    if(playerNatural && bankerNatural) return 0; // natural tie pushes
+    return -betAmount; // non-natural tie loses
+  }
+  return -betAmount; // this side lost outright
+}
+
+function resolveBets(result, bets, commissionMode){
+  var net={banker:0,player:0,tie:0,dragon7:0,panda8:0,dragonP:0,dragonB:0};
+  if(bets.player>0){
+    if(result.outcome==='player'){ net.player=bets.player; }
+    else if(result.outcome==='tie'){ net.player=0; }
+    else { net.player=-bets.player; }
+  }
+  if(bets.banker>0){
+    if(result.outcome==='banker'){
+      var bankerSeven=result.bankerDrewThird&&result.bankerTotal===7;
+      if(!commissionMode&&bankerSeven){ net.banker=0; }
+      else if(commissionMode){ net.banker=Math.floor(bets.banker*0.95); }
+      else { net.banker=bets.banker; }
+    } else if(result.outcome==='tie'){ net.banker=0; }
+    else { net.banker=-bets.banker; }
+  }
+  if(bets.tie>0){
+    if(result.outcome==='tie'){ net.tie=bets.tie*8; }
+    else { net.tie=-bets.tie; }
+  }
+  if(bets.dragon7>0){
+    if(result.outcome==='banker'&&result.bankerDrewThird&&result.bankerTotal===7){ net.dragon7=bets.dragon7*40; }
+    else { net.dragon7=-bets.dragon7; }
+  }
+  if(bets.panda8>0){
+    if(result.outcome==='player'&&result.playerDrewThird&&result.playerTotal===8){ net.panda8=bets.panda8*25; }
+    else { net.panda8=-bets.panda8; }
+  }
+  if(bets.dragonP>0){ net.dragonP=dragonBonusPayout(result,'player',bets.dragonP); }
+  if(bets.dragonB>0){ net.dragonB=dragonBonusPayout(result,'banker',bets.dragonB); }
+  return net;
+}
+function buildShoe(numDecks){
+  var s=[];
+  for(var d=0; d<numDecks; d++){
+    RANKS.forEach(function(r){ SUITS.forEach(function(su){
+      s.push({r:r, suit:su, color:(su==='♥'||su==='♦')?'red':'black'});
+    });});
+  }
+  for(var i=s.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=s[i]; s[i]=s[j]; s[j]=t; }
+  return s;
+}
+
+function partialShuffleFromEnd(pool, maxNeeded){
+  // Fisher-Yates, but only randomizes the last `maxNeeded` positions — statistically
+  // identical to a full shuffle for the purposes of drawing that many cards, but avoids
+  // wastefully shuffling the entire remaining shoe (often 300+ cards) on every trial.
+  var n=pool.length;
+  var limit=Math.min(maxNeeded, n);
+  for(var i=0;i<limit;i++){
+    var idx=n-1-i;
+    var j=Math.floor(Math.random()*(idx+1));
+    var tmp=pool[idx]; pool[idx]=pool[j]; pool[j]=tmp;
+  }
+}
+
+function simulateConditionalOdds(trials){
+  if(G.shoe.length<12) return null;
+  var bankerWins=0, playerWins=0, ties=0;
+  var thirdPhase=(G.phase==='third');
+
+  // the true pool of cards unknown to the player = the remaining shoe PLUS any cards
+  // already dealt this hand but not yet flipped. A face-down card on the table is just
+  // as unknown to the player as one still in the shoe, and excluding it would silently
+  // shrink the true space of possibilities.
+  var basePool=G.shoe.slice();
+  if(G.hands){
+    for(var i=G.playerRevealed.length; i<G.hands.player.length; i++){ basePool.push(G.hands.player[i]); }
+    for(var i=G.bankerRevealed.length; i<G.hands.banker.length; i++){ basePool.push(G.hands.banker[i]); }
+  }
+
+  for(var t=0;t<trials;t++){
+    var pool=basePool.slice();
+    partialShuffleFromEnd(pool, 6); // a baccarat hand never needs more than 6 cards total
+    var player, banker, outcome;
+
+    if(!thirdPhase){
+      // still resolving the initial 4 — use whichever of those are already flipped,
+      // and draw a fresh random card for any that aren't yet
+      var pIdx=0, bIdx=0;
+      var drawP=function(){ var k=G.playerRevealed[pIdx]; pIdx++; return k||pool.pop(); };
+      var drawB=function(){ var k=G.bankerRevealed[bIdx]; bIdx++; return k||pool.pop(); };
+      player=[drawP(),drawP()];
+      banker=[drawB(),drawB()];
+      var result=resolveThirdCards({player:player,banker:banker}, pool, drawCardSim);
+      outcome=result.outcome;
+    } else {
+      // all 4 initial cards are already known by this point — whether either side draws
+      // a third is now a settled fact (the rule already ran), only the third card's
+      // actual VALUE might still be unknown if it hasn't been flipped yet
+      player=G.hands.player.slice(0,2);
+      banker=G.hands.banker.slice(0,2);
+      if(G.hands.player.length===3){ player.push(G.playerRevealed[2]||pool.pop()); }
+      if(G.hands.banker.length===3){ banker.push(G.bankerRevealed[2]||pool.pop()); }
+      var pTotal=handTotal(player), bTotal=handTotal(banker);
+      outcome = pTotal>bTotal?'player':(bTotal>pTotal?'banker':'tie');
+    }
+
+    if(outcome==='banker') bankerWins++;
+    else if(outcome==='player') playerWins++;
+    else ties++;
+  }
+  return {banker:bankerWins/trials*100, player:playerWins/trials*100, tie:ties/trials*100};
+}
+
+function oddsCacheKey(){
+  return G.phase+':'+G.shoe.length+':'+G.playerRevealed.length+':'+G.bankerRevealed.length;
+}
+function getOddsWithCache(){
+  // odds depend on exactly what's currently known — recompute only when that actually
+  // changes (a new card was flipped, or a new hand was dealt), not on every render/click
+  var key=oddsCacheKey();
+  if(G.cachedOdds && G.cachedOddsKey===key) return G.cachedOdds;
+  var res=simulateConditionalOdds(30000);
+  G.cachedOdds=res;
+  G.cachedOddsKey=key;
+  return res;
+}
+
+/* ============ CARD ART (matches blackjack's card system) ============ */
+function faceCardSVG(rank){
+  if(rank==='J'){
+    return '<svg viewBox="0 0 40 56" width="36" height="50" style="overflow:visible;">'+
+      '<circle cx="20" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
+      '<line x1="14" y1="3.5" x2="26" y2="3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="15.5" x2="20" y2="34" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="20" x2="10" y2="27" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="20" x2="30" y2="27" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="34" x2="11" y2="51" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="34" x2="29" y2="51" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+    '</svg>';
+  }
+  if(rank==='Q'){
+    return '<svg viewBox="0 0 40 56" width="36" height="50" style="overflow:visible;">'+
+      '<circle cx="20" cy="11" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
+      '<polyline points="13,4 16,8 20,3 24,8 27,4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+      '<line x1="20" y1="16.5" x2="20" y2="32" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="21" x2="11" y2="28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<line x1="20" y1="21" x2="29" y2="28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+      '<polygon points="20,32 9,52 31,52" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>'+
+    '</svg>';
+  }
+  return '<svg viewBox="0 0 40 56" width="36" height="50" style="overflow:visible;">'+
+    '<circle cx="20" cy="13" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
+    '<polyline points="12,5 15,10 20,4 25,10 28,5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<line x1="20" y1="1.5" x2="20" y2="4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'+
+    '<line x1="17.5" y1="2.5" x2="22.5" y2="2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'+
+    '<line x1="20" y1="18.5" x2="20" y2="36" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+    '<line x1="20" y1="23" x2="10" y2="30" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+    '<line x1="20" y1="23" x2="32" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+    '<line x1="20" y1="36" x2="11" y2="52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+    '<line x1="20" y1="36" x2="29" y2="52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+  '</svg>';
+}
+function pipsHTML(card){
+  if(card.r==='J'||card.r==='Q'||card.r==='K'){
+    return '<span style="position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);">'+faceCardSVG(card.r)+'</span>';
+  }
+  return '<span class="card-pip" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">'+card.suit+'</span>';
+}
+function cardIdxHTML(card){
+  var one='<span class="card-idx"><span class="rank">'+card.r+'</span><span class="pip">'+card.suit+'</span></span>';
+  var two='<span class="card-idx br"><span class="rank">'+card.r+'</span><span class="pip">'+card.suit+'</span></span>';
+  return one+two;
+}
+function cardFaceInnerHTML(card){
+  return cardIdxHTML(card)+pipsHTML(card);
+}
+
+/* ============ GAME STATE ============ */
+var HOUSE_BANKROLL_KEY='house_edge_bankroll_v1';
+var G={
+  bankroll:1000, shoe:[], decks:8, phase:'betting', // betting | initial | third | done
+  showOdds:true, cachedOdds:null, cachedOddsKey:'',
+  bets:{player:0,banker:0,tie:0,dragon7:0,panda8:0,dragonP:0,dragonB:0},
+  activeChip:25,
+  commissionMode:false, sideDragon7:false, sidePanda8:false, sideDragonBonus:false,
+  soundOn:true, tooltipsEnabled:true, turbo:false,
+  hands:null, result:null, showFeedback:false,
+  initialFlipped:0, thirdFlipped:0, thirdNeeded:0,
+  bankerRevealed:[], playerRevealed:[],
+  stats:{hands:0,net:0,banker:0,player:0,tie:0}, roadHistory:[], bigRoad:[], handHistory:[], activeBoard:'big'
+};
+function T(ms){ return G.turbo ? 0 : ms; }
+
+function hasStorage(){ try{ return typeof localStorage!=='undefined' && localStorage!==null; }catch(e){ return false; } }
+
+/* ============ SOUND (same WebAudio technique as Blackjack, baccarat-specific moments) ============ */
+var audioCtx=null;
+function ensureAudioCtx(){
+  if(audioCtx) return audioCtx;
+  var Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx) return null;
+  audioCtx=new Ctx();
+  return audioCtx;
+}
+function playTone(freq, duration, type, volume){
+  if(!G.soundOn) return;
+  var ctx=ensureAudioCtx();
+  if(!ctx) return;
+  var osc=ctx.createOscillator();
+  var gain=ctx.createGain();
+  osc.type=type||'sine';
+  osc.frequency.value=freq;
+  gain.gain.setValueAtTime(volume||0.06, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(); osc.stop(ctx.currentTime+duration);
+}
+function sfxFlip(){ if(G.turbo) return; playTone(560,0.05,'square',0.03); }
+function sfxChip(){ playTone(500,0.04,'triangle',0.035); }
+function sfxDeal(){ if(G.turbo) return; playTone(420,0.035,'square',0.02); }
+function sfxWin(){ playTone(659,0.11,'sine',0.05); setTimeout(function(){ playTone(880,0.16,'sine',0.05); }, 90); }
+function sfxLose(){ playTone(196,0.22,'sine',0.045); }
+function sfxPush(){ playTone(392,0.14,'sine',0.04); }
+function sfxThirdCard(){ playTone(340,0.09,'triangle',0.035); setTimeout(function(){ playTone(460,0.09,'triangle',0.035); }, 70); }
+
+function loadSharedBankroll(){
+  if(!hasStorage()) return null;
+  try{
+    var raw=localStorage.getItem(HOUSE_BANKROLL_KEY);
+    if(!raw) return null;
+    var parsed=JSON.parse(raw);
+    if(typeof parsed.balance==='number'&&!isNaN(parsed.balance)) return parsed.balance;
+    return null;
+  }catch(e){ return null; }
+}
+function saveSharedBankroll(){
+  if(!hasStorage()) return;
+  try{ localStorage.setItem(HOUSE_BANKROLL_KEY, JSON.stringify({balance:G.bankroll,lastUpdated:new Date().toISOString()})); }catch(e){}
+}
+
+/* ============ RENDERING ============ */
+function formatMoney(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+function computeChipBreakdown(amount){
+  var denoms=[100,50,25,10,5,1];
+  var counts=[];
+  var remaining=Math.max(0, Math.round(amount));
+  var maxChips=6;
+  for(var i=0;i<denoms.length && counts.length<maxChips;i++){
+    var d=denoms[i];
+    while(remaining>=d && counts.length<maxChips){
+      counts.push(d);
+      remaining-=d;
+    }
+  }
+  return counts;
+}
+function chipColorClass(d){
+  if(d>=100) return 'chip-100';
+  if(d>=50) return 'chip-50';
+  if(d>=25) return 'chip-25';
+  if(d>=10) return 'chip-10';
+  return 'chip-5';
+}
+function renderBankroll(){
+  document.getElementById('bankroll-amount').textContent=formatMoney(G.bankroll);
+  var stackEl=document.getElementById('bankroll-chip-stack');
+  if(stackEl){
+    var breakdown=computeChipBreakdown(G.bankroll);
+    stackEl.innerHTML=breakdown.map(function(d){
+      return '<span class="mini-chip '+chipColorClass(d)+'"></span>';
+    }).join('');
+  }
+}
+
+function updateLiveTotal(side){
+  var arr = side==='banker' ? G.bankerRevealed : G.playerRevealed;
+  var totalEl = document.getElementById(side+'-total');
+  totalEl.textContent = arr.length>0 ? String(handTotal(arr)) : '';
+}
+
+function makeFaceUpCard(card){
+  var wrap=document.createElement('div');
+  wrap.className='card'+(card.color==='red'?' red':'');
+  wrap.innerHTML=cardFaceInnerHTML(card);
+  return wrap;
+}
+
+function makeFaceDownCard(card, side, onFlip){
+  var wrap=document.createElement('div');
+  wrap.className='flip-card';
+  var inner=document.createElement('div');
+  inner.className='flip-inner';
+  var back=document.createElement('div');
+  back.className='flip-back';
+  back.textContent='?';
+  var front=document.createElement('div');
+  front.className='flip-front card'+(card.color==='red'?' red':'');
+  front.innerHTML=cardFaceInnerHTML(card);
+  inner.appendChild(back);
+  inner.appendChild(front);
+  wrap.appendChild(inner);
+  var flipped=false;
+  wrap.addEventListener('click', function(){
+    if(flipped) return;
+    flipped=true;
+    wrap.classList.add('flipped');
+    sfxFlip();
+    if(side==='banker'){ G.bankerRevealed.push(card); } else { G.playerRevealed.push(card); }
+    updateLiveTotal(side);
+    renderOddsPanel();
+    if(onFlip) onFlip();
+  });
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ wrap.classList.add('show'); }); });
+  return wrap;
+}
+
+function dealCardToSide(sideId, card, delay, onFlip){
+  var side = sideId==='banker-cards' ? 'banker' : 'player';
+  setTimeout(function(){
+    var el=makeFaceDownCard(card, side, onFlip);
+    document.getElementById(sideId).appendChild(el);
+    sfxDeal();
+  }, delay);
+}
+
+function renderBetSpotVisual(spot){
+  var amt=G.bets[spot];
+  var chipsEl=document.getElementById('chips-'+spot);
+  var amtEl=document.getElementById('amt-'+spot);
+  if(chipsEl){
+    var breakdown=computeChipBreakdown(amt);
+    chipsEl.innerHTML = breakdown.map(function(d){
+      return '<span class="mini-chip '+chipColorClass(d)+'"></span>';
+    }).join('');
+  }
+  amtEl.textContent = amt>0 ? formatMoney(amt) : '';
+  var isSideBet = spot==='dragon7'||spot==='panda8'||spot==='dragonP'||spot==='dragonB';
+  document.getElementById(isSideBet ? 'side-spot-'+spot : 'spot-'+spot).classList.toggle('has-bet', amt>0);
+}
+
+function renderBets(){
+  ['player','banker','tie','dragon7','panda8','dragonP','dragonB'].forEach(renderBetSpotVisual);
+  document.getElementById('side-spot-dragon7').style.display=G.sideDragon7?'block':'none';
+  document.getElementById('side-spot-panda8').style.display=G.sidePanda8?'block':'none';
+  document.getElementById('side-spot-dragonP').style.display=G.sideDragonBonus?'block':'none';
+  document.getElementById('side-spot-dragonB').style.display=G.sideDragonBonus?'block':'none';
+  document.getElementById('side-betting-row').style.display=(G.sideDragon7||G.sidePanda8||G.sideDragonBonus)?'flex':'none';
+  document.getElementById('banker-odds-label').textContent = G.commissionMode ? 'Pays 0.95:1 (5% commission)' : 'Pays 1:1 (7 pushes)';
+  ['player','banker','tie'].forEach(function(s){
+    document.getElementById('hint-'+s+'-chip').textContent=formatMoney(G.activeChip);
+  });
+  document.getElementById('active-chip-label').textContent=formatMoney(G.activeChip);
+  document.getElementById('banker-box').classList.toggle('your-bet', G.bets.banker>0);
+  document.getElementById('player-box').classList.toggle('your-bet', G.bets.player>0);
+}
+
+function totalBetAmount(){
+  return G.bets.player+G.bets.banker+G.bets.tie+G.bets.dragon7+G.bets.panda8+G.bets.dragonP+G.bets.dragonB;
+}
+
+function renderStats(){
+  var el=document.getElementById('stats-grid');
+  if(!el) return;
+  var s=G.stats;
+  function item(label, value){ return '<span class="stat-item">'+label+'<span class="sv">'+value+'</span></span>'; }
+  var betCount=s.betCount||0;
+  var winRate = betCount ? Math.round(100*(s.wins||0)/betCount)+'%' : '—';
+  var avgBet = betCount ? formatMoney((s.betTotal||0)/betCount) : '—';
+  var streakText = (s.streak>0) ? s.streak+' '+(s.streakType==='win'?(s.streak>1?'wins':'win'):(s.streak>1?'losses':'loss')) : '—';
+  el.innerHTML =
+    item('Hands', s.hands) +
+    item('Win rate', winRate) +
+    item('W / L / P', (s.wins||0)+' / '+(s.losses||0)+' / '+(s.pushes||0)) +
+    item('Net', (s.net>=0?'+':'')+formatMoney(s.net)) +
+    item('Avg bet', avgBet) +
+    item('Streak', streakText) +
+    item('B / P / T', s.banker+' / '+s.player+' / '+s.tie);
+}
+
+function addToBigRoad(outcome){
+  if(outcome==='tie'){
+    if(G.bigRoad.length===0) return;
+    var lastCol=G.bigRoad[G.bigRoad.length-1];
+    var lastCell=lastCol[lastCol.length-1];
+    lastCell.ties=(lastCell.ties||0)+1;
+    return;
+  }
+  var handIdx=G.handHistory.length; // this hand's index once it gets pushed right after this call
+  if(G.bigRoad.length===0 || G.bigRoad[G.bigRoad.length-1][0].outcome!==outcome){
+    G.bigRoad.push([{outcome:outcome, ties:0, handIdx:handIdx}]);
+  } else {
+    G.bigRoad[G.bigRoad.length-1].push({outcome:outcome, ties:0, handIdx:handIdx});
+  }
+}
+
+// Verified against hand-traced examples and the documented "earliest start" boundaries
+// (Big Eye Boy hand 3, Small Road hand 4, Cockroach Pig hand 5) before shipping.
+function buildDerivedRoad(n){
+  var columns=G.bigRoad;
+  var marks=[];
+  for(var colIdx=0; colIdx<columns.length; colIdx++){
+    for(var rowIdx=0; rowIdx<columns[colIdx].length; rowIdx++){
+      var mark;
+      if(rowIdx===0){
+        var refCol1=colIdx-n, refCol2=colIdx-n-1;
+        if(refCol2<0){ continue; }
+        var depth1=columns[refCol1]?columns[refCol1].length:0;
+        var depth2=columns[refCol2]?columns[refCol2].length:0;
+        mark = depth1===depth2 ? 'red' : 'blue';
+      } else {
+        var refCol=colIdx-n;
+        if(refCol<0){ continue; }
+        var col=columns[refCol]||[];
+        mark = col.length>rowIdx ? 'red' : 'blue';
+      }
+      marks.push(mark);
+    }
+  }
+  return marks;
+}
+
+var BOARD_TABS=[
+  {key:'big', label:'Big Road'},
+  {key:'bead', label:'Bead Plate'},
+  {key:'bigeye', label:'Big Eye Boy'},
+  {key:'small', label:'Small Road'},
+  {key:'cockroach', label:'Cockroach Pig'}
+];
+
+function renderBoardTabs(){
+  var el=document.getElementById('board-tabs');
+  if(!el) return;
+  el.innerHTML=BOARD_TABS.map(function(b){
+    return '<button class="board-tab'+(G.activeBoard===b.key?' active':'')+'" data-board="'+b.key+'">'+b.label+'</button>';
+  }).join('');
+  el.querySelectorAll('.board-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){ G.activeBoard=btn.getAttribute('data-board'); renderRoad(); renderBoardTabs(); });
+  });
+}
+
+function renderRoad(){
+  var el=document.getElementById('road-grid');
+  var explainEl=document.getElementById('road-explain-text');
+  if(!el) return;
+  el.classList.toggle('mode-cols', G.activeBoard==='big');
+
+  if(G.activeBoard==='bead'){
+    if(explainEl) explainEl.textContent='One dot per hand — red Banker, blue Player, hollow green Tie. Fills top to bottom, then starts a new column.';
+    if(G.roadHistory.length===0){ el.innerHTML='<span class="road-empty">Results will appear here as you play.</span>'; return; }
+    el.innerHTML=G.roadHistory.map(function(outcome, i){ return '<span class="road-dot '+outcome+'" data-hand-index="'+i+'"></span>'; }).join('');
+  } else if(G.activeBoard==='big'){
+    if(explainEl) explainEl.textContent='Streaks stack down a column — a new column starts only when the winner changes. Ties mark the cell without breaking the streak.';
+    if(G.bigRoad.length===0){ el.innerHTML='<span class="road-empty">Results will appear here as you play.</span>'; return; }
+    el.innerHTML=G.bigRoad.map(function(col){
+      return '<span class="road-col">'+col.map(function(cell){
+        return '<span class="road-dot big-ring '+cell.outcome+'" data-hand-index="'+cell.handIdx+'">'+(cell.ties?'<span class="tie-badge">'+cell.ties+'</span>':'')+'</span>';
+      }).join('')+'</span>';
+    }).join('');
+  } else {
+    var n = G.activeBoard==='bigeye' ? 1 : (G.activeBoard==='small' ? 2 : 3);
+    var startHand = n===1?'hand 3':(n===2?'hand 4':'hand 5');
+    if(explainEl) explainEl.textContent='Derived from the Big Road — red means the shoe\u2019s pattern is repeating, blue means it broke. Not a prediction, just a read on repetition. Starts from the shoe\u2019s '+startHand+'.';
+    var marks=buildDerivedRoad(n);
+    if(marks.length===0){ el.innerHTML='<span class="road-empty">Not enough hands yet — this road needs more history to start.</span>'; return; }
+    el.innerHTML=marks.map(function(m){ return '<span class="road-dot derived-mark '+m+'"></span>'; }).join('');
+  }
+  el.scrollLeft=el.scrollWidth;
+}
+
+function showHandDetail(index){
+  var r=G.handHistory[index];
+  if(!r) return;
+  document.getElementById('hd-title').textContent='Hand #'+(index+1);
+  document.getElementById('hd-banker-cards').innerHTML=r.banker.map(function(c){ return makeFaceUpCard(c).outerHTML; }).join('');
+  document.getElementById('hd-player-cards').innerHTML=r.player.map(function(c){ return makeFaceUpCard(c).outerHTML; }).join('');
+  document.getElementById('hd-banker-total').textContent=String(r.bankerTotal);
+  document.getElementById('hd-player-total').textContent=String(r.playerTotal);
+  var label = r.outcome==='tie' ? 'Push — Tie' : (r.outcome==='banker' ? 'Banker won' : 'Player won');
+  document.getElementById('hd-outcome').innerHTML='<span style="color:'+(r.outcome==='tie'?'var(--brass-bright)':'var(--sage-bright)')+';">'+label+'</span> ('+r.bankerTotal+' – '+r.playerTotal+')';
+  document.getElementById('hd-why').innerHTML=explainHand(r);
+  var betParts=[];
+  ['player','banker','tie','dragon7','panda8','dragonP','dragonB'].forEach(function(k){
+    if(r.bets[k]>0) betParts.push(formatMoney(r.bets[k])+' on '+k.charAt(0).toUpperCase()+k.slice(1));
+  });
+  var betText = betParts.length ? 'Your bets: '+betParts.join(', ')+' — net '+(r.net>=0?'+':'')+formatMoney(r.net) : 'No bets were placed on this hand.';
+  document.getElementById('hd-bets').textContent=betText;
+  document.getElementById('hand-detail-overlay').style.display='flex';
+}
+function hideHandDetail(){
+  document.getElementById('hand-detail-overlay').style.display='none';
+}
+
+function renderOddsPanel(){
+  var el=document.getElementById('odds-panel');
+  if(!el) return;
+  if(!G.showOdds){ el.style.display='none'; el.innerHTML=''; return; }
+  var res=getOddsWithCache();
+  if(!res){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='block';
+
+  function wrap(key, colorVar, label){
+    var isMine=G.bets[key]>0;
+    var style='font-weight:600;color:var('+colorVar+');'+(isMine?'text-decoration:underline;text-underline-offset:3px;':'');
+    return '<span style="'+style+'">'+res[key].toFixed(1)+'%</span> '+label+(isMine?' <span style="font-size:10px;color:var(--brass-bright);">(your bet)</span>':'');
+  }
+
+  var flippedCount=G.playerRevealed.length+G.bankerRevealed.length;
+  var context;
+  if(G.phase==='done'){ context='hand resolved — odds reset for the next hand'; }
+  else if(G.phase==='betting'){ context='odds for the next hand, based on what is left in the shoe'; }
+  else if(flippedCount===0){ context='odds before any cards are flipped'; }
+  else { context='odds updated after '+flippedCount+' card'+(flippedCount===1?'':'s')+' flipped'; }
+
+  el.innerHTML=wrap('banker','--coral','Banker')+' &nbsp; '+wrap('player','--dusty-blue','Player')+' &nbsp; '+wrap('tie','--sage-bright','Tie')+' &nbsp; <span>— '+context+'</span>'+
+    '<div style="font-size:10.5px;color:var(--text-muted);opacity:0.8;margin-top:3px;">Estimated from thousands of simulated hands — can\'t be exact, but accurate enough to learn from.</div>';
+}
+
+function explainHand(r){
+  if(r.natural){
+    var naturalWho = r.playerInitialTotal>=8 && r.bankerInitialTotal>=8 ? 'Both sides' : (r.playerInitialTotal>=8 ? 'Player' : 'Banker');
+    return '<strong>Natural.</strong> '+naturalWho+' reached an 8 or 9 on the first two cards (Player had '+r.playerInitialTotal+', Banker had '+r.bankerInitialTotal+'). Once either side hits a natural, nobody draws a third card — the hand resolves immediately.';
+  }
+  var pPart = r.playerDrewThird
+    ? 'Player had a two-card total of '+r.playerInitialTotal+'. Totals of 0 to 5 always draw a third card, so Player drew.'
+    : 'Player had a two-card total of '+r.playerInitialTotal+'. Totals of 6 or 7 always stand, so no third card.';
+  var bPart;
+  if(r.playerThirdCardValue===null){
+    bPart = 'Since Player stood, Banker follows the same simple rule: Banker had '+r.bankerInitialTotal+', and totals of 0 to 5 draw while 6 or 7 stand — so Banker '+(r.bankerDrewThird?'drew.':'stood.');
+  } else {
+    var ruleText;
+    switch(r.bankerInitialTotal){
+      case 0: case 1: case 2: ruleText='a Banker total of '+r.bankerInitialTotal+' always draws, no matter what the Player third card is'; break;
+      case 3: ruleText='a Banker total of 3 draws unless the Player third card is an 8 (it was '+r.playerThirdCardValue+')'; break;
+      case 4: ruleText='a Banker total of 4 draws only if the Player third card is 2 through 7 (it was '+r.playerThirdCardValue+')'; break;
+      case 5: ruleText='a Banker total of 5 draws only if the Player third card is 4 through 7 (it was '+r.playerThirdCardValue+')'; break;
+      case 6: ruleText='a Banker total of 6 draws only if the Player third card is 6 or 7 (it was '+r.playerThirdCardValue+')'; break;
+      case 7: ruleText='a Banker total of 7 always stands, no matter what the Player third card is'; break;
+    }
+    bPart = 'Banker had a two-card total of '+r.bankerInitialTotal+'. The rule: '+ruleText+' — so Banker '+(r.bankerDrewThird?'drew.':'stood.');
+  }
+  return '<strong>'+ pPart +'</strong> '+ bPart;
+}
+
+function renderOutcome(){
+  var badge=document.getElementById('outcome-badge');
+  var why=document.getElementById('why-panel');
+  if(!G.showFeedback||!G.result){ badge.innerHTML=''; why.style.display='none'; return; }
+  var r=G.result;
+  document.getElementById('banker-total').textContent=String(r.bankerTotal);
+  document.getElementById('player-total').textContent=String(r.playerTotal);
+  var label = r.outcome==='tie' ? 'Push — Tie' : (r.outcome==='banker' ? 'Banker wins' : 'Player wins');
+  var cls = r.outcome==='tie' ? 'push' : 'win';
+  badge.innerHTML='<span class="'+cls+'">'+label+' ('+r.bankerTotal+' – '+r.playerTotal+')</span>';
+
+  var explain=explainHand(r);
+  why.innerHTML=explain;
+  why.style.display='block';
+}
+
+function renderPhaseControls(){
+  var betting = G.phase==='betting';
+  document.getElementById('btn-deal').style.display = betting ? 'inline-block' : 'none';
+  var total=totalBetAmount();
+  document.getElementById('btn-deal').disabled = total<=0 || total>G.bankroll;
+  document.getElementById('btn-all-in').disabled = !betting || G.bankroll<=0;
+  document.querySelectorAll('.chip, #btn-clear-bets').forEach(function(b){ b.disabled=!betting; });
+  document.querySelectorAll('.bet-spot, .side-spot').forEach(function(b){ b.style.pointerEvents = betting?'auto':'none'; b.style.opacity = betting?'1':'0.75'; });
+}
+
+function renderAll(){
+  renderBankroll();
+  renderBets();
+  renderStats();
+  renderOutcome();
+  renderRoad();
+  renderOddsPanel();
+  renderPhaseControls();
+}
+
+/* ============ BETTING ACTIONS ============ */
+function selectChip(amount){
+  G.activeChip=amount;
+  document.querySelectorAll('.chip').forEach(function(b){
+    b.classList.toggle('selected', parseInt(b.getAttribute('data-chip'),10)===amount);
+  });
+  document.getElementById('btn-all-in').classList.toggle('all-in-active', G.bankroll>0 && amount===G.bankroll);
+  renderBets();
+}
+function placeBet(spot){
+  if(G.phase!=='betting') return;
+  if((spot==='dragon7'&&!G.sideDragon7)||(spot==='panda8'&&!G.sidePanda8)||((spot==='dragonP'||spot==='dragonB')&&!G.sideDragonBonus)) return;
+  G.bets[spot]+=G.activeChip;
+  sfxChip();
+  renderAll();
+}
+function removeChipFrom(spot){
+  if(G.phase!=='betting') return;
+  G.bets[spot]=Math.max(0, G.bets[spot]-G.activeChip);
+  renderAll();
+}
+function clearBets(){
+  if(G.phase!=='betting') return;
+  G.bets={player:0,banker:0,tie:0,dragon7:0,panda8:0,dragonP:0,dragonB:0};
+  renderAll();
+}
+
+function betAllIn(){
+  if(G.phase!=='betting'||G.bankroll<=0) return;
+  selectChip(G.bankroll);
+}
+
+/* ============ DEAL / REVEAL FLOW ============ */
+function dealHand(){
+  if(G.phase!=='betting') return;
+  var total=totalBetAmount();
+  if(total<=0||total>G.bankroll) return;
+  G.bankroll -= total;
+  document.getElementById('banker-cards').innerHTML='';
+  document.getElementById('player-cards').innerHTML='';
+  document.getElementById('outcome-badge').innerHTML='';
+  document.getElementById('why-panel').style.display='none';
+  document.getElementById('banker-total').textContent='';
+  document.getElementById('player-total').textContent='';
+  G.showFeedback=false;
+  G.bankerRevealed=[]; G.playerRevealed=[];
+  G.hands=dealInitialHands(G.shoe);
+  G.result=null;
+
+  if(G.turbo){
+    G.result=resolveThirdCards(G.hands, G.shoe);
+    G.playerRevealed=G.result.player.slice();
+    G.bankerRevealed=G.result.banker.slice();
+    G.result.player.forEach(function(c){ document.getElementById('player-cards').appendChild(makeFaceUpCard(c)); });
+    G.result.banker.forEach(function(c){ document.getElementById('banker-cards').appendChild(makeFaceUpCard(c)); });
+    document.getElementById('player-total').textContent=String(G.result.playerTotal);
+    document.getElementById('banker-total').textContent=String(G.result.bankerTotal);
+    G.phase='initial';
+    finishHand();
+    return;
+  }
+
+  G.initialFlipped=0;
+  G.phase='initial';
+  renderAll();
+
+  var order=[
+    {side:'player-cards', card:G.hands.player[0]},
+    {side:'banker-cards', card:G.hands.banker[0]},
+    {side:'player-cards', card:G.hands.player[1]},
+    {side:'banker-cards', card:G.hands.banker[1]}
+  ];
+  order.forEach(function(step, i){
+    dealCardToSide(step.side, step.card, i*260, onInitialCardFlipped);
+  });
+}
+
+function onInitialCardFlipped(){
+  G.initialFlipped++;
+  if(G.initialFlipped<4) return;
+  // all four initial cards seen — now (and only now) determine whether a third card is needed
+  G.result=resolveThirdCards(G.hands, G.shoe);
+  var needsPlayerThird=G.result.playerDrewThird;
+  var needsBankerThird=G.result.bankerDrewThird;
+  G.thirdNeeded=(needsPlayerThird?1:0)+(needsBankerThird?1:0);
+  if(G.thirdNeeded===0){
+    finishHand();
+    return;
+  }
+  G.thirdFlipped=0;
+  G.phase='third';
+  sfxThirdCard();
+  var delay=0;
+  if(needsPlayerThird){
+    dealCardToSide('player-cards', G.result.playerDrawnCard, delay, onThirdCardFlipped);
+    delay+=260;
+  }
+  if(needsBankerThird){
+    dealCardToSide('banker-cards', G.result.bankerDrawnCard, delay, onThirdCardFlipped);
+  }
+}
+
+function onThirdCardFlipped(){
+  G.thirdFlipped++;
+  if(G.thirdFlipped>=G.thirdNeeded){ finishHand(); }
+}
+
+function finishHand(){
+  var net=resolveBets(G.result, G.bets, G.commissionMode);
+  var totalNet=net.player+net.banker+net.tie+net.dragon7+net.panda8+net.dragonP+net.dragonB;
+  var totalBack=0;
+  ['player','banker','tie','dragon7','panda8','dragonP','dragonB'].forEach(function(k){
+    if(net[k]>=0){ totalBack += G.bets[k]+net[k]; }
+  });
+  G.bankroll += totalBack;
+  G.stats.hands++;
+  G.stats.net += totalNet;
+  if(totalBetAmount()>0){
+    if(totalNet>0){ G.stats.wins=(G.stats.wins||0)+1; G.stats.streak=(G.stats.streakType==='win'?(G.stats.streak||0)+1:1); G.stats.streakType='win'; }
+    else if(totalNet<0){ G.stats.losses=(G.stats.losses||0)+1; G.stats.streak=(G.stats.streakType==='loss'?(G.stats.streak||0)+1:1); G.stats.streakType='loss'; }
+    else { G.stats.pushes=(G.stats.pushes||0)+1; G.stats.streak=0; G.stats.streakType=null; }
+    G.stats.betCount=(G.stats.betCount||0)+1;
+    G.stats.betTotal=(G.stats.betTotal||0)+totalBetAmount();
+  }
+  if(G.result.outcome==='banker') G.stats.banker++;
+  else if(G.result.outcome==='player') G.stats.player++;
+  else G.stats.tie++;
+  G.roadHistory.push(G.result.outcome);
+  addToBigRoad(G.result.outcome);
+  G.handHistory.push({
+    player:G.result.player.slice(), banker:G.result.banker.slice(),
+    playerTotal:G.result.playerTotal, bankerTotal:G.result.bankerTotal,
+    playerInitialTotal:G.result.playerInitialTotal, bankerInitialTotal:G.result.bankerInitialTotal,
+    outcome:G.result.outcome, natural:G.result.natural,
+    playerDrewThird:G.result.playerDrewThird, bankerDrewThird:G.result.bankerDrewThird,
+    playerThirdCardValue:G.result.playerThirdCardValue,
+    bets:Object.assign({},G.bets), net:totalNet
+  });
+  G.phase='done';
+  G.showFeedback=true;
+  G.bankerRevealed=[]; G.playerRevealed=[]; // reset so the odds panel shows the fresh baseline, not the just-finished hand
+  if(totalBetAmount()>0){
+    if(totalNet>0) sfxWin(); else if(totalNet<0) sfxLose(); else sfxPush();
+  }
+  saveSharedBankroll();
+  renderAll();
+  setTimeout(function(){ nextHand(); }, T(RESULT_PAUSE));
+}
+
+function nextHand(){
+  if(G.phase!=='done') return;
+  G.phase='betting';
+  G.bets={player:0,banker:0,tie:0,dragon7:0,panda8:0,dragonP:0,dragonB:0};
+  G.hands=null;
+  renderAll();
+}
+
+/* ============ SETTINGS ============ */
+function readSettings(){
+  G.commissionMode=document.getElementById('set-commission').value==='yes';
+  G.sideDragon7=document.getElementById('sb-dragon7').checked;
+  G.sidePanda8=document.getElementById('sb-panda8').checked;
+  G.sideDragonBonus=document.getElementById('sb-dragonbonus').checked;
+  G.soundOn=document.getElementById('set-sound').checked;
+  G.tooltipsEnabled=document.getElementById('set-tooltips').checked;
+  G.showOdds=document.getElementById('set-showodds').checked;
+  G.turbo=document.getElementById('set-turbo').checked;
+  document.body.classList.toggle('tooltips-off', !G.tooltipsEnabled);
+  var newDecks=parseInt(document.getElementById('set-decks').value,10)||8;
+  if(newDecks!==G.decks){
+    G.decks=newDecks;
+    G.shoe=buildShoe(G.decks);
+  }
+}
+
+var THEMES={
+  graphite:{label:'Graphite', felt:'#0C0D10','felt-dark':'#08090B',panel:'#15171B','panel-2':'#1D2025','card-face':'#F4F5F7',ink:'#15171B',brass:'#D6A94B','brass-bright':'#F0C46B',coral:'#E15D45',sage:'#3FA484','sage-bright':'#65C7A3','dusty-blue':'#5B8DE0',violet:'#9C82E0',text:'#EDEEF0','text-muted':'#8A8F98',line:'rgba(237,238,240,0.09)'},
+  emerald:{label:'Emerald Felt', felt:'#0F3D36','felt-dark':'#0A2B26',panel:'#123832','panel-2':'#163F38','card-face':'#F7F3E9',ink:'#16211C',brass:'#C9A24B','brass-bright':'#E8C468',coral:'#C1563F',sage:'#6E8F79','sage-bright':'#8FB49E','dusty-blue':'#5C82A0',violet:'#8F7CB8',text:'#E8E4D8','text-muted':'#9FB5AE',line:'rgba(232,228,216,0.14)'},
+  midnight:{label:'Midnight', felt:'#0B0F1A','felt-dark':'#060810',panel:'#131826','panel-2':'#1B2233','card-face':'#F2F4F8',ink:'#12141C',brass:'#4FB8E0','brass-bright':'#7ED0F0',coral:'#E1596B',sage:'#3FA484','sage-bright':'#65C7A3','dusty-blue':'#6C7CE0',violet:'#9C82E0',text:'#EAEEF5','text-muted':'#8790A3',line:'rgba(234,238,245,0.09)'},
+  crimson:{label:'Crimson', felt:'#1A0E10','felt-dark':'#120A0B',panel:'#241318','panel-2':'#2E1920','card-face':'#F6F0F0',ink:'#1A0E10',brass:'#D6935A','brass-bright':'#EBAF7C',coral:'#FF6B52',sage:'#4FA484','sage-bright':'#72C4A5','dusty-blue':'#5B8DE0',violet:'#C08CDD',text:'#F3ECEA','text-muted':'#A6949B',line:'rgba(243,236,234,0.09)'}
+};
+var G_theme='emerald';
+function applyTheme(name){
+  var t=THEMES[name]; if(!t) return;
+  G_theme=name;
+  Object.keys(t).forEach(function(k){ if(k!=='label') document.documentElement.style.setProperty('--'+k, t[k]); });
+}
+
+/* ============ WIRING ============ */
+document.querySelectorAll('.bet-spot, .side-spot').forEach(function(el){
+  el.addEventListener('click', function(){ placeBet(el.getAttribute('data-spot')); });
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); removeChipFrom(el.getAttribute('data-spot')); });
+});
+document.querySelectorAll('.chip').forEach(function(el){
+  el.addEventListener('click', function(){ selectChip(parseInt(el.getAttribute('data-chip'),10)); });
+});
+document.getElementById('btn-clear-bets').addEventListener('click', clearBets);
+document.getElementById('btn-all-in').addEventListener('click', betAllIn);
+document.getElementById('btn-deal').addEventListener('click', dealHand);
+['set-commission','sb-dragon7','sb-panda8','sb-dragonbonus','set-sound','set-tooltips','set-showodds','set-decks','set-turbo'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', function(){ readSettings(); renderAll(); });
+});
+document.getElementById('btn-toggle-settings').addEventListener('click', function(){
+  var p=document.getElementById('settings-panel');
+  p.style.display = p.style.display==='none' ? 'block' : 'none';
+});
+document.getElementById('set-theme').addEventListener('change', function(){ applyTheme(this.value); });
+document.getElementById('road-grid').addEventListener('click', function(e){
+  var dot = e.target.closest ? e.target.closest('[data-hand-index]') : null;
+  if(dot){ showHandDetail(parseInt(dot.getAttribute('data-hand-index'),10)); }
+});
+document.getElementById('btn-close-detail').addEventListener('click', hideHandDetail);
+document.getElementById('hand-detail-overlay').addEventListener('click', function(e){
+  if(e.target.id==='hand-detail-overlay'){ hideHandDetail(); }
+});
+document.addEventListener('click', function(e){
+  var openTerms=document.querySelectorAll('.term.open');
+  var clickedTerm=e.target.closest?e.target.closest('.term'):null;
+  openTerms.forEach(function(t){ if(t!==clickedTerm) t.classList.remove('open'); });
+  if(clickedTerm){ e.preventDefault(); clickedTerm.classList.toggle('open'); }
+});
+
+/* ============ INIT ============ */
+G.shoe=buildShoe(8);
+applyTheme('emerald');
+var sharedBalance=loadSharedBankroll();
+if(sharedBalance!==null){ G.bankroll=sharedBalance; } else { saveSharedBankroll(); }
+readSettings();
+renderBoardTabs();
+renderAll();
 </script>
 </body>
 </html>
