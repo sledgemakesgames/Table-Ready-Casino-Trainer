@@ -218,6 +218,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
   <div class="hand-row" id="dealer-cards"></div>
   <div class="hand-total" id="dealer-total">&nbsp;</div>
 
+  <p class="hint-line" id="resume-notice" style="display:none;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the hand you had in progress.</p>
   <p class="hint-line">This is Face-Up Pai Gow — the dealer's hand is set and revealed before you act on your own. Both of your hands must beat both of the dealer's to win. Win one, lose one is a push. Exact ties go to the dealer. Commission-free — but if the dealer's best hand is Ace-high with no pair, your Ante automatically pushes.</p>
 
   <p class="seat-label">You</p>
@@ -870,6 +871,49 @@ function saveSharedBankroll(){
   try{ localStorage.setItem(HOUSE_BANKROLL_KEY, JSON.stringify({balance:G.bankroll, lastUpdated:new Date().toISOString()})); }catch(e){}
 }
 
+/* ============ IN-PROGRESS HAND (per-game, so switching games or navigating home doesn't lose your spot) ============
+   Only the essential data is saved -- the bets and both 7-card hands. Everything else (the dealer's
+   house-way split, ace-high status) is recomputed fresh from those cards on restore rather than
+   saved, since it's all deterministic from the cards alone. This deliberately does not try to
+   replay the reveal animation or preserve exactly which cards the player had picked mid-arrangement
+   -- on restore, the dealer's hand is shown already-set (no animation) and the player starts the
+   arranging step fresh, keeping the restore logic simple and low-risk rather than trying to capture
+   every possible mid-animation moment. */
+var HAND_STATE_KEY = 'house_edge_paigow_hand_v1';
+function saveHandState(){
+  if(!hasStorage()) return;
+  try{
+    localStorage.setItem(HAND_STATE_KEY, JSON.stringify({
+      bets: { ante:G.bets.ante, fortune:G.bets.fortune||0, aceHigh:G.bets.aceHigh||0 },
+      playerCards: G.playerCards,
+      dealerCards: G.dealerCards
+    }));
+  }catch(e){}
+}
+function clearHandState(){
+  if(!hasStorage()) return;
+  try{ localStorage.removeItem(HAND_STATE_KEY); }catch(e){}
+}
+function isValidCardArray(arr){
+  if(!Array.isArray(arr) || arr.length!==7) return false;
+  return arr.every(function(c){
+    if(!c || typeof c!=='object') return false;
+    if(c.joker) return true;
+    return typeof c.rank==='string' && typeof c.suit==='string' && RANK_VAL[c.rank] && SUITS.indexOf(c.suit)!==-1;
+  });
+}
+function loadHandState(){
+  if(!hasStorage()) return null;
+  try{
+    var raw = localStorage.getItem(HAND_STATE_KEY);
+    if(!raw) return null;
+    var parsed = JSON.parse(raw);
+    if(!parsed.bets || !(parsed.bets.ante > 0)) return null;
+    if(!isValidCardArray(parsed.playerCards) || !isValidCardArray(parsed.dealerCards)) return null;
+    return parsed;
+  }catch(e){ return null; }
+}
+
 var G = {
   phase: 'betting', // betting | arranging | revealing | resolved
   bankroll: 1000,
@@ -937,11 +981,13 @@ function dealHand(){
   G.actionLocked = false;
   G.bankroll -= totalBet;
   renderBankroll();
+  saveSharedBankroll(); // persist the deduction immediately -- a hand in progress must not be escapable by refreshing
   sfxDeal();
   var deck = shuffle(freshDeck());
   G.playerCards = deck.slice(0,7);
   G.dealerCards = deck.slice(7,14);
   G.deck = deck.slice(14);
+  saveHandState();
   G.pickedLow = [];
   G.playerHighEval = null; G.playerLowEval = null; G.playerHighCards = null; G.playerLowCards = null;
   G.dealerHighEval = null; G.dealerLowEval = null; G.dealerHighCards = null; G.dealerLowCards = null;
@@ -1254,6 +1300,7 @@ function resolveAceHighPush(){
   pushHistory(0, sideBetResults);
   renderHistory();
 
+  clearHandState();
   G.phase = 'resolved';
   G.actionLocked = false;
   renderActionRow();
@@ -1294,6 +1341,7 @@ function resolveHand(){
   pushHistory(netChange, sideBetResults);
   renderHistory();
 
+  clearHandState();
   G.phase = 'resolved';
   G.actionLocked = false;
   renderActionRow();
@@ -1320,7 +1368,9 @@ function renderHouseWayNote(){
   var matchesHigh = compareHigh(houseSet.highEval, G.playerHighEval)===0;
   var matchesLow = compareLow(houseSet.lowEval, G.playerLowEval)===0;
   G.matchedHouseWay = matchesHigh && matchesLow;
+  G.stats.houseWayChecked = (G.stats.houseWayChecked||0) + 1;
   if(G.matchedHouseWay){
+    G.stats.houseWayMatched = (G.stats.houseWayMatched||0) + 1;
     el.innerHTML = '<span class="label">House way comparison</span>Your split matches the simplified house way for this hand.';
   } else {
     el.innerHTML = '<span class="label">House way comparison</span>The simplified house way would have set High: '+houseSet.highEval.label+' / Low: '+houseSet.lowEval.label+' here. This is a simplified reference, not full optimal strategy \u2014 differing from it doesn\'t necessarily mean your split was wrong.';
@@ -1385,6 +1435,10 @@ function renderStats(){
   if(typeof s.aceHighNet==='number'){
     html += '<div class="stat"><div class="v" style="color:'+(s.aceHighNet>=0?'var(--sage-bright)':'var(--coral)')+';">'+signedMoney(s.aceHighNet)+'</div><div class="k">Ace-High net</div></div>';
   }
+  if(s.houseWayChecked>0){
+    var matchPct = Math.round((s.houseWayMatched/s.houseWayChecked)*1000)/10;
+    html += '<div class="stat"><div class="v">'+matchPct+'%</div><div class="k">House way match</div></div>';
+  }
   el.innerHTML = html;
 }
 function pushHistory(netChange, sideBetResults){
@@ -1438,6 +1492,7 @@ document.getElementById('set-sidebets').addEventListener('change', function(){
 document.getElementById('set-showodds').addEventListener('change', function(){ G.showHouseWayCompare = this.checked; });
 document.getElementById('set-turbo').addEventListener('change', function(){ G.turbo = this.checked; });
 document.getElementById('btn-reset-bankroll-settings').addEventListener('click', function(){
+  if(G.phase!=='betting' && G.phase!=='resolved') return; // can't use reset to escape an in-progress bet
   G.bankroll = 1000;
   renderBankroll();
   saveSharedBankroll();
@@ -1458,6 +1513,62 @@ document.getElementById('spot-acehigh').addEventListener('keydown', function(e){
   if(e.key==='Enter' || e.key===' '){ e.preventDefault(); placeBet('aceHigh'); }
 });
 
+function resumeHand(saved){
+  G.bets.ante = saved.bets.ante;
+  G.bets.fortune = saved.bets.fortune||0;
+  G.bets.aceHigh = saved.bets.aceHigh||0;
+  G.playerCards = saved.playerCards;
+  G.dealerCards = saved.dealerCards;
+  G.pickedLow = [];
+  G.playerHighEval = null; G.playerLowEval = null; G.playerHighCards = null; G.playerLowCards = null;
+  G.dealerHighEval = null; G.dealerLowEval = null; G.dealerHighCards = null; G.dealerLowCards = null;
+  G.result = null; G.matchedHouseWay = null; G.dealerIsAceHigh = false;
+  G.actionLocked = false;
+  G.phase = 'dealer-revealing';
+
+  document.getElementById('outcome-badge').className = 'outcome-badge';
+  document.getElementById('outcome-badge').textContent = '';
+  document.getElementById('why-panel').classList.remove('show');
+  document.getElementById('house-way-note').classList.remove('show');
+  document.getElementById('side-bets-result').classList.remove('show');
+  document.getElementById('bet-row').style.display = 'none';
+  renderPlayerCards();
+  document.getElementById('player-high-total').innerHTML = '&nbsp;';
+  document.getElementById('player-low-total').innerHTML = '&nbsp;';
+  document.getElementById('foul-banner').classList.remove('show');
+  renderActionRow();
+  renderBetCircle();
+
+  var notice = document.getElementById('resume-notice');
+  notice.style.display = '';
+  setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+
+  // The dealer's hand is shown already-set, with no reveal animation -- those cards were dealt in
+  // a previous session, so there's nothing to dramatically flip up here, just the result to show.
+  var dealerSet = setHouseWay(G.dealerCards);
+  G.dealerHighCards = dealerSet.high;
+  G.dealerLowCards = dealerSet.low;
+  G.dealerHighEval = dealerSet.highEval;
+  G.dealerLowEval = dealerSet.lowEval;
+  renderSetHandStatic('dealer-cards', 'dealer-total', G.dealerHighCards, G.dealerLowCards, G.dealerHighEval, G.dealerLowEval);
+
+  var dealerBest7 = bestFiveOfSeven(G.dealerCards);
+  G.dealerIsAceHigh = isAceHighPaiGow(dealerBest7);
+  var resultHtml = 'Dealer sets \u2014 High: <b>'+G.dealerHighEval.label+'</b> &nbsp;|&nbsp; Low: <b>'+G.dealerLowEval.label+'</b>';
+  if(G.dealerIsAceHigh){
+    resultHtml += ' <span style="color:var(--brass-bright);font-weight:700;">\u2014 Ace-High Pai Gow! Your Ante pushes.</span>';
+  }
+  document.getElementById('dealer-total').innerHTML = resultHtml;
+
+  if(G.dealerIsAceHigh){
+    resolveAceHighPush();
+  } else {
+    G.phase = 'arranging';
+    renderArrangementFeedback();
+    renderActionRow();
+  }
+}
+
 /* ============ INIT ============ */
 var sharedBalance = loadSharedBankroll();
 if(sharedBalance!==null){ G.bankroll = sharedBalance; } else { saveSharedBankroll(); }
@@ -1465,7 +1576,12 @@ selectChip(25);
 renderBankroll();
 renderStats();
 renderHistory();
-renderActionRow();
+var savedHand = loadHandState();
+if(savedHand){
+  resumeHand(savedHand);
+} else {
+  renderActionRow();
+}
 
 </script>
 </body>
