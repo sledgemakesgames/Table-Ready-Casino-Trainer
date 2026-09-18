@@ -395,6 +395,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     <button class="primary" id="btn-deal" style="margin-left:auto;">Deal</button>
   </div>
 
+  <p class="hint-line" id="resume-notice" style="display:none;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the hand you had in progress.</p>
   <div class="hands-row" id="hands-row"></div>
   <div class="actions-row" id="actions-row"></div>
   <p class="hint-line" id="hint-chart" style="display:none;">Not sure what to do? The chart below always has the right play.</p>
@@ -1144,6 +1145,52 @@ function loadSharedBankroll(){
     var parsed=JSON.parse(raw);
     if(typeof parsed.balance==='number' && !isNaN(parsed.balance)) return parsed.balance;
     return null;
+  }catch(e){ return null; }
+}
+
+/* ============ IN-PROGRESS HAND (so switching games or navigating home doesn't lose your spot) ============
+   Saved continuously while a hand has any active or dealer-facing state, covering split hands,
+   insurance, and doubles. The dealer's own additional draws (hit until 17+) are randomness-
+   dependent, so rather than trying to preserve the exact remaining shoe, a restore where all
+   player hands are already decided just runs the dealer's draw logic fresh from whatever cards
+   were saved -- the same "fast-forward through remaining randomness" approach used for baccarat's
+   third card. This deliberately does not try to capture bot players (numBots), since they're a
+   cosmetic table-atmosphere feature with no bearing on the real player's bet or outcome. */
+var HAND_STATE_KEY = 'house_edge_blackjack_hand_v1';
+function saveHandState(){
+  if(!hasStorage()) return;
+  try{
+    localStorage.setItem(HAND_STATE_KEY, JSON.stringify({
+      hands: G.hands,
+      dealer: G.dealer,
+      activeIdx: G.activeIdx,
+      holeRevealed: G.holeRevealed,
+      insuranceBet: G.insuranceBet,
+      sbAmounts: G.sbAmounts,
+      sidebets: G.sidebets
+    }));
+  }catch(e){}
+}
+function clearHandState(){
+  if(!hasStorage()) return;
+  try{ localStorage.removeItem(HAND_STATE_KEY); }catch(e){}
+}
+function isValidCard(c){ return c && typeof c==='object' && typeof c.r==='string' && typeof c.suit==='string' && typeof c.v==='number'; }
+function isValidHandObj(h){
+  return h && typeof h==='object' && Array.isArray(h.cards) && h.cards.every(isValidCard) && typeof h.bet==='number' && h.bet>0 && typeof h.status==='string';
+}
+function maybeSaveHandState(){
+  if(G.phase==='player' || G.phase==='dealer' || G.phase==='dealing'){ saveHandState(); }
+}
+function loadHandState(){
+  if(!hasStorage()) return null;
+  try{
+    var raw=localStorage.getItem(HAND_STATE_KEY);
+    if(!raw) return null;
+    var parsed=JSON.parse(raw);
+    if(!Array.isArray(parsed.hands) || parsed.hands.length===0 || !parsed.hands.every(isValidHandObj)) return null;
+    if(!parsed.dealer || !Array.isArray(parsed.dealer.cards) || !parsed.dealer.cards.every(isValidCard) || parsed.dealer.cards.length<1) return null;
+    return parsed;
   }catch(e){ return null; }
 }
 function saveSession(){
@@ -1962,6 +2009,7 @@ function dealerDrawStep(){
 }
 
 function finishRound(){
+  clearHandState();
   G.phase='result';
   var dt=handTotal(G.dealer.cards);
   var dealerBJ = dt.total===21 && G.dealer.cards.length===2;
@@ -2159,6 +2207,7 @@ function showFeedback(action, cls, effectiveAction, correct, note, doubleUnavail
 }
 
 function renderAll(){
+  maybeSaveHandState();
   renderCountBar(); renderSeen();
   var dc=document.getElementById('dealer-cards');
   syncCardsRow(dc, G.dealer.cards, function(i){ return i===1 && !G.holeRevealed; });
@@ -2310,13 +2359,51 @@ document.addEventListener('click', function(e){
   }
 });
 
+function resumeHand(saved){
+  G.hands = saved.hands;
+  G.dealer = saved.dealer;
+  G.activeIdx = saved.activeIdx || 0;
+  G.holeRevealed = !!saved.holeRevealed;
+  G.insuranceBet = saved.insuranceBet || 0;
+  G.sbAmounts = saved.sbAmounts || {};
+  if(saved.sidebets) G.sidebets = saved.sidebets;
+  G.locked = false;
+  G.bots = [];
+
+  var notice = document.getElementById('resume-notice');
+  notice.style.display = '';
+  setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+
+  var anyActive = G.hands.some(function(h){ return h.status==='active'; });
+  if(anyActive){
+    G.phase = 'player';
+    renderAll();
+    syncChartTabToHand();
+  } else {
+    // All hands were already decided when the player left -- the dealer's remaining draws are
+    // randomness-dependent, so rather than trying to preserve the exact shoe, just run the
+    // dealer's draw logic fresh (instant, no animation) from whatever cards were saved.
+    G.phase = 'dealer';
+    var wasTurbo = G.turbo;
+    G.turbo = true;
+    renderAll();
+    playDealer();
+    G.turbo = wasTurbo;
+  }
+}
+
 readSettings();
 buildShoe();
 buildChart('hard');
 applyTheme('emerald');
 applyLoadedSession();
-freshShoeWithPrompt();
-renderAll();
+var savedHand = loadHandState();
+if(savedHand){
+  resumeHand(savedHand);
+} else {
+  freshShoeWithPrompt();
+  renderAll();
+}
 renderHistory();
 buildChart(G.activeTab);
 maybeShowChipsHint();
