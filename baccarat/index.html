@@ -310,6 +310,7 @@ footer{padding:24px 0 10px;text-align:center;font-size:12px;color:var(--text-mut
     </div>
     <p id="quiz-feedback" style="margin-top:10px;display:none;color:var(--text-muted);"></p>
   </div>
+  <div class="why-panel" id="resume-notice" style="display:none;text-align:center;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the hand you had in progress.</div>
   <div class="why-panel" id="third-card-note" style="display:none;"></div>
 
   <div class="outcome-badge" id="outcome-badge"></div>
@@ -764,6 +765,46 @@ function loadSharedBankroll(){
 function saveSharedBankroll(){
   if(!hasStorage()) return;
   try{ localStorage.setItem(HOUSE_BANKROLL_KEY, JSON.stringify({balance:G.bankroll,lastUpdated:new Date().toISOString()})); }catch(e){}
+}
+
+/* ============ IN-PROGRESS HAND (so switching games or navigating home doesn't lose your spot) ============
+   Saved once the third-card decision is made (G.result is then fully self-contained: both final
+   hands, totals, and the outcome). This is deliberately saved AFTER the third-card draw, not at
+   the initial deal, because resolveThirdCards() draws from the shared shoe -- re-running it on
+   restore would draw different random cards and silently produce a different result than what
+   actually happened. There's a brief window between the initial deal and the third-card decision
+   where a refresh wouldn't be resumable, but the bet itself is already safely committed either way. */
+var HAND_STATE_KEY = 'house_edge_baccarat_hand_v1';
+function saveHandState(){
+  if(!hasStorage()) return;
+  try{
+    localStorage.setItem(HAND_STATE_KEY, JSON.stringify({ bets: G.bets, result: G.result }));
+  }catch(e){}
+}
+function clearHandState(){
+  if(!hasStorage()) return;
+  try{ localStorage.removeItem(HAND_STATE_KEY); }catch(e){}
+}
+function isValidHandCards(arr){
+  if(!Array.isArray(arr) || arr.length<2 || arr.length>3) return false;
+  return arr.every(function(c){ return c && typeof c==='object' && typeof c.r==='string' && typeof c.suit==='string'; });
+}
+function loadHandState(){
+  if(!hasStorage()) return null;
+  try{
+    var raw = localStorage.getItem(HAND_STATE_KEY);
+    if(!raw) return null;
+    var parsed = JSON.parse(raw);
+    if(!parsed.bets || totalBetAmountFrom(parsed.bets)<=0) return null;
+    var r = parsed.result;
+    if(!r || !isValidHandCards(r.player) || !isValidHandCards(r.banker)) return null;
+    if(typeof r.playerTotal!=='number' || typeof r.bankerTotal!=='number') return null;
+    if(['player','banker','tie'].indexOf(r.outcome)===-1) return null;
+    return parsed;
+  }catch(e){ return null; }
+}
+function totalBetAmountFrom(bets){
+  return (bets.player||0)+(bets.banker||0)+(bets.tie||0)+(bets.dragon7||0)+(bets.panda8||0)+(bets.dragonP||0)+(bets.dragonB||0);
 }
 
 /* ============ ONBOARDING HINTS (subtle, first-time-only, never repeat) ============ */
@@ -1228,6 +1269,7 @@ function renderPhaseControls(){
   document.getElementById('bankroll-empty').style.display = (G.bankroll<=0 && betting) ? 'flex' : 'none';
 }
 function resetBankroll(){
+  if(G.phase!=='betting' && G.phase!=='done') return; // can't use reset to escape an in-progress bet
   G.bankroll=1000;
   renderAll();
   saveSharedBankroll();
@@ -1297,6 +1339,7 @@ function dealHand(){
   var total=totalBetAmount();
   if(total<=0||total>G.bankroll) return;
   G.bankroll -= total;
+  saveSharedBankroll(); // persist the deduction immediately -- a hand in progress must not be escapable by refreshing
   document.getElementById('banker-cards').innerHTML='';
   document.getElementById('player-cards').innerHTML='';
   document.getElementById('outcome-badge').innerHTML='';
@@ -1385,6 +1428,7 @@ function onInitialCardFlipped(){
   if(G.initialFlipped<4) return;
   // all four initial cards seen — now (and only now) determine whether a third card is needed
   G.result=resolveThirdCards(G.hands, G.shoe);
+  saveHandState();
   var needsPlayerThird=G.result.playerDrewThird;
   var needsBankerThird=G.result.bankerDrewThird;
   G.thirdNeeded=(needsPlayerThird?1:0)+(needsBankerThird?1:0);
@@ -1421,6 +1465,7 @@ function onThirdCardFlipped(){
 }
 
 function finishHand(){
+  clearHandState();
   G.lastBets=Object.assign({},G.bets);
   var net=resolveBets(G.result, G.bets, G.commissionMode);
   var totalNet=net.player+net.banker+net.tie+net.dragon7+net.panda8+net.dragonP+net.dragonB;
@@ -1564,6 +1609,37 @@ document.addEventListener('click', function(e){
   if(clickedTerm){ e.preventDefault(); clickedTerm.classList.toggle('open'); }
 });
 
+function resumeHand(saved){
+  G.bets = saved.bets;
+  G.result = saved.result;
+  G.hands = { player: saved.result.player, banker: saved.result.banker };
+  G.showFeedback = true;
+  G.bankerRevealed = []; G.playerRevealed = [];
+
+  document.getElementById('banker-cards').innerHTML='';
+  document.getElementById('player-cards').innerHTML='';
+  // Build and instantly reveal all the cards from the saved, complete result -- these were
+  // already dealt in a previous session, so there's nothing to animate, just show the outcome.
+  G.result.player.forEach(function(card){
+    var el = makeFaceDownCard(card, 'player');
+    document.getElementById('player-cards').appendChild(el);
+    el.triggerFlip();
+  });
+  G.result.banker.forEach(function(card){
+    var el = makeFaceDownCard(card, 'banker');
+    document.getElementById('banker-cards').appendChild(el);
+    el.triggerFlip();
+  });
+
+  var notice = document.getElementById('resume-notice');
+  if(notice){
+    notice.style.display = '';
+    setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+  }
+
+  finishHand();
+}
+
 /* ============ INIT ============ */
 G.shoe=buildShoe(8);
 applyTheme('emerald');
@@ -1572,7 +1648,12 @@ if(sharedBalance!==null){ G.bankroll=sharedBalance; } else { saveSharedBankroll(
 loadHintsSeen();
 readSettings();
 renderBoardTabs();
-renderAll();
+var savedHand=loadHandState();
+if(savedHand){
+  resumeHand(savedHand);
+} else {
+  renderAll();
+}
 maybeShowChipsHint();
 </script>
 </body>
