@@ -392,6 +392,7 @@ footer{text-align:center;padding:24px 0 10px;font-size:12px;color:var(--text-mut
   <p class="hint-line" id="hint-qualify" style="display:none;">The dealer needs at least a pair to "qualify" — if they don't, your Ante is protected either way.</p>
   <p class="hint-line" id="hint-playbet" style="display:none;">Bet big early with a strong hand (4x), or wait and bet less as more cards are revealed (2x, then 1x).</p>
   <p class="hint-line" id="hint-chart" style="display:none;">Not sure what to do? The strategy chart below always has the right play.</p>
+  <p class="hint-line" id="resume-notice" style="display:none;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the hand you had in progress.</p>
 
   <div class="strategy-hint" id="strategy-hint"></div>
   <div class="outs-panel" id="outs-panel"></div>
@@ -1125,6 +1126,7 @@ function dealHand(){
   if(totalMainBet()>G.bankroll) return;
   G.actionLocked=false;
   G.bankroll -= totalMainBet();
+  saveSharedBankroll(); // persist immediately -- a hand in progress must not be escapable by refreshing
   G.deck = freshDeck();
   maybeShowBasicsHint();
   document.getElementById('dealer-cards').innerHTML='';
@@ -1196,10 +1198,10 @@ function checkAction(){
   renderDecisionFeedback('check');
   if(G.phase==='preflop'){
     G.phase='flop';
-    dealCommunity(3, function(){ switchChartTab('flop'); renderActionRow(); renderStrategyHint(); });
+    dealCommunity(3, function(){ switchChartTab('flop'); renderActionRow(); renderStrategyHint(); saveHandState(); });
   } else if(G.phase==='flop'){
     G.phase='river';
-    dealCommunity(2, function(){ switchChartTab('river'); renderActionRow(); renderStrategyHint(); });
+    dealCommunity(2, function(){ switchChartTab('river'); renderActionRow(); renderStrategyHint(); saveHandState(); });
   }
 }
 function betAction(multiplier){
@@ -1209,6 +1211,7 @@ function betAction(multiplier){
   G.actionLocked=true;
   document.getElementById('inplay-action-row').innerHTML='';
   G.bankroll -= playAmt;
+  saveSharedBankroll();
   G.bets.play = playAmt;
   renderDecisionFeedback('bet');
   if(!(G.showOdds && G.pendingHint)){ document.getElementById('strategy-hint').style.display='none'; }
@@ -1251,6 +1254,7 @@ function dealCommunity(count, cb){
 
 /* ============ SHOWDOWN / RESOLUTION ============ */
 function resolveShowdown(folded){
+  clearHandState();
   G.phase='done';
 
   var playerFull=G.playerCards.concat(G.communityCards);
@@ -1793,6 +1797,7 @@ function renderStats(){
     '<span class="stat-item">Net<span class="sv" style="color:'+(s.net>=0?'var(--sage-bright)':'var(--coral)')+';">'+(s.net>=0?'+':'')+formatMoney(s.net)+'</span></span>';
 }
 function renderAll(){
+  maybeSaveHandState();
   renderBetCircles();
   renderChips();
   renderBankroll();
@@ -1804,6 +1809,54 @@ function saveSharedBankroll(){
   if(!hasStorage()) return;
   try{ localStorage.setItem('house_edge_bankroll_v1', JSON.stringify({balance:G.bankroll, lastUpdated:new Date().toISOString()})); }catch(e){}
 }
+
+/* ============ IN-PROGRESS HAND (so switching games or navigating home doesn't lose your spot) ============
+   Unlike blackjack/baccarat, UTH deals a fresh, fully-shuffled deck per hand rather than drawing
+   from a shared multi-hand shoe -- the entire 9-card outcome (player, dealer, and all 5 community
+   cards) is already fully determined the moment the hand is dealt, even though community cards
+   aren't revealed until later. That means the remaining deck can be saved and restored exactly,
+   so a restore -- even one where the player had already bet and community cards were still being
+   revealed -- reproduces precisely what would have happened, with no fast-forward-through-fresh-
+   randomness simplification needed. */
+var HAND_STATE_KEY = 'house_edge_uth_hand_v1';
+function saveHandState(){
+  if(!hasStorage()) return;
+  try{
+    localStorage.setItem(HAND_STATE_KEY, JSON.stringify({
+      bets: G.bets,
+      deck: G.deck,
+      playerCards: G.playerCards,
+      dealerCards: G.dealerCards,
+      communityCards: G.communityCards,
+      phase: G.phase,
+      lastDecisions: G.lastDecisions
+    }));
+  }catch(e){}
+}
+function clearHandState(){
+  if(!hasStorage()) return;
+  try{ localStorage.removeItem(HAND_STATE_KEY); }catch(e){}
+}
+function isValidUthCard(c){ return c && typeof c==='object' && typeof c.rank==='number' && c.rank>=2 && c.rank<=14 && ['s','h','d','c'].indexOf(c.suit)!==-1; }
+function maybeSaveHandState(){
+  if(['preflop','flop','river','showdown-pending'].indexOf(G.phase)!==-1){ saveHandState(); }
+}
+function loadHandState(){
+  if(!hasStorage()) return null;
+  try{
+    var raw=localStorage.getItem(HAND_STATE_KEY);
+    if(!raw) return null;
+    var parsed=JSON.parse(raw);
+    if(!parsed.bets || !(parsed.bets.ante>0)) return null;
+    if(!Array.isArray(parsed.playerCards) || parsed.playerCards.length!==2 || !parsed.playerCards.every(isValidUthCard)) return null;
+    if(!Array.isArray(parsed.dealerCards) || parsed.dealerCards.length!==2 || !parsed.dealerCards.every(isValidUthCard)) return null;
+    if(!Array.isArray(parsed.communityCards) || parsed.communityCards.length>5 || !parsed.communityCards.every(isValidUthCard)) return null;
+    if(!Array.isArray(parsed.deck) || !parsed.deck.every(isValidUthCard)) return null;
+    if(['preflop','flop','river','showdown-pending'].indexOf(parsed.phase)===-1) return null;
+    return parsed;
+  }catch(e){ return null; }
+}
+
 function loadSharedBankroll(){
   var loaded=false;
   if(hasStorage()){
@@ -1930,7 +1983,7 @@ document.getElementById('set-pairglow').addEventListener('change', function(){
 });
 document.getElementById('set-turbo').addEventListener('change', function(){ G.turbo=this.checked; });
 document.getElementById('sb-trips').addEventListener('change', function(){ G.tripsEnabled=this.checked; renderBetCircles(); });
-function resetBankroll(){ G.bankroll=1000; G.bets={ante:0,blind:0,trips:0,play:0}; G.phase='betting'; saveSharedBankroll(); renderAll(); }
+function resetBankroll(){ if(G.phase!=='betting' && G.phase!=='done') return; G.bankroll=1000; G.bets={ante:0,blind:0,trips:0,play:0}; G.phase='betting'; saveSharedBankroll(); renderAll(); }
 document.getElementById('btn-reset-bankroll').addEventListener('click', resetBankroll);
 document.getElementById('btn-reset-bankroll-settings').addEventListener('click', resetBankroll);
 
@@ -1957,6 +2010,50 @@ document.getElementById('btn-level-advanced').addEventListener('click', function
 document.getElementById('tab-preflop').addEventListener('click', function(){ switchChartTab('preflop'); });
 document.getElementById('tab-flop').addEventListener('click', function(){ switchChartTab('flop'); });
 document.getElementById('tab-river').addEventListener('click', function(){ switchChartTab('river'); });
+function resumeHand(saved){
+  G.bets = saved.bets;
+  G.deck = saved.deck;
+  G.playerCards = saved.playerCards;
+  G.dealerCards = saved.dealerCards;
+  G.communityCards = saved.communityCards;
+  G.phase = saved.phase;
+  G.lastDecisions = saved.lastDecisions || {preflop:null, flop:null, river:null};
+  G.actionLocked = false;
+  G.result = null;
+  G.playerFlipCount = 2;
+  G.playerRevealed = G.playerCards.slice();
+
+  document.getElementById('player-cards').innerHTML = '';
+  G.playerCards.forEach(function(card){ document.getElementById('player-cards').appendChild(makeFaceUpCard(card)); });
+  renderDealerBacks();
+  document.getElementById('community-cards').innerHTML = '';
+  G.communityCards.forEach(function(card){ document.getElementById('community-cards').appendChild(makeFaceUpCard(card)); });
+
+  var notice = document.getElementById('resume-notice');
+  notice.style.display = '';
+  setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+
+  if(G.phase==='showdown-pending'){
+    // The player had already committed (bet) when they left -- the deck was saved exactly as it
+    // stood at that moment, so revealing the rest of it now reproduces precisely what would have
+    // happened, unlike blackjack/baccarat's shared-shoe case which needed a fresh continuation.
+    while(G.communityCards.length<5){
+      var card=G.deck.pop();
+      G.communityCards.push(card);
+      document.getElementById('community-cards').appendChild(makeFaceUpCard(card));
+    }
+    renderAll();
+    resolveShowdown();
+  } else {
+    switchChartTab(G.phase);
+    renderHandValues();
+    renderLivePairHighlights();
+    renderCommunityPairOuts();
+    renderActionRow();
+    renderAll();
+  }
+}
+
 document.addEventListener('click', function(e){
   var openTerms=document.querySelectorAll('.term.open');
   var clickedTerm=e.target.closest?e.target.closest('.term'):null;
@@ -1970,10 +2067,15 @@ applyTheme('emerald');
 loadSharedBankroll();
 loadHintState();
 applySkillLevel();
-maybeShowSkillPrompt();
-maybeShowChipsHint();
-selectChip(25);
-renderAll();
+var savedHand=loadHandState();
+if(savedHand){
+  resumeHand(savedHand);
+} else {
+  maybeShowSkillPrompt();
+  maybeShowChipsHint();
+  selectChip(25);
+  renderAll();
+}
 
 </script>
 </body>
