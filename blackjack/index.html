@@ -1286,7 +1286,7 @@ document.getElementById('bet-allin').addEventListener('click', function(){
   });
   setBet(G.bankroll - sbTotal);
 });
-function resetBankroll(){ G.bankroll=1000; renderAll(); saveSession(); }
+function resetBankroll(){ if(G.phase!=='betting' && G.phase!=='result') return; G.bankroll=1000; renderAll(); saveSession(); }
 document.getElementById('btn-reset-bankroll').addEventListener('click', resetBankroll);
 document.getElementById('btn-reset-bankroll-settings').addEventListener('click', resetBankroll);
 setBet(0);
@@ -1646,6 +1646,7 @@ function startDeal(){
   });
   if(bet+sbTotal>G.bankroll){ alert("That's more than your bankroll — lower the bet."); return; }
   G.bankroll -= (bet+sbTotal);
+  saveSharedBankroll(); // persist immediately -- a hand in progress must not be escapable by refreshing
   document.getElementById('feedback-zone').innerHTML='';
   document.getElementById('result-zone').innerHTML='';
   G.dealer={cards:[]};
@@ -1732,6 +1733,7 @@ function showInsuranceOffer(){
     var amt=Math.min(maxAllowed, Math.max(0, parseInt(document.getElementById('insurance-amt').value,10)||0), G.bankroll);
     G.insuranceBet=amt;
     G.bankroll -= amt;
+    saveSharedBankroll();
     logInsuranceDecision(true, tc);
     document.getElementById('feedback-zone').innerHTML='';
     renderAll();
@@ -1873,6 +1875,7 @@ function doAction(action){
     if(!isFreeDouble(h)){
       if(G.bankroll<h.bet){ alert("You don't have enough bankroll to double this bet."); return; }
       G.bankroll -= h.bet; h.bet*=2;
+      saveSharedBankroll();
     } else {
       h.freeDoubleBonus = h.bet;
     }
@@ -1893,7 +1896,7 @@ function doAction(action){
   } else if(action==='P'){
     if(!canSplit(h)) return;
     var free = isFreeSplit(h);
-    if(!free){ if(G.bankroll<h.bet){ return; } G.bankroll -= h.bet; }
+    if(!free){ if(G.bankroll<h.bet){ return; } G.bankroll -= h.bet; saveSharedBankroll(); }
     var aceSplit = h.cards[0].r==='A';
     var c2=h.cards.pop();
     h.cards.push(draw());
