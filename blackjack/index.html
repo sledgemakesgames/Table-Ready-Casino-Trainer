@@ -1389,6 +1389,7 @@ function cardIdxHTML(card){
 function cardEl(card, faceDown){
   var d=document.createElement('div');
   d.className='card'+(faceDown?' back':'')+(card&&card.color==='red'&&!faceDown?' red':'');
+  d.dataset.cardKey = faceDown ? 'back' : (card ? (card.r+card.suit) : '');
   if(faceDown){
     d.textContent='?';
   } else {
@@ -1408,7 +1409,8 @@ function syncCardsRow(container, cards, hideFn){
     if(i < container.children.length){
       var existing = container.children[i];
       var isBack = existing.classList.contains('back');
-      if(isBack !== shouldHide){
+      var expectedKey = shouldHide ? 'back' : (cards[i].r+cards[i].suit);
+      if(isBack !== shouldHide || existing.dataset.cardKey !== expectedKey){
         container.replaceChild(cardEl(cards[i], shouldHide), existing);
       }
     } else {
