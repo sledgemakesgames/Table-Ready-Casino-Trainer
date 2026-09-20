@@ -209,6 +209,13 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
   <div class="check-row"><input type="checkbox" id="set-showodds" checked><label for="set-showodds">Show house-way comparison after each hand</label></div>
   <div class="check-row"><input type="checkbox" id="set-turbo"><label for="set-turbo">Turbo — instant reveal, no pauses</label></div>
   <button id="btn-reset-bankroll-settings" style="margin-top:8px;">Reset bankroll to 1000</button>
+  <label style="display:block;font-size:13px;margin:10px 0 6px;">Theme</label>
+  <select id="set-theme">
+    <option value="graphite">Graphite</option>
+    <option value="emerald" selected>Emerald Felt</option>
+    <option value="midnight">Midnight</option>
+    <option value="crimson">Crimson</option>
+  </select>
 </div>
 
 <div class="layout-grid">
@@ -297,6 +304,20 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 </div>
 
 <script>
+/* ============ THEMES ============ */
+var THEMES={
+  graphite:{label:'Graphite', felt:'#0C0D10','felt-dark':'#08090B',panel:'#15171B','panel-2':'#1D2025','card-face':'#F4F5F7',ink:'#15171B',brass:'#D6A94B','brass-bright':'#F0C46B',coral:'#E15D45',sage:'#3FA484','sage-bright':'#65C7A3','dusty-blue':'#5B8DE0',violet:'#9C82E0',text:'#EDEEF0','text-muted':'#8A8F98',line:'rgba(237,238,240,0.09)'},
+  emerald:{label:'Emerald Felt', felt:'#0F3D36','felt-dark':'#0A2B26',panel:'#123832','panel-2':'#163F38','card-face':'#F7F3E9',ink:'#16211C',brass:'#C9A24B','brass-bright':'#E8C468',coral:'#C1563F',sage:'#6E8F79','sage-bright':'#8FB49E','dusty-blue':'#5C82A0',violet:'#8F7CB8',text:'#E8E4D8','text-muted':'#9FB5AE',line:'rgba(232,228,216,0.14)'},
+  midnight:{label:'Midnight', felt:'#0B0F1A','felt-dark':'#060810',panel:'#131826','panel-2':'#1B2233','card-face':'#F2F4F8',ink:'#12141C',brass:'#4FB8E0','brass-bright':'#7ED0F0',coral:'#E1596B',sage:'#3FA484','sage-bright':'#65C7A3','dusty-blue':'#6C7CE0',violet:'#9C82E0',text:'#EAEEF5','text-muted':'#8790A3',line:'rgba(234,238,245,0.09)'},
+  crimson:{label:'Crimson', felt:'#1A0E10','felt-dark':'#120A0B',panel:'#241318','panel-2':'#2E1920','card-face':'#F6F0F0',ink:'#1A0E10',brass:'#D6935A','brass-bright':'#EBAF7C',coral:'#FF6B52',sage:'#4FA484','sage-bright':'#72C4A5','dusty-blue':'#5B8DE0',violet:'#C08CDD',text:'#F3ECEA','text-muted':'#A6949B',line:'rgba(243,236,234,0.09)'}
+};
+var G_theme='emerald';
+function applyTheme(name){
+  var t=THEMES[name]; if(!t) return;
+  G_theme=name;
+  Object.keys(t).forEach(function(k){ if(k!=='label') document.documentElement.style.setProperty('--'+k, t[k]); });
+}
+
 // ============ PAI GOW POKER CORE ENGINE ============
 // Verified against: Wizard of Odds (wizardofodds.com/games/pai-gow-poker/), Pennsylvania Gaming
 // Code 58 Pa. Code §645a.6, Maryland MDGaming Standard Rules, Nevada Gaming Commission STAX
@@ -1477,6 +1498,7 @@ document.getElementById('btn-toggle-settings').addEventListener('click', functio
   var p = document.getElementById('settings-panel');
   p.style.display = p.style.display==='none' ? '' : 'none';
 });
+document.getElementById('set-theme').addEventListener('change', function(){ applyTheme(this.value); });
 document.getElementById('set-sound').addEventListener('change', function(){ G.soundOn = this.checked; });
 document.getElementById('set-sidebets').addEventListener('change', function(){
   G.sideBetsEnabled = this.checked;
@@ -1570,6 +1592,7 @@ function resumeHand(saved){
 }
 
 /* ============ INIT ============ */
+applyTheme('emerald');
 var sharedBalance = loadSharedBankroll();
 if(sharedBalance!==null){ G.bankroll = sharedBalance; } else { saveSharedBankroll(); }
 selectChip(25);
