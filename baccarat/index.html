@@ -778,7 +778,7 @@ var HAND_STATE_KEY = 'house_edge_baccarat_hand_v1';
 function saveHandState(){
   if(!hasStorage()) return;
   try{
-    localStorage.setItem(HAND_STATE_KEY, JSON.stringify({ bets: G.bets, result: G.result }));
+    localStorage.setItem(HAND_STATE_KEY, JSON.stringify({ bets: G.bets, hands: G.hands, result: G.result }));
   }catch(e){}
 }
 function clearHandState(){
@@ -796,10 +796,18 @@ function loadHandState(){
     if(!raw) return null;
     var parsed = JSON.parse(raw);
     if(!parsed.bets || totalBetAmountFrom(parsed.bets)<=0) return null;
-    var r = parsed.result;
-    if(!r || !isValidHandCards(r.player) || !isValidHandCards(r.banker)) return null;
-    if(typeof r.playerTotal!=='number' || typeof r.bankerTotal!=='number') return null;
-    if(['player','banker','tie'].indexOf(r.outcome)===-1) return null;
+    if(parsed.result){
+      var r = parsed.result;
+      if(!isValidHandCards(r.player) || !isValidHandCards(r.banker)) return null;
+      if(typeof r.playerTotal!=='number' || typeof r.bankerTotal!=='number') return null;
+      if(['player','banker','tie'].indexOf(r.outcome)===-1) return null;
+    } else {
+      // The player left before the third-card decision was even made (e.g. before manually
+      // revealing all four initial cards) -- only the raw dealt hands were saved, not yet a
+      // computed result. isValidHandCards requires 2-3 cards; the initial deal is exactly 2.
+      if(!parsed.hands || !isValidHandCards(parsed.hands.player) || parsed.hands.player.length!==2) return null;
+      if(!isValidHandCards(parsed.hands.banker) || parsed.hands.banker.length!==2) return null;
+    }
     return parsed;
   }catch(e){ return null; }
 }
@@ -1354,6 +1362,7 @@ function dealHand(){
   G.bankerRevealed=[]; G.playerRevealed=[];
   G.hands=dealInitialHands(G.shoe);
   G.result=null;
+  saveHandState(); // save immediately -- don't wait for the player to manually reveal every card
   maybeShowBasicsHint();
 
   G.initialFlipped=0;
@@ -1611,8 +1620,16 @@ document.addEventListener('click', function(e){
 
 function resumeHand(saved){
   G.bets = saved.bets;
-  G.result = saved.result;
-  G.hands = { player: saved.result.player, banker: saved.result.banker };
+  if(saved.result){
+    G.result = saved.result;
+    G.hands = { player: saved.result.player, banker: saved.result.banker };
+  } else {
+    // The player left before the third-card decision was made -- only the raw dealt hands were
+    // saved. Compute the result fresh from the restored page's own shoe: since the player never
+    // watched any of this happen, this is no less faithful than what they'd have seen live.
+    G.hands = saved.hands;
+    G.result = resolveThirdCards(G.hands, G.shoe);
+  }
   G.showFeedback = true;
   G.bankerRevealed = []; G.playerRevealed = [];
 
