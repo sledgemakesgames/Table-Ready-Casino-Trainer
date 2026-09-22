@@ -430,6 +430,8 @@ footer{text-align:center;padding:24px 0 10px;font-size:12px;color:var(--text-mut
     <button class="chip chip-100" data-chip="100">100</button>
     <button class="chip chip-500" data-chip="500">500</button>
     <button class="chip chip-1000" data-chip="1000">1K</button>
+    <button id="btn-bet-half" style="font-size:12px;">½x</button>
+    <button id="btn-bet-double" style="font-size:12px;">2x</button>
     <button id="btn-clear-bets">Clear bets</button>
   </div>
   <p class="chip-hint" id="chip-hint">Pick a chip, click Ante or Blind to bet it (they stay equal). Holding <b id="active-chip-label">$25</b>.</p>
@@ -1106,6 +1108,20 @@ function placeBet(spot){
   sfxChip();
   renderAll();
 }
+function betHalf(){
+  if(G.phase!=='betting') return;
+  if(G.bets.ante>0){ G.bets.ante=Math.floor(G.bets.ante/2); G.bets.blind=G.bets.ante; }
+  if(G.bets.trips>0){ G.bets.trips=Math.floor(G.bets.trips/2); }
+  sfxChip();
+  renderAll();
+}
+function betDouble(){
+  if(G.phase!=='betting') return;
+  if(G.bets.ante>0){ G.bets.ante=G.bets.ante*2; G.bets.blind=G.bets.ante; }
+  if(G.bets.trips>0){ G.bets.trips=G.bets.trips*2; }
+  sfxChip();
+  renderAll();
+}
 function clearBets(){
   if(G.phase!=='betting') return;
   G.bets.ante=0; G.bets.blind=0; G.bets.trips=0; G.bets.play=0;
@@ -1750,7 +1766,7 @@ function renderBetCircles(){
 }
 function renderChips(){
   var betting = G.phase==='betting';
-  document.querySelectorAll('.chip, #btn-clear-bets').forEach(function(b){ b.disabled=!betting; });
+  document.querySelectorAll('.chip, #btn-clear-bets, #btn-bet-half, #btn-bet-double').forEach(function(b){ b.disabled=!betting; });
 }
 function renderBankroll(){
   document.getElementById('bankroll-amount').textContent=formatMoney(G.bankroll);
@@ -1960,6 +1976,8 @@ document.getElementById('spot-trips').addEventListener('click', function(){ plac
   });
 });
 document.getElementById('btn-clear-bets').addEventListener('click', clearBets);
+document.getElementById('btn-bet-half').addEventListener('click', betHalf);
+document.getElementById('btn-bet-double').addEventListener('click', betDouble);
 document.getElementById('btn-toggle-settings').addEventListener('click', function(){
   var p=document.getElementById('settings-panel');
   p.style.display = p.style.display==='none' ? 'block' : 'none';
