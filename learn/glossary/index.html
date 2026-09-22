@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Glossary — Table Ready</title>
-<meta name="description" content="Every term from Blackjack and Baccarat, explained in one line each — soft 17, commission, the third-card rule, and everything in between.">
+<meta name="description" content="Every term from Blackjack, Baccarat, Pai Gow Poker, and Ultimate Texas Hold'em, explained in one line each — soft 17, commission, the third-card rule, and everything in between.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Table Ready">
 <meta property="og:title" content="Glossary — Table Ready">
-<meta property="og:description" content="Every term from Blackjack and Baccarat, explained in one line each.">
+<meta property="og:description" content="Every term from Blackjack, Baccarat, Pai Gow Poker, and Ultimate Texas Hold'em, explained in one line each.">
 <meta property="og:url" content="https://tableready.xyz/learn/glossary/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
 :root{
   --felt:#0C0D10; --felt-dark:#08090B; --panel:#15171B; --panel-2:#1D2025;
   --brass:#D6A94B; --brass-bright:#F0C46B;
-  --coral:#E15D45; --sage-bright:#65C7A3; --dusty-blue:#5B8DE0;
+  --coral:#E15D45; --sage-bright:#65C7A3; --dusty-blue:#5B8DE0; --violet:#9C82E0;
   --text:#EDEEF0; --text-muted:#8A8F98; --line:rgba(237,238,240,0.09);
 }
 *{box-sizing:border-box;}
@@ -61,6 +61,8 @@ a{color:inherit;}
 .term-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:2px 7px;border-radius:5px;}
 .term-tag.bj{background:rgba(91,141,224,0.15);color:var(--dusty-blue);}
 .term-tag.bc{background:rgba(101,199,163,0.15);color:var(--sage-bright);}
+.term-tag.uth{background:rgba(156,130,224,0.15);color:var(--violet);}
+.term-tag.pg{background:rgba(225,93,69,0.15);color:var(--coral);}
 .term-tag.gen{background:rgba(214,169,75,0.15);color:var(--brass-bright);}
 .term-def{font-size:13.5px;color:var(--text-muted);line-height:1.55;margin:0;}
 .no-results{text-align:center;color:var(--text-muted);font-size:14px;padding:40px 24px;display:none;}
@@ -82,7 +84,7 @@ footer{text-align:center;padding:20px 24px 60px;font-size:12px;color:var(--text-
   <div class="hero-glow"></div>
   <p class="eyebrow">Reference</p>
   <h1>The glossary</h1>
-  <p>Every term from both games, in one line each. Search, or filter by table.</p>
+  <p>Every term from all four games, in one line each. Search, or filter by table.</p>
   <div class="search-wrap">
     <input type="text" class="search-input" id="search" placeholder="Search a term, like &quot;soft 17&quot; or &quot;commission&quot;" aria-label="Search the glossary">
   </div>
@@ -92,6 +94,8 @@ footer{text-align:center;padding:20px 24px 60px;font-size:12px;color:var(--text-
   <button class="filter-btn active" data-filter="all">All terms</button>
   <button class="filter-btn" data-filter="bj">Blackjack</button>
   <button class="filter-btn" data-filter="bc">Baccarat</button>
+  <button class="filter-btn" data-filter="pg">Pai Gow</button>
+  <button class="filter-btn" data-filter="uth">Hold'em</button>
   <button class="filter-btn" data-filter="gen">General</button>
 </div>
 
@@ -129,7 +133,26 @@ var TERMS = [
   {tag:'bc', name:'Dragon Bonus', def:'A side bet on Player or Banker winning by a wide margin, or with a natural. Bigger margins pay more.'},
   {tag:'bc', name:'Big Road', def:'A grid tracking the pattern of past hands, where streaks of the same winner stack down a column.'},
   {tag:'bc', name:'Bead Plate', def:'The simplest way to track past hands \u2014 one dot per hand, in the order they happened.'},
-  {tag:'bc', name:'Squeeze', def:'A tradition at bigger tables where the player with the largest bet slowly reveals their own cards. Not done at mini-baccarat.'}
+  {tag:'bc', name:'Squeeze', def:'A tradition at bigger tables where the player with the largest bet slowly reveals their own cards. Not done at mini-baccarat.'},
+
+  {tag:'pg', name:'High hand / Low hand', def:'Your seven cards split into a five-card hand and a two-card hand. Both have to beat the dealer\\u2019s corresponding hand to win.'},
+  {tag:'pg', name:'Setting the hand', def:'Deciding how to split your seven cards into high and low. Once confirmed, it can\\u2019t be changed.'},
+  {tag:'pg', name:'Foul', def:'Setting your low hand stronger than your high hand. An automatic loss, no matter how good the cards were.'},
+  {tag:'pg', name:'Joker', def:'The one wild card in the deck \\u2014 but only semi-wild. It plays as an Ace, or completes a straight or flush. It can never just become a matching card to make a pair.'},
+  {tag:'pg', name:'House way', def:'A fixed set of rules for splitting a hand, used by the dealer and offered as an optional auto-set for players.'},
+  {tag:'pg', name:'Banker copy', def:'An exact tie between your hand and the dealer\\u2019s. Unlike most games, the tie goes to the dealer \\u2014 you lose.'},
+  {tag:'pg', name:'Ace-High Pai Gow', def:'When the dealer\\u2019s best possible hand is just an Ace on top with no pair anywhere. Your Ante pushes automatically, no matter what you were dealt.'},
+  {tag:'pg', name:'Fortune Bonus', def:'An optional side bet on your own seven cards alone, paying out on a strong hand regardless of whether you beat the dealer.'},
+  {tag:'pg', name:'Ace-High bonus', def:'An optional side bet that pays when the dealer is forced into an Ace-High Pai Gow.'},
+  {tag:'pg', name:'Commission-free', def:'This variant doesn\\u2019t take a cut out of winning bets, unlike some Pai Gow tables that charge 5% on wins.'},
+
+  {tag:'uth', name:'Ante / Blind', def:'Two mandatory, equal bets placed before any cards are dealt. Blind only pays extra on a straight or better; otherwise it just pushes.'},
+  {tag:'uth', name:'Play bet', def:'Your one raise of the hand, sized 4x the Ante pre-flop, 2x after the flop, or 1x at the river. Once placed, no more community cards change your decision.'},
+  {tag:'uth', name:'Trips', def:'An optional side bet on your own final five-card hand alone, win or lose against the dealer \u2014 it even pays if you fold the main hand.'},
+  {tag:'uth', name:'Qualify', def:'The dealer needs at least a pair to \u201cqualify.\u201d If they don\u2019t, your Ante pushes no matter who actually wins the hand.'},
+  {tag:'uth', name:'Hidden pair', def:'A pair made using at least one of your own hole cards, so the dealer can\u2019t see it forming on the board the way an obvious board pair would.'},
+  {tag:'uth', name:'Board', def:'The five shared community cards \u2014 three at the flop, then two more at the turn and river \u2014 that both you and the dealer can use.'},
+  {tag:'uth', name:'Qualifying hand (dealer outs)', def:'At the river, the number of possible dealer hole cards that would beat you. Fewer outs favors betting; more favors folding.'}
 ];
 
 var termCardEntries = [];
@@ -141,9 +164,11 @@ function renderGlossary(){
   var sections = [
     {key:'gen', label:'General'},
     {key:'bj', label:'Blackjack'},
-    {key:'bc', label:'Baccarat'}
+    {key:'bc', label:'Baccarat'},
+    {key:'pg', label:'Pai Gow Poker'},
+    {key:'uth', label:'Ultimate Texas Hold\u2019em'}
   ];
-  var tagLabel = {bj:'BJ', bc:'BAC', gen:'GEN'};
+  var tagLabel = {bj:'BJ', bc:'BAC', pg:'PG', uth:'UTH', gen:'GEN'};
   sections.forEach(function(sec){
     var terms = TERMS.filter(function(t){ return t.tag===sec.key; });
     var sectionEl = document.createElement('div');
