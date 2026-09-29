@@ -400,6 +400,7 @@ footer{padding:24px 0 10px;text-align:center;font-size:12px;color:var(--text-mut
   </div>
   <p class="hint-line" id="hint-chips" style="display:none;">These are your chips — pick one, then click a table spot to bet it.</p>
   <p class="chip-hint">Pick a chip, then click a betting spot to place it. Right-click a spot to remove one chip. Currently holding <b id="active-chip-label">$25</b>.</p>
+  <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
 
   <div class="deal-row">
     <button class="primary" id="btn-deal">Deal</button>
@@ -765,6 +766,17 @@ function loadSharedBankroll(){
 function saveSharedBankroll(){
   if(!hasStorage()) return;
   try{ localStorage.setItem(HOUSE_BANKROLL_KEY, JSON.stringify({balance:G.bankroll,lastUpdated:new Date().toISOString()})); }catch(e){}
+}
+function checkBankruptcy(){
+  if(G.bankroll > 0) return;
+  G.bankroll = 1000;
+  saveSharedBankroll();
+  renderBankroll();
+  var notice = document.getElementById('bankruptcy-notice');
+  if(notice){
+    notice.style.display = '';
+    setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+  }
 }
 
 /* ============ IN-PROGRESS HAND (so switching games or navigating home doesn't lose your spot) ============
@@ -1514,6 +1526,7 @@ function finishHand(){
     if(totalNet>0) sfxWin(); else if(totalNet<0) sfxLose(); else sfxPush();
   }
   saveSharedBankroll();
+  checkBankruptcy();
   renderAll();
   setTimeout(function(){ nextHand(); }, T(RESULT_PAUSE));
 }
