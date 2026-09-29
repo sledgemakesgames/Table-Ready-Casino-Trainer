@@ -436,6 +436,7 @@ footer{text-align:center;padding:24px 0 10px;font-size:12px;color:var(--text-mut
   </div>
   <p class="chip-hint" id="chip-hint">Pick a chip, click Ante or Blind to bet it (they stay equal). Holding <b id="active-chip-label">$25</b>.</p>
   <p class="hint-line" id="hint-chips" style="display:none;">These are your chips — pick one, then click Ante or Blind to bet it.</p>
+  <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
 
   <div class="action-row" id="action-row">
     <button class="primary" id="btn-deal" disabled>Deal</button>
@@ -1324,6 +1325,7 @@ function resolveShowdown(folded){
     renderHistory();
     if(totalNet>0) sfxWin(); else if(totalNet<0) sfxLose();
     saveSharedBankroll();
+    checkBankruptcy();
     renderAll();
 
     setTimeout(function(){
@@ -1826,6 +1828,17 @@ function hasStorage(){ try{ return typeof localStorage!=='undefined' && localSto
 function saveSharedBankroll(){
   if(!hasStorage()) return;
   try{ localStorage.setItem('house_edge_bankroll_v1', JSON.stringify({balance:G.bankroll, lastUpdated:new Date().toISOString()})); }catch(e){}
+}
+function checkBankruptcy(){
+  if(G.bankroll > 0) return;
+  G.bankroll = 1000;
+  saveSharedBankroll();
+  renderBankroll();
+  var notice = document.getElementById('bankruptcy-notice');
+  if(notice){
+    notice.style.display = '';
+    setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+  }
 }
 
 /* ============ IN-PROGRESS HAND (so switching games or navigating home doesn't lose your spot) ============
