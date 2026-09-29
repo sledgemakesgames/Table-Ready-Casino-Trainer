@@ -378,6 +378,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
         <button id="bet-clear" style="font-size:12px;">Clear</button>
       </div>
       <p class="hint-line" id="hint-chips" style="display:none;">These are your chips — pick an amount, then hit Deal to start.</p>
+      <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
       <p id="bet-tip" style="font-size:11.5px;color:var(--text-muted);margin:6px 0 0;"></p>
     </div>
     <label class="field" id="sb-pp-amt-wrap" style="display:none;">Perfect Pairs
@@ -1136,6 +1137,17 @@ function saveSharedBankroll(){
   try{
     localStorage.setItem(HOUSE_BANKROLL_KEY, JSON.stringify({balance:G.bankroll, lastUpdated:new Date().toISOString()}));
   }catch(e){}
+}
+function checkBankruptcy(){
+  if(G.bankroll > 0) return;
+  G.bankroll = 1000;
+  saveSharedBankroll();
+  renderAll();
+  var notice = document.getElementById('bankruptcy-notice');
+  if(notice){
+    notice.style.display = '';
+    setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+  }
 }
 function loadSharedBankroll(){
   if(!hasStorage()) return null;
@@ -2128,6 +2140,7 @@ function finishRound(){
   else { sfxPush(); }
   if(G.shoe.length<=G.cutCardThreshold){ G.needsReshuffle=true; }
   saveSession();
+  checkBankruptcy();
 
   setTimeout(function(){
     document.getElementById('feedback-zone').innerHTML='';
