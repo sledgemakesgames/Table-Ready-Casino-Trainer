@@ -265,6 +265,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
       <button id="btn-bet-double" style="font-size:12px;">2x</button>
     </div>
     <p class="chip-hint">Pick a chip, then click a spot to bet it. Holding <b id="active-chip-label">$25</b>.</p>
+    <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
   </div>
 
   <div class="action-row" id="action-row"></div>
@@ -896,6 +897,17 @@ function saveSharedBankroll(){
   if(!hasStorage()) return;
   try{ localStorage.setItem(HOUSE_BANKROLL_KEY, JSON.stringify({balance:G.bankroll, lastUpdated:new Date().toISOString()})); }catch(e){}
 }
+function checkBankruptcy(){
+  if(G.bankroll > 0) return;
+  G.bankroll = 1000;
+  saveSharedBankroll();
+  renderBankroll();
+  var notice = document.getElementById('bankruptcy-notice');
+  if(notice){
+    notice.style.display = '';
+    setTimeout(function(){ notice.style.display = 'none'; }, 6000);
+  }
+}
 
 /* ============ IN-PROGRESS HAND (per-game, so switching games or navigating home doesn't lose your spot) ============
    Only the essential data is saved -- the bets and both 7-card hands. Everything else (the dealer's
@@ -1345,6 +1357,7 @@ function resolveAceHighPush(){
   renderHistory();
 
   clearHandState();
+  checkBankruptcy();
   G.phase = 'resolved';
   G.actionLocked = false;
   renderActionRow();
@@ -1386,6 +1399,7 @@ function resolveHand(){
   renderHistory();
 
   clearHandState();
+  checkBankruptcy();
   G.phase = 'resolved';
   G.actionLocked = false;
   renderActionRow();
