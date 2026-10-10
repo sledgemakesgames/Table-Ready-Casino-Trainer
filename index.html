@@ -56,23 +56,30 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
 .cta svg{transition:transform 160ms ease;}
 .cta:hover svg{transform:translateX(3px);}
 .hero-anim{flex-shrink:0;position:relative;width:220px;height:190px;}
-.deck-stack{position:absolute;left:50%;top:50%;}
-.deck-card{position:absolute;width:104px;height:138px;border-radius:10px;background-color:var(--panel-2);border:1.5px solid var(--brass);background-image:repeating-linear-gradient(45deg, var(--brass) 0, var(--brass) 1.5px, transparent 1.5px, transparent 9px);box-shadow:0 12px 28px -12px rgba(0,0,0,0.55);}
-.deck-card::after{content:'';position:absolute;inset:0;background:var(--panel-2);opacity:0.76;border-radius:8.5px;}
-.dc1{transform:translate(-56px,-73px) rotate(-3deg);}
-.dc2{transform:translate(-56px,-73px) rotate(0deg);}
-.dc3{transform:translate(-56px,-73px) rotate(3deg);}
-@keyframes shuffleLeft{0%,100%{transform:translate(-56px,-73px) rotate(-3deg);}50%{transform:translate(-32px,-95px) rotate(-15deg);}}
-@keyframes shuffleRight{0%,100%{transform:translate(-56px,-73px) rotate(3deg);}50%{transform:translate(-80px,-95px) rotate(15deg);}}
-.hero-anim.shuffling .dc1{animation:shuffleLeft 640ms ease-in-out;}
-.hero-anim.shuffling .dc3{animation:shuffleRight 640ms ease-in-out;}
-.hero-anim.dealing .dc1{transition:transform 680ms cubic-bezier(.16,1,.3,1),opacity 620ms ease;transform:translate(-150px,-30px) rotate(-26deg);opacity:0;}
-.hero-anim.dealing .dc2{transition:transform 680ms cubic-bezier(.16,1,.3,1),opacity 620ms ease;transform:translate(-56px,18px) rotate(0deg);opacity:0;}
-.hero-anim.dealing .dc3{transition:transform 680ms cubic-bezier(.16,1,.3,1),opacity 620ms ease;transform:translate(38px,-30px) rotate(26deg);opacity:0;}
-.hero-chip{position:absolute;left:50%;top:50%;width:88px;height:88px;transform:translate(-50%,-50%) scale(0.5) rotate(-20deg);opacity:0;transition:transform 760ms cubic-bezier(.34,1.56,.64,1),opacity 620ms ease;}
-.hero-chip.show{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg);}
-.hero-chip .face{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 72%);box-shadow:0 18px 36px -14px rgba(214,169,75,0.4),0 0 0 1px rgba(8,9,11,0.3) inset;position:relative;}
-.hero-chip svg{position:absolute;inset:0;}
+/* The chip is a real <button>: keyboard, touch and mouse all flip it. Centering uses margins
+   (not transform) so the hover/away transforms never fight the flip transforms inside it. */
+.hero-chip{position:absolute;left:50%;top:50%;width:104px;height:104px;margin:-52px 0 0 -52px;padding:0;border:0;background:none;border-radius:50%;cursor:pointer;perspective:720px;-webkit-tap-highlight-color:transparent;transition:opacity 260ms ease,transform 260ms ease;}
+.hero-chip:focus-visible{outline:2px solid var(--brass-bright);outline-offset:7px;}
+.hero-chip.away{opacity:0;transform:scale(0.7);pointer-events:none;}
+.chip-hop{display:block;width:100%;height:100%;transition:transform 220ms ease;}
+.hero-chip:hover .chip-hop{transform:translateY(-3px);}
+@keyframes chipHop{0%{transform:translateY(0) scale(1);}38%{transform:translateY(-20px) scale(1.07);}100%{transform:translateY(0) scale(1);}}
+.chip-hop.hop{animation:chipHop 760ms cubic-bezier(.33,.05,.3,1);}
+.chip-inner{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 760ms cubic-bezier(.33,.05,.25,1);}
+.chip-face{position:absolute;inset:0;border-radius:50%;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 72%);box-shadow:0 18px 36px -14px rgba(214,169,75,0.42),0 0 0 1px rgba(8,9,11,0.3) inset;}
+.chip-back{transform:rotateY(180deg);}
+.chip-face svg{position:absolute;inset:0;width:100%;height:100%;}
+.chip-suit{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;line-height:1;color:#20160A;opacity:0.62;}
+.hero-moment{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 280ms ease;}
+.hero-moment.show{opacity:1;}
+.hero-moment-cards{position:relative;width:100%;height:100%;}
+.hero-moment .flip-card{position:absolute;left:50%;top:50%;width:84px;height:116px;perspective:900px;}
+.hero-moment .flip-card:nth-child(1){transform:translate(-72px,-66px) rotate(-8deg);}
+.hero-moment .flip-card:nth-child(2){transform:translate(-12px,-50px) rotate(7deg);}
+.hero-moment .flip-front .idx{font-size:17px;}
+.hero-moment .flip-front .idx .s{font-size:13px;}
+.hero-moment-label{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--tc-accent, var(--brass-bright));white-space:nowrap;opacity:0;transition:opacity 280ms ease 120ms;}
+.hero-moment.show .hero-moment-label{opacity:1;}
 @media(max-width:640px){.hero-anim{margin-top:8px;}}
 
 /* ---------- reveal-on-load ---------- */
@@ -104,6 +111,8 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
 .flip-front .idx{position:absolute;top:4px;left:5px;font-family:'Space Grotesk',sans-serif;font-weight:800;line-height:1;display:flex;flex-direction:column;align-items:center;font-size:14px;}
 .flip-front .idx .s{font-size:11px;line-height:1;margin-top:1px;}
 .flip-front .idx.br{top:auto;left:auto;bottom:4px;right:5px;transform:rotate(180deg);}
+.flip-front .idx.joker-idx{font-size:7px;letter-spacing:0.2px;}
+.flip-front .idx.joker-idx .s{display:none;}
 .flip-front .center-pip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;line-height:1;}
 .flip-front .center-pip svg{display:block;}
 
@@ -145,9 +154,35 @@ footer a:hover{color:var(--brass-bright);}
   .flip-inner{transition:none !important;}
   .table-card:hover,.table-card:focus-within{transform:none !important;}
   .cta:hover{transform:none;}
-  .deck-stack{display:none !important;}
-  .hero-chip{transition:none !important;opacity:1 !important;transform:translate(-50%,-50%) !important;}
+  .hero-chip{transition:none !important;}
+  .chip-inner,.chip-hop{transition:none !important;}
+  .chip-hop.hop{animation:none !important;}
+  .hero-chip:hover .chip-hop{transform:none !important;}
+  .hero-moment{transition:none !important;}
+  .hero-moment .flip-inner{transition:none !important;}
+  .hero-moment-label{transition:none !important;}
 }
+/* ---------- first-visit "how familiar are you?" dialog ---------- */
+.xp-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;background:rgba(6,7,8,0.80);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.xp-overlay[hidden]{display:none !important;}
+.xp-dialog{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px 24px 20px;box-shadow:0 30px 70px -20px rgba(0,0,0,0.7);animation:xpIn 320ms cubic-bezier(.16,1,.3,1);}
+@keyframes xpIn{from{opacity:0;transform:translateY(14px) scale(0.98);}to{opacity:1;transform:none;}}
+.xp-dialog h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.3px;margin:0 0 8px;}
+.xp-dialog p{font-size:14px;line-height:1.55;color:var(--text-muted);margin:0 0 18px;}
+.xp-options{display:grid;gap:10px;}
+.xp-opt{display:flex;flex-direction:column;gap:3px;text-align:left;width:100%;padding:14px 16px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;transition:border-color 160ms ease,background 160ms ease,transform 100ms ease;}
+.xp-opt:hover,.xp-opt:focus-visible{border-color:var(--brass);background:#23272D;}
+.xp-opt:active{transform:scale(0.99);}
+.xp-opt.selected{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset;}
+.xp-opt-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15.5px;}
+.xp-opt-desc{font-size:13px;color:var(--text-muted);line-height:1.45;}
+.xp-skip{display:block;margin:14px auto 0;background:none;border:0;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;padding:6px 10px;border-radius:6px;}
+.xp-skip:hover{color:var(--text);}
+.xp-change{background:none;border:0;padding:0;margin:0 0 0 6px;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;transition:color 140ms ease;}
+.xp-change:hover{color:var(--brass-bright);}
+/* a card that will teach you first keeps its call-to-action visible, not hover-only */
+.table-card.learn-first .enter{opacity:1;transform:translateX(0);}
+@media (prefers-reduced-motion: reduce){ .xp-dialog{animation:none;} .xp-opt{transition:none;} }
 </style>
 </head>
 <body>
@@ -169,24 +204,37 @@ footer a:hover{color:var(--brass-bright);}
       <h1 class="rv" id="rv-h1">Be table ready.</h1>
       <p class="rv" id="rv-p">Four real casino games, one shared bankroll, and the correct play at every decision — worked out before you ever risk real money.</p>
       <a class="cta rv" id="rv-cta" href="/blackjack/">
-        Sit down at Blackjack
+        <span id="cta-label">Sit down at Blackjack</span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </div>
     <div class="hero-anim rv" id="rv-hero-anim">
-      <div class="deck-stack" id="deck-stack">
-        <div class="deck-card dc1"></div>
-        <div class="deck-card dc2"></div>
-        <div class="deck-card dc3"></div>
-      </div>
-      <div class="hero-chip" id="hero-chip">
-        <div class="face">
-          <svg width="88" height="88" viewBox="0 0 88 88">
-            <circle cx="44" cy="44" r="39" fill="none" stroke="#20160A" stroke-width="2.5" stroke-dasharray="5.2 7.3" opacity="0.28"/>
-            <circle cx="44" cy="44" r="28" fill="none" stroke="#20160A" stroke-width="1.5" opacity="0.22"/>
-            <circle cx="44" cy="44" r="4" fill="#20160A" opacity="0.22"/>
-          </svg>
+      <button type="button" class="hero-chip" id="hero-chip" aria-label="Flip the chip">
+        <span class="chip-hop" id="chip-hop">
+          <span class="chip-inner" id="chip-inner">
+            <span class="chip-face chip-front">
+              <svg viewBox="0 0 88 88" aria-hidden="true">
+                <circle cx="44" cy="44" r="39" fill="none" stroke="#20160A" stroke-width="2.5" stroke-dasharray="5.2 7.3" opacity="0.28"/>
+                <circle cx="44" cy="44" r="28" fill="none" stroke="#20160A" stroke-width="1.5" opacity="0.22"/>
+                <circle cx="44" cy="44" r="4" fill="#20160A" opacity="0.22"/>
+              </svg>
+            </span>
+            <span class="chip-face chip-back">
+              <svg viewBox="0 0 88 88" aria-hidden="true">
+                <circle cx="44" cy="44" r="39" fill="none" stroke="#20160A" stroke-width="2.5" stroke-dasharray="5.2 7.3" opacity="0.28"/>
+                <circle cx="44" cy="44" r="28" fill="none" stroke="#20160A" stroke-width="1.5" opacity="0.22"/>
+              </svg>
+              <span class="chip-suit" id="chip-suit" aria-hidden="true">♠</span>
+            </span>
+          </span>
+        </span>
+      </button>
+      <div class="hero-moment" id="hero-moment">
+        <div class="hero-moment-cards">
+          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
+          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
         </div>
+        <div class="hero-moment-label" id="hero-moment-label"></div>
       </div>
     </div>
   </section>
@@ -204,7 +252,7 @@ footer a:hover{color:var(--brass-bright);}
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Blackjack</h3>
         <p>Beat the dealer to 21 — and know exactly when to hit.</p>
-        <span class="enter">Sit down<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
 
       <div class="table-card tc-baccarat" data-card>
@@ -218,7 +266,7 @@ footer a:hover{color:var(--brass-bright);}
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Baccarat</h3>
         <p>Bet Banker or Player, and let the cards decide.</p>
-        <span class="enter">Sit down<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
 
       <div class="table-card tc-paigow" data-card>
@@ -231,7 +279,7 @@ footer a:hover{color:var(--brass-bright);}
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Pai Gow Poker</h3>
         <p>Seven cards, two hands — set them right and you're ahead.</p>
-        <span class="enter">Sit down<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
 
       <div class="table-card tc-uth" data-card>
@@ -243,7 +291,7 @@ footer a:hover{color:var(--brass-bright);}
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Ultimate Texas Hold'em</h3>
         <p>Real hold'em rules, except you're up against the house.</p>
-        <span class="enter">Sit down<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
 
     </div>
@@ -255,9 +303,23 @@ footer a:hover{color:var(--brass-bright);}
       <span style="opacity:0.4;margin:0 6px;">&middot;</span>
       <a href="/learn/glossary/" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
     </span>
+    <span style="display:block;margin-top:10px;" id="xp-status-line"><span id="xp-status-text"></span><button type="button" class="xp-change" id="xp-change"></button></span>
     <span style="display:block;margin-top:10px;">For education only — free practice tables, not real-money gambling.</span>
     <span style="display:block;margin-top:4px;">© 2026 SledgeMakesGames. All rights reserved.</span>
   </footer>
+</div>
+
+<div class="xp-overlay" id="xp-overlay" hidden>
+  <div class="xp-dialog" role="dialog" aria-modal="true" aria-labelledby="xp-title" aria-describedby="xp-sub">
+    <h2 id="xp-title">How well do you know these games?</h2>
+    <p id="xp-sub">Pick the closest one. It sets where we start you at every table, and you can change it any time.</p>
+    <div class="xp-options">
+      <button type="button" class="xp-opt" data-level="new"><span class="xp-opt-title">I&rsquo;m brand new</span><span class="xp-opt-desc">I don&rsquo;t know how to play yet. Teach me the basics first.</span></button>
+      <button type="button" class="xp-opt" data-level="rules"><span class="xp-opt-title">I know the rules</span><span class="xp-opt-desc">I can play, but I don&rsquo;t know the strategy yet.</span></button>
+      <button type="button" class="xp-opt" data-level="pro"><span class="xp-opt-title">I know the games</span><span class="xp-opt-desc">Skip the basics. I&rsquo;m here to sharpen my play.</span></button>
+    </div>
+    <button type="button" class="xp-skip" id="xp-skip">Skip for now</button>
+  </div>
 </div>
 
 <script>
@@ -333,15 +395,36 @@ function faceCardSVG(rank, w, h){
   '</svg>';
 }
 
+function jokerStarSVG(w, h){
+  return '<svg viewBox="0 0 40 40" width="'+w+'" height="'+h+'" style="overflow:visible;">'+
+    '<polygon points="20,2 24.5,14.5 38,15.5 27.5,24 31,37 20,29.5 9,37 12.5,24 2,15.5 15.5,14.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'+
+  '</svg>';
+}
+
 /* Fills a .flip-front element's corner indices and center pip/face-card art for one card.
    svgSize is {w,h} for the face-card SVG; pipSize is the font-size (px) for a plain suit pip. */
 function applyCardVisual(frontEl, card, svgSize, pipSize){
+  var centerPip = frontEl.querySelector('.center-pip');
+  if(card.joker){
+    frontEl.querySelectorAll('.idx').forEach(function(idx){
+      idx.querySelector('.r').textContent = 'JOKER';
+      idx.querySelector('.s').textContent = '';
+      idx.style.color = card.color;
+      idx.classList.add('joker-idx');
+    });
+    if(centerPip){
+      centerPip.style.color = card.color;
+      centerPip.style.fontSize = '';
+      centerPip.innerHTML = jokerStarSVG(svgSize.w, svgSize.h);
+    }
+    return;
+  }
   frontEl.querySelectorAll('.idx').forEach(function(idx){
+    idx.classList.remove('joker-idx');
     idx.querySelector('.r').textContent = card.rank;
     idx.querySelector('.s').textContent = card.sym;
     idx.style.color = card.color;
   });
-  var centerPip = frontEl.querySelector('.center-pip');
   if(!centerPip) return;
   if(isFaceCard(card.rank)){
     centerPip.style.color = card.color;
@@ -358,43 +441,280 @@ function applyCardVisual(frontEl, card, svgSize, pipSize){
 /* ---------- hover/focus card-flip reveal on each table card ---------- */
 var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* Every staggered flip is a pending timer. They MUST be tracked and cancelled, otherwise a flip
+   scheduled for 330ms can fire after a quick mouse-leave has already reset the cards, leaving
+   the last card of a hand stuck face-up (this is the Baccarat bug: it has four cards, so its
+   last flip has the longest delay). */
+function clearFlipTimers(owner){
+  if(!owner._flipTimers) owner._flipTimers = [];
+  while(owner._flipTimers.length){ clearTimeout(owner._flipTimers.pop()); }
+}
 function dealRandomHand(stage){
-  var flipCards = stage.querySelectorAll('.flip-card');
-  flipCards.forEach(function(fc, i){
+  clearFlipTimers(stage);
+  stage.querySelectorAll('.flip-card').forEach(function(fc, i){
     var card = randomCard();
+    fc.classList.remove('flipped');
     applyCardVisual(fc.querySelector('.flip-front'), card, {w:29, h:41}, 25);
     if(prefersReducedMotion){
       fc.classList.add('flipped');
     } else {
-      setTimeout(function(){ fc.classList.add('flipped'); }, i*110);
+      stage._flipTimers.push(setTimeout(function(){ fc.classList.add('flipped'); }, i*110));
     }
   });
 }
+function cancelPendingFlips(stage){ clearFlipTimers(stage); }
 function resetHand(stage){
+  clearFlipTimers(stage);
   stage.querySelectorAll('.flip-card').forEach(function(fc){ fc.classList.remove('flipped'); });
 }
 
+
+/* ---------- per-game hero "moment": hovering a table swaps the hero's resting chip for a
+   specific, characteristic hand from that game ---------- */
+var HERO_MOMENTS = {
+  blackjack: { cards: [{rank:'A',sym:'♠',color:'#15171B'},{rank:'K',sym:'♥',color:'#E15D45'}], label: 'Blackjack!' },
+  baccarat:  { cards: [{rank:'4',sym:'♦',color:'#E15D45'},{rank:'5',sym:'♣',color:'#15171B'}], label: 'Natural 9' },
+  paigow:    { cards: [{joker:true,color:'#9C82E0'},{rank:'A',sym:'♠',color:'#15171B'}], label: 'The Joker' },
+  uth:       { cards: [{rank:'A',sym:'♠',color:'#15171B'},{rank:'A',sym:'♥',color:'#E15D45'}], label: 'Pocket Aces' }
+};
+var heroMomentEl = document.getElementById('hero-moment');
+var heroMomentLabelEl = document.getElementById('hero-moment-label');
+var heroChipEl = document.getElementById('hero-chip');
+var heroMomentCards = heroMomentEl ? heroMomentEl.querySelectorAll('.flip-card') : [];
+var currentHeroGame = null;
+var heroHideTimer = null;
+
+function showHeroMoment(game){
+  var data = HERO_MOMENTS[game];
+  if(!data || !heroMomentEl) return;
+  if(heroHideTimer){ clearTimeout(heroHideTimer); heroHideTimer = null; }
+  clearFlipTimers(heroMomentEl);
+  currentHeroGame = game;
+  heroChipEl.classList.add('away');
+  heroMomentLabelEl.textContent = data.label;
+  heroMomentEl.style.setProperty('--tc-accent', 'var(--' + (
+    game==='blackjack' ? 'dusty-blue' : game==='baccarat' ? 'sage-bright' : game==='paigow' ? 'coral' : 'violet'
+  ) + ')');
+  heroMomentCards.forEach(function(fc, i){
+    fc.classList.remove('flipped');
+    applyCardVisual(fc.querySelector('.flip-front'), data.cards[i], {w:38,h:53}, 34);
+  });
+  heroMomentEl.classList.add('show');
+  heroMomentCards.forEach(function(fc, i){
+    if(prefersReducedMotion){
+      fc.classList.add('flipped');
+    } else {
+      heroMomentEl._flipTimers.push(setTimeout(function(){ fc.classList.add('flipped'); }, i*130));
+    }
+  });
+}
+function hideHeroMoment(game){
+  if(heroHideTimer) clearTimeout(heroHideTimer);
+  // Cancel not-yet-fired flips right away so none can land after the hide below.
+  if(currentHeroGame === game) clearFlipTimers(heroMomentEl);
+  heroHideTimer = setTimeout(function(){
+    if(currentHeroGame !== game) return; // a different game has already taken over -- don't hide it
+    currentHeroGame = null;
+    clearFlipTimers(heroMomentEl);
+    heroMomentEl.classList.remove('show');
+    heroChipEl.classList.remove('away');
+    heroMomentCards.forEach(function(fc){ fc.classList.remove('flipped'); });
+  }, 90);
+}
 
 document.querySelectorAll('.table-card').forEach(function(card){
   var stage = card.querySelector('.icon-stage');
   if(!stage) return;
   var resetTimer = null;
-  function trigger(){
-    if(resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
-    dealRandomHand(stage);
+  var game = stage.dataset.game;
+  // One shared "is this card wanted open?" state: pointer over it OR keyboard focus inside it.
+  // Acting only on changes of that state means hover + focus together can't deal the hand twice.
+  var hovering = false, focused = false, wasOpen = false;
+  function sync(){
+    var open = hovering || focused;
+    if(open === wasOpen) return;
+    wasOpen = open;
+    if(open){
+      if(resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
+      dealRandomHand(stage);
+      if(game) showHeroMoment(game);
+    } else {
+      cancelPendingFlips(stage);
+      if(resetTimer) clearTimeout(resetTimer);
+      resetTimer = setTimeout(function(){ resetTimer = null; resetHand(stage); }, 240);
+      if(game) hideHeroMoment(game);
+    }
   }
-  function untrigger(){
-    if(resetTimer) clearTimeout(resetTimer);
-    resetTimer = setTimeout(function(){ resetHand(stage); }, 240);
-  }
-  card.addEventListener('mouseenter', trigger);
-  card.addEventListener('mouseleave', untrigger);
-  card.addEventListener('focusin', trigger);
+  card.addEventListener('mouseenter', function(){ hovering = true; sync(); });
+  card.addEventListener('mouseleave', function(){ hovering = false; sync(); });
+  card.addEventListener('focusin', function(){ focused = true; sync(); });
   card.addEventListener('focusout', function(e){
     if(card.contains(e.relatedTarget)) return;
-    untrigger();
+    focused = false; sync();
   });
 });
+
+
+/* ---------- "how familiar are you?" + where each table sends you ----------
+   One answer is shared by every game (house_edge_experience_v1): 'new' | 'rules' | 'pro'.
+   Only 'new' changes where a click goes: the FIRST time you open each game you land on that
+   game's lesson, then it goes straight to the table. Storage is wrapped in try/catch because
+   private windows can block it; the page then just remembers your answer for this visit. */
+var EXPERIENCE_KEY = 'house_edge_experience_v1';
+var LEARNED_KEY = 'house_edge_learned_v1';
+var XP_SKIPPED_KEY = 'house_edge_xp_skipped_v1';
+var XP_LABELS = { 'new':"I'm brand new", 'rules':'I know the rules', 'pro':'I know the games' };
+var memLevel = null, memLearned = {};
+function isLevel(v){ return typeof v === 'string' && Object.prototype.hasOwnProperty.call(XP_LABELS, v); }
+function readLevel(){
+  try{
+    var raw = localStorage.getItem(EXPERIENCE_KEY);
+    if(raw){ var p = JSON.parse(raw); if(p && isLevel(p.level)) return p.level; }
+  }catch(e){}
+  return memLevel;
+}
+function writeLevel(level){
+  memLevel = level;
+  try{ localStorage.setItem(EXPERIENCE_KEY, JSON.stringify({ level: level, updated: new Date().toISOString() })); }catch(e){}
+}
+function readLearned(){
+  try{
+    var raw = localStorage.getItem(LEARNED_KEY);
+    if(raw){ var p = JSON.parse(raw); if(p && typeof p === 'object' && !Array.isArray(p)) return p; }
+  }catch(e){}
+  return memLearned;
+}
+function markLearned(game){
+  var l = readLearned(); l[game] = true; memLearned = l;
+  try{ localStorage.setItem(LEARNED_KEY, JSON.stringify(l)); }catch(e){}
+}
+
+var GAME_ROUTES = {
+  blackjack:{ name:'Blackjack',               play:'/blackjack/',               learn:'/learn/?from=floor#blackjack' },
+  baccarat: { name:'Baccarat',                play:'/baccarat/',                learn:'/learn/?from=floor#baccarat' },
+  paigow:   { name:'Pai Gow Poker',           play:'/pai-gow/',                 learn:'/learn/?from=floor#paigow' },
+  uth:      { name:"Ultimate Texas Hold'em",  play:'/ultimate-texas-holdem/',   learn:'/learn/?from=floor#uth' }
+};
+function learnFirst(game){ return readLevel() === 'new' && readLearned()[game] !== true; }
+
+function routeCard(card){
+  var stage = card.querySelector('.icon-stage');
+  var cover = card.querySelector('a.cover');
+  if(!stage || !cover) return;
+  var game = stage.dataset.game, r = GAME_ROUTES[game];
+  if(!r) return;
+  var lf = learnFirst(game);
+  cover.setAttribute('href', lf ? r.learn : r.play);
+  cover.setAttribute('aria-label', lf ? 'Learn how to play ' + r.name + ' first' : 'Play ' + r.name);
+  card.classList.toggle('learn-first', lf);
+  var label = card.querySelector('.enter-label');
+  if(label) label.textContent = lf ? 'Learn the basics' : 'Sit down';
+}
+function routeHeroCta(){
+  var cta = document.getElementById('rv-cta'), label = document.getElementById('cta-label');
+  if(!cta || !label) return;
+  var lf = learnFirst('blackjack');
+  cta.setAttribute('href', lf ? GAME_ROUTES.blackjack.learn : GAME_ROUTES.blackjack.play);
+  label.textContent = lf ? 'Learn Blackjack first' : 'Sit down at Blackjack';
+}
+function updateExperienceStatus(){
+  var level = readLevel();
+  var text = document.getElementById('xp-status-text'), btn = document.getElementById('xp-change');
+  if(!text || !btn) return;
+  if(level){ text.textContent = 'Your level: ' + XP_LABELS[level]; btn.textContent = 'Change'; }
+  else { text.textContent = ''; btn.textContent = 'How familiar are you with these games?'; }
+}
+function applyRouting(){
+  document.querySelectorAll('.table-card').forEach(routeCard);
+  routeHeroCta();
+  updateExperienceStatus();
+}
+
+// Clicking a learn-first link counts as "this game's lesson has been offered": next time it goes
+// straight to the table. The href is refreshed first so the navigation itself always uses the
+// current answer, and the labels are deliberately NOT redrawn here (they'd flicker mid-navigation);
+// they refresh when you come back to the page.
+function wireRouteClicks(){
+  function onUse(el, game, card){
+    var handler = function(){
+      if(card) routeCard(card); else routeHeroCta();
+      if(learnFirst(game)) markLearned(game);
+    };
+    el.addEventListener('click', handler);
+    el.addEventListener('auxclick', handler);
+  }
+  document.querySelectorAll('.table-card').forEach(function(card){
+    var stage = card.querySelector('.icon-stage'), cover = card.querySelector('a.cover');
+    if(stage && cover) onUse(cover, stage.dataset.game, card);
+  });
+  var cta = document.getElementById('rv-cta');
+  if(cta) onUse(cta, 'blackjack', null);
+}
+
+/* ---- the dialog ---- */
+var xpOverlay = document.getElementById('xp-overlay');
+var xpReturnFocus = null;
+function xpFocusables(){ return Array.prototype.slice.call(xpOverlay.querySelectorAll('button')); }
+function openExperienceDialog(fromUser){
+  if(!xpOverlay) return;
+  xpReturnFocus = fromUser ? document.activeElement : null;
+  var current = readLevel();
+  xpOverlay.querySelectorAll('.xp-opt').forEach(function(b){
+    b.classList.toggle('selected', b.getAttribute('data-level') === current);
+  });
+  xpOverlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+  var first = xpOverlay.querySelector('.xp-opt.selected') || xpOverlay.querySelector('.xp-opt');
+  if(first) first.focus();
+}
+function closeExperienceDialog(){
+  if(!xpOverlay) return;
+  xpOverlay.hidden = true;
+  document.body.style.overflow = '';
+  if(xpReturnFocus && xpReturnFocus.focus){ try{ xpReturnFocus.focus(); }catch(e){} }
+  xpReturnFocus = null;
+}
+function chooseExperience(level){
+  if(!isLevel(level)) return;
+  writeLevel(level);
+  closeExperienceDialog();
+  applyRouting();
+}
+function skipExperience(){
+  if(!readLevel()){ try{ sessionStorage.setItem(XP_SKIPPED_KEY, '1'); }catch(e){} }
+  closeExperienceDialog();
+}
+function maybeAskExperience(){
+  if(readLevel()) return;
+  var skipped = false;
+  try{ skipped = sessionStorage.getItem(XP_SKIPPED_KEY) === '1'; }catch(e){}
+  if(skipped) return;
+  setTimeout(function(){ if(!readLevel() && xpOverlay.hidden) openExperienceDialog(false); }, 650);
+}
+if(xpOverlay){
+  xpOverlay.querySelectorAll('.xp-opt').forEach(function(b){
+    b.addEventListener('click', function(){ chooseExperience(b.getAttribute('data-level')); });
+  });
+  document.getElementById('xp-skip').addEventListener('click', skipExperience);
+  xpOverlay.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ e.preventDefault(); skipExperience(); return; }
+    if(e.key === 'Tab'){
+      var f = xpFocusables(); if(!f.length) return;
+      var firstEl = f[0], lastEl = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === firstEl){ e.preventDefault(); lastEl.focus(); }
+      else if(!e.shiftKey && document.activeElement === lastEl){ e.preventDefault(); firstEl.focus(); }
+    }
+  });
+}
+var xpChangeBtn = document.getElementById('xp-change');
+if(xpChangeBtn) xpChangeBtn.addEventListener('click', function(){ openExperienceDialog(true); });
+
+wireRouteClicks();
+applyRouting();
+maybeAskExperience();
+// Coming back via the back button (or from another tab) must show up-to-date labels.
+window.addEventListener('pageshow', applyRouting);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyRouting(); });
 
 /* ---------- page-load reveal sequence ---------- */
 var loadOrder = ['rv-wordmark','rv-nav','rv-bankroll','rv-h1','rv-p','rv-cta','rv-hero-anim'];
@@ -405,20 +725,29 @@ loadOrder.forEach(function(id, i){
 });
 
 /* ---------- hero: one-time shuffle -> deal -> settle-into-a-chip sequence ---------- */
-(function playHeroCardSequence(){
-  if(prefersReducedMotion) return;
-  var heroAnim = document.getElementById('rv-hero-anim');
+/* ---------- hero chip: click (or Enter/Space) flips it ---------- */
+(function initHeroChip(){
   var chip = document.getElementById('hero-chip');
-  if(!heroAnim || !chip) return;
-  var heroRevealDelay = 70 + (loadOrder.length - 1) * 70; // matches this element's own place in loadOrder above
-  setTimeout(function(){
-    heroAnim.classList.add('shuffling');
-    setTimeout(function(){
-      heroAnim.classList.remove('shuffling');
-      heroAnim.classList.add('dealing');
-      setTimeout(function(){ chip.classList.add('show'); }, 250);
-    }, 640);
-  }, heroRevealDelay + 420);
+  var inner = document.getElementById('chip-inner');
+  var hop = document.getElementById('chip-hop');
+  var suitEl = document.getElementById('chip-suit');
+  if(!chip || !inner || !hop) return;
+  var CHIP_SUITS = ['\u2660','\u2665','\u2666','\u2663'];
+  var angle = 0; // always rotates forward, so the chip never "unwinds" backwards
+  chip.addEventListener('click', function(){
+    angle += 180;
+    if(Math.round(angle/180) % 2 === 1 && suitEl){
+      // we're turning to the back: pick its suit now, while the back is facing away
+      suitEl.textContent = CHIP_SUITS[Math.floor(Math.random()*CHIP_SUITS.length)];
+    }
+    inner.style.transform = 'rotateY(' + angle + 'deg)';
+    if(!prefersReducedMotion){
+      hop.classList.remove('hop');
+      void hop.offsetWidth; // restart the hop if clicked again mid-flip
+      hop.classList.add('hop');
+    }
+  });
+  hop.addEventListener('animationend', function(){ hop.classList.remove('hop'); });
 })();
 
 /* ---------- scroll-triggered reveal for table cards ---------- */
