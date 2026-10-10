@@ -416,7 +416,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     <h2 class="section" style="margin:0;">Session stats</h2>
     <button id="btn-reset-stats" style="font-size:12px;">Reset session</button>
   </div>
-  <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;"></div>
+  <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;"></div>
 </div>
 
 <div class="panel">
@@ -606,7 +606,8 @@ var G={
   shoe:[], runningCount:0, seenTally:{},
   bankroll:1000, phase:'betting',
   dealer:{cards:[]}, hands:[], activeIdx:0,
-  history:[], sbAmounts:{}, holeRevealed:false, locked:false, feedbackLog:[], lastClass:null, activeTab:'hard'
+  history:[], sbAmounts:{}, holeRevealed:false, locked:false, feedbackLog:[], lastClass:null, activeTab:'hard',
+  openBet:null, openTC:null   // this round's opening bet and the true count when it was dealt (feeds the bet advice)
 };
 
 function buildShoe(){
@@ -838,19 +839,67 @@ function suggestedBetUnits(tc){
   return Math.min(8, Math.max(1, Math.floor(tc)));
 }
 
+/* ============ BET ADVICE ============
+   The advice ramps off the player's "usual bet": the average opening bet over this session's
+   hands that were dealt at a low count (the ones where the advice was a flat bet). Hands dealt
+   at a count that already called for pressing are left out on purpose -- if they were included,
+   every time you followed the advice your average would rise, and the next suggestion would be
+   built on that higher average, so the advice would creep upward hand after hand.
+   Hands with no recorded opening bet/count (played before this was tracked) are ignored rather
+   than guessed at, since a doubled hand's stored bet can't be told apart from a large bet. */
+function sessionUsualBet(){
+  var sum=0, n=0;
+  G.history.forEach(function(e){
+    if(!e || typeof e.openBet!=='number' || !isFinite(e.openBet) || e.openBet<=0) return;
+    if(typeof e.openTC!=='number' || !isFinite(e.openTC)) return;
+    if(suggestedBetUnits(e.openTC)>1) return;
+    sum+=e.openBet; n++;
+  });
+  return n ? {amount:sum/n, hands:n} : null;
+}
+
+// Bets under $10 stay exact; larger ones snap to the nearest $5 (the smallest chip).
+function roundBet(x){
+  if(x<10) return Math.max(1, Math.round(x));
+  return Math.round(x/5)*5;
+}
+
+// How much of the bankroll is free for the main bet once any side bets are covered.
+function betRoomForMainBet(){
+  var sb=0;
+  ['pp','tp','tl','bb'].forEach(function(k){
+    var cb=document.getElementById('sb-'+k);
+    if(cb && cb.checked){ sb += parseInt(document.getElementById('sb-'+k+'-amt').value,10)||0; }
+  });
+  return G.bankroll - sb;
+}
+
+// Pure text builder: tc = true count, usualAvg = session average opening bet at low counts (0 if none yet),
+// room = bankroll free for the main bet.
+function buildBetTip(tc, usualAvg, room){
+  var units=suggestedBetUnits(tc);
+  var head='True count '+tc+' — ';
+  var usualAmt = usualAvg>0 ? Math.max(1, Math.round(usualAvg)) : 0;
+  if(units<=1){
+    return head+'a flat bet is fine here'+(usualAmt ? ' (your usual bet is about $'+usualAmt+').' : '.');
+  }
+  if(!(usualAvg>0)){
+    return head+'consider pressing to about '+units+'x your usual bet (the dollar amount appears once you have played a hand at a low count).';
+  }
+  var target=roundBet(usualAvg*units);
+  var basis=units+'x your usual bet of about $'+usualAmt;
+  if(room>0 && target>room){
+    return head+'press to $'+room+', the most you have free ('+basis+' would be $'+target+').';
+  }
+  return head+'press to about $'+target+' ('+basis+').';
+}
+
 function renderBetTip(){
   var el=document.getElementById('bet-tip');
   if(!el) return;
   if(!G.showCount || G.phase!=='betting'){ el.textContent=''; return; }
-  var tc=trueCount();
-  var units=suggestedBetUnits(tc);
-  var baseBet=parseInt(document.getElementById('bet-amount').value,10)||0;
-  if(units<=1){
-    el.textContent='True count '+tc+' — a flat bet is fine here.';
-  } else {
-    var suggested = baseBet>0 ? (' (~'+(baseBet*units)+')') : '';
-    el.textContent='True count '+tc+' — consider pressing to about '+units+'x your usual bet'+suggested+'.';
-  }
+  var usual=sessionUsualBet();
+  el.textContent=buildBetTip(trueCount(), usual?usual.amount:0, betRoomForMainBet());
 }
 
 function pluckCard(rank){
@@ -1179,7 +1228,9 @@ function saveHandState(){
       holeRevealed: G.holeRevealed,
       insuranceBet: G.insuranceBet,
       sbAmounts: G.sbAmounts,
-      sidebets: G.sidebets
+      sidebets: G.sidebets,
+      openBet: G.openBet,
+      openTC: G.openTC
     }));
   }catch(e){}
 }
@@ -1538,7 +1589,8 @@ function renderStats(){
   var el=document.getElementById('stats-grid');
   if(!el) return;
   var s=computeSessionStats();
-  function card(label, value){ return '<div class="stat-card"><span class="sl">'+label+'</span><span class="sv">'+value+'</span></div>'; }
+  function card(label, value, title){ return '<div class="stat-card"'+(title?' title="'+title+'"':'')+'><span class="sl">'+label+'</span><span class="sv">'+value+'</span></div>'; }
+  var usual=sessionUsualBet();
   var winRate = s.hands ? Math.round(100*s.wins/s.hands)+'%' : '—';
   var streakWord = s.streakType==='You win' ? (s.streak>1?'wins':'win') : (s.streak>1?'losses':'loss');
   var streakText = s.streak>0 ? s.streak+' '+streakWord : '—';
@@ -1548,12 +1600,14 @@ function renderStats(){
     card('W / L / P', s.wins+' / '+s.losses+(s.mixed?' / '+s.mixed+' mixed':'')+' / '+s.pushes) +
     card('Net', (s.netTotal>=0?'+':'')+s.netTotal) +
     card('Avg bet', s.avgBet) +
+    card('Usual bet', usual ? Math.max(1, Math.round(usual.amount)) : '—', 'Your average opening bet on hands dealt at a low count. The bet advice is built on this number.') +
     card('Decision accuracy', s.accuracy===null?'—':s.accuracy+'%') +
     card('Current streak', streakText);
 }
 document.getElementById('btn-reset-stats').addEventListener('click', function(){
   G.history=[];
   renderHistory();
+  renderBetTip(); // the usual bet starts over, so the advice has to refresh right away
   saveSession();
 });
 
@@ -1706,6 +1760,7 @@ function startDeal(){
     if(G.sidebets[k]){ var amt=parseInt(document.getElementById('sb-'+k+'-amt').value,10)||0; G.sbAmounts[k]=amt; sbTotal+=amt; }
   });
   if(bet+sbTotal>G.bankroll){ alert("That's more than your bankroll — lower the bet."); return; }
+  G.openBet=bet; G.openTC=trueCount(); // opening bet + count at the deal, recorded before any card is drawn (feeds the bet advice)
   G.bankroll -= (bet+sbTotal);
   saveSharedBankroll(); // persist immediately -- a hand in progress must not be escapable by refreshing
   document.getElementById('feedback-zone').innerHTML='';
@@ -2124,14 +2179,20 @@ function finishRound(){
   else if(pushLike>0 && winLike===0 && loseLike===0) headline={text:'Push', cls:'push'};
   else headline={text:'Mixed result', cls:'push'};
 
-  G.history.push({
+  var histEntry={
     label:'Hand #'+(G.history.length+1)+' ('+G.hands.length+(G.hands.length>1?' hands':' hand')+')',
     net:totalNet, headline:headline,
     dealerCards: G.dealer.cards.slice(),
     hands: G.hands.map(function(h){ return {cards:h.cards.slice(), status:h.status, bet:h.bet}; }),
     results: results.slice(),
     feedback: G.feedbackLog.slice()
-  });
+  };
+  // Opening bet and the count it was dealt at -- only stored when both are known (see sessionUsualBet).
+  if(typeof G.openBet==='number' && G.openBet>0 && typeof G.openTC==='number' && isFinite(G.openTC)){
+    histEntry.openBet=G.openBet; histEntry.openTC=G.openTC;
+  }
+  G.openBet=null; G.openTC=null;
+  G.history.push(histEntry);
 
   renderResults(results, headline);
   renderAll();
@@ -2382,6 +2443,8 @@ function resumeHand(saved){
   G.insuranceBet = saved.insuranceBet || 0;
   G.sbAmounts = saved.sbAmounts || {};
   if(saved.sidebets) G.sidebets = saved.sidebets;
+  G.openBet = (typeof saved.openBet==='number' && isFinite(saved.openBet) && saved.openBet>0) ? saved.openBet : null;
+  G.openTC = (typeof saved.openTC==='number' && isFinite(saved.openTC)) ? saved.openTC : null;
   G.locked = false;
   G.bots = [];
 
