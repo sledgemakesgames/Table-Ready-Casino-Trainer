@@ -291,7 +291,7 @@ footer{text-align:center;padding:24px 0 10px;font-size:12px;color:var(--text-mut
 <div id="skill-overlay" style="display:none;position:fixed;inset:0;background:rgba(6,7,8,0.94);z-index:50;align-items:center;justify-content:center;padding:24px;text-align:center;">
   <div style="max-width:420px;">
     <p style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;margin:0 0 8px;">How well do you know Ultimate Texas Hold'em?</p>
-    <p style="font-size:13px;color:var(--text-muted);margin:0 0 22px;">This just sets a starting point \u2014 you can change it anytime in Settings.</p>
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 22px;">This just sets a starting point — you can change it anytime in Settings.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <button class="primary" id="btn-skill-advanced" style="padding:14px 18px;">I know it well</button>
       <button id="btn-skill-some" style="padding:14px 18px;">I know some of it</button>
@@ -324,7 +324,7 @@ footer{text-align:center;padding:24px 0 10px;font-size:12px;color:var(--text-mut
       <button id="btn-level-beginner" style="flex:1;padding:9px 12px;font-size:12.5px;">Beginner</button>
       <button id="btn-level-advanced" style="flex:1;padding:9px 12px;font-size:12.5px;">Advanced</button>
     </div>
-    <p style="font-size:11px;color:var(--text-muted);margin:6px 0 0;">Advanced adds the strategy chart, hand history, and detailed outs analysis. Beginner keeps just the essentials \u2014 cards, betting, and feedback on your decisions.</p>
+    <p style="font-size:11px;color:var(--text-muted);margin:6px 0 0;">Advanced adds the strategy chart, hand history, and detailed outs analysis. Beginner keeps just the essentials — cards, betting, and feedback on your decisions.</p>
   </div>
   <div class="check-row"><input type="checkbox" id="set-sound" checked><label for="set-sound">Sound effects</label></div>
   <div class="check-row"><input type="checkbox" id="set-tooltips" checked><label for="set-tooltips">Term tooltips</label></div>
@@ -1083,7 +1083,7 @@ var G = {
   activeChip:25,
   deck:[], playerCards:[], dealerCards:[], communityCards:[],
   playerRevealed:[], playerFlipCount:0,
-  turbo:false, soundOn:true, tooltipsEnabled:true, showOdds:true, livePairGlow:true, pendingHint:null, tripsEnabled:true, skillLevel:'advanced', seenSkillPrompt:false, actionLocked:false,
+  turbo:false, soundOn:true, tooltipsEnabled:true, showOdds:true, livePairGlow:true, pendingHint:null, tripsEnabled:true, skillLevel:'advanced', seenSkillPrompt:false, skillSource:null, sharedLevel:null, actionLocked:false,
   result:null,
   stats:{hands:0, net:0, wins:0, losses:0, pushes:0, folds:0}, history:[]
 };
@@ -1914,11 +1914,36 @@ function loadHintState(){
       G.seenBasicsHint=!!parsed.seenBasicsHint;
       if(parsed.skillLevel==='beginner' || parsed.skillLevel==='advanced'){ G.skillLevel=parsed.skillLevel; }
       G.seenSkillPrompt=!!parsed.seenSkillPrompt;
+      // Where the current skill level came from: 'shared' = taken from the home page answer,
+      // 'own' = chosen here in the game. Older saves have neither, which is treated as 'own'
+      // (an explicit choice is never overridden).
+      G.skillSource = parsed.skillSource==='shared' ? 'shared' : (G.seenSkillPrompt ? 'own' : null);
+      G.sharedLevel = isSharedLevel(parsed.sharedLevel) ? parsed.sharedLevel : null;
+    }
+  }catch(e){}
+  // The home page asks once, for every game, "how well do you know these games?"
+  // (house_edge_experience_v1: 'new' | 'rules' | 'pro'). That answer drives the new-player behavior here:
+  //  - no choice made in this game yet -> use it and skip this game's own prompt;
+  //  - level was taken from the home page earlier and the answer there has since changed -> follow the new answer;
+  //  - level was chosen in this game (prompt or Settings toggle) -> that explicit choice always wins.
+  try{
+    var exp=JSON.parse(localStorage.getItem('house_edge_experience_v1')||'null');
+    if(exp && isSharedLevel(exp.level)){
+      if(!G.seenSkillPrompt){
+        G.skillLevel = (exp.level==='pro') ? 'advanced' : 'beginner';
+        G.seenSkillPrompt = true; G.skillSource = 'shared'; G.sharedLevel = exp.level;
+        saveHintState();
+      } else if(G.skillSource==='shared' && G.sharedLevel!==exp.level){
+        G.skillLevel = (exp.level==='pro') ? 'advanced' : 'beginner';
+        G.sharedLevel = exp.level;
+        saveHintState();
+      }
     }
   }catch(e){}
 }
+function isSharedLevel(v){ return v==='new' || v==='rules' || v==='pro'; }
 function saveHintState(){
-  try{ localStorage.setItem(HINTS_KEY, JSON.stringify({seenChipsHint:G.seenChipsHint, seenBasicsHint:G.seenBasicsHint, skillLevel:G.skillLevel, seenSkillPrompt:G.seenSkillPrompt})); }catch(e){}
+  try{ localStorage.setItem(HINTS_KEY, JSON.stringify({seenChipsHint:G.seenChipsHint, seenBasicsHint:G.seenBasicsHint, skillLevel:G.skillLevel, seenSkillPrompt:G.seenSkillPrompt, skillSource:G.skillSource, sharedLevel:G.sharedLevel})); }catch(e){}
 }
 function applySkillLevel(){
   var beginner = G.skillLevel==='beginner';
@@ -1935,6 +1960,7 @@ function applySkillLevel(){
 }
 function setSkillLevel(level){
   G.skillLevel = level;
+  G.skillSource = 'own'; // a choice made in the game (prompt or Settings toggle) is never overridden by the home page answer
   saveHintState();
   applySkillLevel();
 }
