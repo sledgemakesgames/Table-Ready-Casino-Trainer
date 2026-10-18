@@ -4,17 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Learn to Play — Table Ready</title>
-<meta name="description" content="See how Blackjack, Baccarat, Pai Gow Poker, and Ultimate Texas Hold'em actually play, in short animated walkthroughs — no signup, no wall of rules text.">
+<meta name="description" content="See how Blackjack, Baccarat, Pai Gow Poker, Ultimate Texas Hold'em, and Craps actually play, in short animated walkthroughs — no signup, no wall of rules text.">
+<link rel="canonical" href="https://tableready.xyz/learn/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Table Ready">
 <meta property="og:title" content="Learn to Play — Table Ready">
-<meta property="og:description" content="See how Blackjack, Baccarat, Pai Gow Poker, and Ultimate Texas Hold'em actually play, in short animated walkthroughs — no signup, no wall of rules text.">
+<meta property="og:description" content="See how Blackjack, Baccarat, Pai Gow Poker, Ultimate Texas Hold'em, and Craps actually play, in short animated walkthroughs — no signup, no wall of rules text.">
 <meta property="og:url" content="https://tableready.xyz/learn/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Learn to Play — Table Ready">
-<meta name="twitter:description" content="See how Blackjack, Baccarat, Pai Gow Poker, and Ultimate Texas Hold'em actually play, in short animated walkthroughs.">
+<meta name="twitter:description" content="See how Blackjack, Baccarat, Pai Gow Poker, Ultimate Texas Hold'em, and Craps actually play, in short animated walkthroughs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -28,7 +29,7 @@
 }
 *{box-sizing:border-box;}
 :focus-visible{outline:2px solid var(--brass-bright);outline-offset:3px;border-radius:4px;}
-body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;}
+body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
 a{color:inherit;}
 ::selection{background:rgba(214,169,75,0.3);}
 
@@ -82,7 +83,7 @@ a{color:inherit;}
 }
 @media (prefers-reduced-motion: reduce){
   .scene{transition:opacity 300ms ease;transform:none !important;}
-  .in-view .anim-deal,.in-view .anim-flip,.in-view .anim-shake,.in-view .anim-fade,.in-view .anim-ring,.in-view .anim-glow{animation:none !important;}
+  .in-view .anim-deal,.in-view .anim-flip,.in-view .anim-shake,.in-view .anim-fade,.in-view .anim-ring,.in-view .anim-glow,.in-view .anim-roll,.in-view .anim-grow{animation:none !important;}
 }
 
 .card{width:64px;height:90px;border-radius:8px;background:var(--card-face);color:var(--ink);position:relative;font-weight:700;font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 10px -4px rgba(0,0,0,0.5);flex-shrink:0;}
@@ -123,6 +124,67 @@ footer{text-align:center;padding:40px 24px 60px;font-size:12px;color:var(--text-
 .win-tag{display:inline-block;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;padding:4px 12px;border-radius:999px;margin-top:8px;}
 .win-tag.good{background:rgba(63,164,132,0.15);color:var(--sage-bright);border:1px solid rgba(63,164,132,0.3);}
 .win-tag.bad{background:rgba(225,93,69,0.15);color:var(--coral);border:1px solid rgba(225,93,69,0.3);}
+/* ---------- craps: dice, number board, puck ---------- */
+.die{position:relative;width:62px;height:62px;padding:10px;border-radius:13px;display:grid;grid-template:repeat(3,1fr) / repeat(3,1fr);flex-shrink:0;background:linear-gradient(145deg,#FBF6EA,#E4DBC4);box-shadow:0 8px 14px -6px rgba(0,0,0,0.6),0 0 0 1px rgba(0,0,0,0.2) inset,0 -3px 0 rgba(0,0,0,0.07) inset;}
+.die i{width:10px;height:10px;border-radius:50%;background:#1A1B1F;place-self:center;box-shadow:0 1px 0 rgba(255,255,255,0.45);}
+.die.one i{width:14px;height:14px;background:var(--coral);}
+.die.sm{width:48px;height:48px;padding:8px;border-radius:10px;}
+.die.sm i{width:8px;height:8px;}
+.die.sm.one i{width:11px;height:11px;}
+.dice-row{display:flex;gap:12px;justify-content:center;align-items:center;}
+.dice-pair{text-align:center;}
+.dice-pair .dice-row{margin-bottom:10px;}
+.numboard{display:flex;gap:6px;justify-content:center;}
+.numboard.has-token{margin-bottom:44px;}
+.numbox{position:relative;width:44px;min-height:54px;border-radius:9px;background:var(--panel-2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:6px 0 5px;font-family:'Space Grotesk',sans-serif;}
+.numbox .nb-n{font-weight:800;font-size:17px;line-height:1;}
+.numbox .nb-cap{margin-top:6px;font-size:10px;line-height:1.25;color:var(--text-muted);text-align:center;font-weight:600;}
+.numbox .nb-cap b{display:block;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--brass-bright);}
+.numbox.hot{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset;}
+.puck,.minichip{position:absolute;left:50%;top:100%;width:34px;height:34px;margin:8px 0 0 -17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:10px;letter-spacing:.5px;}
+.puck.on{background:#F4F5F7;color:#15171B;box-shadow:0 6px 12px -5px rgba(0,0,0,0.6);}
+.minichip{background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 72%);color:#20160A;font-size:8.5px;box-shadow:0 6px 12px -5px rgba(0,0,0,0.6);}
+.numchip{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 6px;border-radius:9px;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:15px;background:var(--panel-2);border:1px solid var(--line);}
+.numchip.win{background:rgba(63,164,132,0.15);border-color:rgba(63,164,132,0.35);color:var(--sage-bright);}
+.numchip.lose{background:rgba(225,93,69,0.15);border-color:rgba(225,93,69,0.35);color:var(--coral);}
+.numchip.pt{background:rgba(214,169,75,0.14);border-color:rgba(214,169,75,0.4);color:var(--brass-bright);}
+.rule-row{display:flex;flex-direction:column;align-items:center;gap:6px;margin:9px 0;}
+.rule-row .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.rule-row .win-tag{margin-top:0;}
+.ways{display:flex;align-items:flex-end;gap:6px;height:168px;}
+.ways .col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;width:24px;height:100%;}
+.ways .bar{width:100%;border-radius:6px 6px 2px 2px;background:var(--panel-2);border:1px solid var(--line);transform-origin:bottom;}
+.ways .col.seven .bar{background:var(--brass);border-color:var(--brass);}
+.ways .n{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:800;color:var(--text);}
+.ways .w{font-size:10px;font-weight:600;color:var(--text-muted);}
+.ways .col.seven .w{color:var(--brass-bright);}
+@keyframes dieRoll{0%{opacity:0;transform:translateY(-36px) rotate(-210deg) scale(0.8);}55%{opacity:1;transform:translateY(0) rotate(14deg) scale(1.05);}78%{transform:translateY(-7px) rotate(-5deg) scale(1);}100%{opacity:1;transform:translateY(0) rotate(0) scale(1);}}
+@keyframes growUp{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+.in-view .anim-roll{animation:dieRoll 680ms cubic-bezier(.3,.7,.4,1) both;}
+.in-view .anim-grow{animation:growUp 640ms cubic-bezier(.2,.8,.2,1) both;}
+@media(max-width:720px){
+  .die{width:52px;height:52px;padding:8px;}
+  .die i{width:9px;height:9px;}
+  .die.one i{width:12px;height:12px;}
+  .die.sm{width:44px;height:44px;padding:7px;}
+  .numbox{width:40px;}
+  .ways{gap:4px;}
+  .ways .col{width:22px;}
+}
+.floor-note{display:none;width:calc(100% - 40px);max-width:760px;margin:16px auto 0;padding:12px 14px 12px 16px;border:1px solid rgba(240,196,107,0.28);background:rgba(214,169,75,0.08);border-radius:12px;font-size:13.5px;line-height:1.5;align-items:center;justify-content:space-between;gap:12px;}
+.floor-note.show{display:flex;}
+.floor-note a{color:var(--brass-bright);font-weight:600;text-decoration:none;white-space:nowrap;}
+.floor-note a:hover{text-decoration:underline;}
+.floor-note .dismiss{background:none;border:0;color:var(--text-muted);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;}
+.floor-note .dismiss:hover{color:var(--text);}
+.play-cta{max-width:640px;margin:0 auto;padding:48px 24px 96px;text-align:center;}
+.play-cta h2{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:clamp(24px,4vw,32px);margin:0 0 10px;letter-spacing:-0.4px;}
+.play-cta p{font-size:15px;color:var(--text-muted);line-height:1.6;margin:0 auto 24px;max-width:460px;}
+.play-cta .play-btn{display:inline-flex;align-items:center;gap:9px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;background:var(--brass);color:#20160A;border-radius:12px;padding:15px 26px;text-decoration:none;box-shadow:0 8px 22px -10px rgba(214,169,75,0.55);transition:background 160ms ease,transform 100ms ease;}
+.play-cta .play-btn:hover{background:var(--brass-bright);transform:translateY(-1px);}
+.play-cta .play-btn svg{transition:transform 160ms ease;}
+.play-cta .play-btn:hover svg{transform:translateX(3px);}
+@media (prefers-reduced-motion: reduce){ .play-cta .play-btn,.play-cta .play-btn svg{transition:none;} .play-cta .play-btn:hover{transform:none;} }
 </style>
 </head>
 <body>
@@ -140,6 +202,12 @@ footer{text-align:center;padding:40px 24px 60px;font-size:12px;color:var(--text-
   <button class="switch-btn" id="switch-baccarat">Baccarat</button>
   <button class="switch-btn" id="switch-paigow">Pai Gow Poker</button>
   <button class="switch-btn" id="switch-uth">Ultimate Texas Hold'em</button>
+  <button class="switch-btn" id="switch-craps">Craps</button>
+</div>
+
+<div class="floor-note" id="floor-note" role="note">
+  <span>Since you&rsquo;re new, we started you with the basics. Already know <b id="floor-note-game">Blackjack</b>? <a id="floor-note-skip" href="/blackjack/">Skip to the table &rarr;</a></span>
+  <button type="button" class="dismiss" id="floor-note-dismiss" aria-label="Dismiss this note">&times;</button>
 </div>
 
 <div class="progress-rail" id="progress-rail"></div>
@@ -151,6 +219,11 @@ footer{text-align:center;padding:40px 24px 60px;font-size:12px;color:var(--text-
     <p>Seven quick steps, no rulebook required. Scroll through &mdash; each one shows exactly what happens at the table.</p>
   </section>
   <div id="blackjack-scenes"></div>
+  <section class="play-cta" id="play-cta-blackjack">
+    <h2>That&rsquo;s the basics of Blackjack.</h2>
+    <p>The best way to make it stick is a few hands at the table. It&rsquo;s all free chips, and your bankroll carries across every game.</p>
+    <a class="play-btn" id="play-btn-blackjack" href="/blackjack/">Play Blackjack <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
 </div>
 
 <div class="game-panel" id="panel-baccarat">
@@ -160,6 +233,11 @@ footer{text-align:center;padding:40px 24px 60px;font-size:12px;color:var(--text-
     <p>Seven quick steps covering everything from the deal to the one rule that trips everybody up.</p>
   </section>
   <div id="baccarat-scenes"></div>
+  <section class="play-cta" id="play-cta-baccarat">
+    <h2>That&rsquo;s the basics of Baccarat.</h2>
+    <p>The best way to make it stick is a few hands at the table. It&rsquo;s all free chips, and your bankroll carries across every game.</p>
+    <a class="play-btn" id="play-btn-baccarat" href="/baccarat/">Play Baccarat <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
 </div>
 
 <div class="game-panel" id="panel-paigow">
@@ -169,6 +247,11 @@ footer{text-align:center;padding:40px 24px 60px;font-size:12px;color:var(--text-
     <p>Nine quick steps &mdash; from splitting seven cards into two hands to the one dealer rule that pushes your bet outright.</p>
   </section>
   <div id="paigow-scenes"></div>
+  <section class="play-cta" id="play-cta-paigow">
+    <h2>That&rsquo;s the basics of Pai Gow Poker.</h2>
+    <p>The best way to make it stick is a few hands at the table. It&rsquo;s all free chips, and your bankroll carries across every game.</p>
+    <a class="play-btn" id="play-btn-paigow" href="/pai-gow/">Play Pai Gow Poker <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
 </div>
 
 <div class="game-panel" id="panel-uth">
@@ -178,6 +261,25 @@ footer{text-align:center;padding:40px 24px 60px;font-size:12px;color:var(--text-
     <p>Real hold'em rules, but you're only ever playing against the dealer. Ten quick steps, from the deal to the payout.</p>
   </section>
   <div id="uth-scenes"></div>
+  <section class="play-cta" id="play-cta-uth">
+    <h2>That&rsquo;s the basics of Ultimate Texas Hold&rsquo;em.</h2>
+    <p>The best way to make it stick is a few hands at the table. It&rsquo;s all free chips, and your bankroll carries across every game.</p>
+    <a class="play-btn" id="play-btn-uth" href="/ultimate-texas-holdem/">Play Ultimate Texas Hold&rsquo;em <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
+</div>
+
+<div class="game-panel" id="panel-craps">
+  <section class="game-hero">
+    <div class="hero-glow"></div>
+    <h1>How Craps works</h1>
+    <p>Eleven quick steps &mdash; from the first roll of the dice to the bets worth making and the ones to skip.</p>
+  </section>
+  <div id="craps-scenes"></div>
+  <section class="play-cta" id="play-cta-craps">
+    <h2>That&rsquo;s the basics of Craps.</h2>
+    <p>The best way to make it stick is a few rolls at the table. It&rsquo;s all free chips, and your bankroll carries across every game.</p>
+    <a class="play-btn" id="play-btn-craps" href="/craps/">Play Craps <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
 </div>
 
 <footer>Table Ready — free practice tables, for education only.</footer>
@@ -452,6 +554,89 @@ renderScene(uthContainer, 9, 'The Blind bet', 'Blind only pays extra if your fin
 renderScene(uthContainer, 10, 'The Trips bet', 'Trips is judged entirely on its own \u2014 it only cares about your final hand, three of a kind or better, whether or not you beat the dealer at all. Miss it, and Trips loses on its own too.',
   '<div style="text-align:center;"><div class="hand-label">You</div><div class="hand-row anim-ring">'+cardHTML('8','♠')+cardHTML('8','♥')+cardHTML('8','♦')+cardHTML('K','♣')+cardHTML('3','♦')+'</div><div class="hand-total win anim-fade">Three of a Kind</div><span class="win-tag good anim-fade">Trips pays 3:1</span></div>');
 
+/* ============ CRAPS SCENES ============ */
+var DIE_PIPS = {1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[1,3],[3,1],[3,3]],5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]};
+function dieHTML(v, extra, delay){
+  return '<div class="die'+(v===1?' one':'')+(extra?' '+extra:'')+'"'+(delay?' style="animation-delay:'+delay+'ms"':'')+'>'+
+    DIE_PIPS[v].map(function(q){ return '<i style="grid-area:'+q[0]+' / '+q[1]+'"></i>'; }).join('')+'</div>';
+}
+function diceRow(a, b, extra){
+  return '<div class="dice-row">'+dieHTML(a,'anim-roll'+(extra?' '+extra:''),0)+dieHTML(b,'anim-roll'+(extra?' '+extra:''),130)+'</div>';
+}
+function numChip(n, kind, delay){ return '<span class="numchip '+kind+' anim-fade" style="animation-delay:'+delay+'ms">'+n+'</span>'; }
+function numBoard(o){
+  o = o || {};
+  return '<div class="numboard'+((o.puck||o.chip)?' has-token':'')+'">'+[4,5,6,8,9,10].map(function(n, i){
+    var cap = o.captions && o.captions[n];
+    return '<div class="numbox'+(o.puck===n||o.chip===n?' hot':'')+' anim-fade" style="animation-delay:'+(i*70)+'ms">'+
+      '<span class="nb-n">'+n+'</span>'+
+      (cap ? '<span class="nb-cap"><b>'+cap[0]+'</b>'+cap[1]+'</span>' : '')+
+      (o.puck===n ? '<span class="puck on anim-ring" style="animation-delay:520ms">ON</span>' : '')+
+      (o.chip===n ? '<span class="minichip anim-ring" style="animation-delay:520ms">COME</span>' : '')+
+    '</div>';
+  }).join('')+'</div>';
+}
+function waysChart(){
+  var WAYS = {2:1,3:2,4:3,5:4,6:5,7:6,8:5,9:4,10:3,11:2,12:1}, html = '<div class="ways">';
+  for(var n=2;n<=12;n++){
+    html += '<div class="col'+(n===7?' seven':'')+'"><span class="w">'+WAYS[n]+'</span><div class="bar anim-grow" style="height:'+(WAYS[n]*20)+'px;animation-delay:'+((n-2)*55)+'ms"></div><span class="n">'+n+'</span></div>';
+  }
+  return html+'</div>';
+}
+
+var crContainer = document.getElementById('craps-scenes');
+
+renderScene(crContainer, 1, 'Two dice, one roll', 'Craps is played with two dice. On every roll the shooter throws both, and the total &mdash; anywhere from 2 to 12 &mdash; is what every bet is about. Each die is random on its own; the total is just the two added together.',
+  '<div class="dice-pair">'+diceRow(6,4)+'<div class="hand-total win anim-fade">6 + 4 = 10</div></div>');
+
+renderScene(crContainer, 2, 'Some totals come up more', 'Because two dice make a total, not every number is equally likely. There\'s one way to roll a 2 or a 12, but six ways to roll a 7. Almost everything about craps strategy comes back to this.',
+  '<div style="text-align:center;"><div class="hand-label">Ways to roll each total (out of 36)</div>'+waysChart()+'</div>',
+  'A 7 comes up 6 times in 36');
+
+renderScene(crContainer, 3, 'The come-out roll', 'Every hand opens with a come-out roll. A 7 or 11 wins for the Pass Line right away. A 2, 3 or 12 &mdash; called craps &mdash; loses. Any other total becomes the point.',
+  '<div style="text-align:center;">'+
+    '<div class="rule-row"><div class="chips">'+numChip(7,'win',0)+numChip(11,'win',90)+'</div><span class="win-tag good anim-fade" style="animation-delay:180ms">Natural &mdash; Pass Line wins</span></div>'+
+    '<div class="rule-row"><div class="chips">'+numChip(2,'lose',260)+numChip(3,'lose',350)+numChip(12,'lose',440)+'</div><span class="win-tag bad anim-fade" style="animation-delay:520ms">Craps &mdash; Pass Line loses</span></div>'+
+    '<div class="rule-row"><div class="chips">'+numChip(4,'pt',600)+numChip(5,'pt',660)+numChip(6,'pt',720)+numChip(8,'pt',780)+numChip(9,'pt',840)+numChip(10,'pt',900)+'</div><span class="win-tag anim-fade" style="animation-delay:960ms;background:rgba(214,169,75,0.15);color:var(--brass-bright);border:1px solid rgba(214,169,75,0.3);">Becomes the point</span></div>'+
+  '</div>');
+
+renderScene(crContainer, 4, 'The point', 'When the come-out lands on 4, 5, 6, 8, 9 or 10, that number becomes the point. The dealer flips the puck to ON and sets it on the number, so everyone can see it.',
+  '<div class="dice-pair">'+diceRow(4,2,'sm')+numBoard({puck:6})+'<div class="hand-total anim-fade" style="font-size:15px;">The point is 6</div></div>');
+
+renderScene(crContainer, 5, 'Make the point, or seven out', 'Now the shooter keeps rolling. Roll the point again before a 7 and the Pass Line wins, then a new come-out begins. Roll a 7 first and that\'s a seven out: the Pass Line loses and the dice move on. Any other total just means roll again.',
+  '<div style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;">'+
+    '<div class="dice-pair"><div class="hand-label">Point is 6</div>'+diceRow(4,2,'sm')+'<div class="hand-total win anim-fade">6</div><span class="win-tag good anim-fade">Point made</span></div>'+
+    '<div class="dice-pair anim-shake"><div class="hand-label">Point is 6</div>'+diceRow(4,3,'sm')+'<div class="hand-total bust anim-fade">7</div><span class="win-tag bad anim-fade">Seven out</span></div>'+
+  '</div>');
+
+renderScene(crContainer, 6, 'Pass and Don\'t Pass', 'The Pass Line bets with the shooter; Don\'t Pass bets against. Both pay even money, and both are among the cheapest bets on the table. One catch: a 12 on the come-out is a push for Don\'t Pass &mdash; that tiny rule is the casino\'s whole edge there.',
+  '<div style="display:flex;gap:18px;">'+betChip('Pass','1:1','anim-deal')+betChip('Don\'t<br>Pass','1:1','anim-deal')+'</div>',
+  'House edge: Pass 1.41% &middot; Don\'t Pass 1.36%');
+
+renderScene(crContainer, 7, 'Free odds: the best bet in the casino', 'Once a point is set, you can back your Pass Line bet with odds. Odds pay true odds &mdash; 2:1 on a 4 or 10, 3:2 on a 5 or 9, 6:5 on a 6 or 8 &mdash; so the casino has no edge on them at all. How much you can take depends on the table\'s odds rule (3-4-5x by default here).',
+  '<div style="display:flex;gap:16px;">'+betChip('4 or 10','2:1','anim-deal')+betChip('5 or 9','3:2','anim-deal')+betChip('6 or 8','6:5','anim-deal')+'</div>',
+  'House edge on the odds: 0%');
+
+renderScene(crContainer, 8, 'Come and Don\'t Come', 'These are Pass and Don\'t Pass for later: you can make them any time after the point is set. The very next roll is a come-out for that bet alone &mdash; a 7 or 11 wins, a 2, 3 or 12 loses, and any other number moves your bet onto that number.',
+  '<div class="dice-pair">'+diceRow(5,3,'sm')+numBoard({chip:8})+'<div class="hand-total anim-fade" style="font-size:15px;">Your Come bet travels to the 8</div></div>');
+
+renderScene(crContainer, 9, 'Place and Buy bets', 'Want a number to roll before a 7? Place it. Place pays 9:5 on 4 and 10, 7:5 on 5 and 9, and 7:6 on 6 and 8. A Buy bet pays true odds minus a 5% commission, which is the cheaper choice on the 4, 5, 9 and 10. Both are off during a come-out roll.',
+  '<div class="dice-pair">'+numBoard({captions:{4:['Buy','2:1'],5:['Buy','3:2'],6:['Place','7:6'],8:['Place','7:6'],9:['Buy','3:2'],10:['Buy','2:1']}})+'<div class="hand-total anim-fade" style="font-size:14px;margin-top:14px;">The cheapest way to bet each number</div></div>',
+  'Buy the outside numbers, Place the 6 and 8');
+
+renderScene(crContainer, 10, 'Hardways', 'A hardway bet wins if the number rolls as a pair &mdash; a hard six is 3 + 3 &mdash; before any 7 and before the number rolls the easy way, like 4 + 2. Hard 6 and 8 pay 9:1; hard 4 and 10 pay 7:1.',
+  '<div style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;">'+
+    '<div class="dice-pair"><div class="hand-label">Hard six</div>'+diceRow(3,3,'sm')+'<span class="win-tag good anim-fade">Hardway wins 9:1</span></div>'+
+    '<div class="dice-pair"><div class="hand-label">Easy six</div>'+diceRow(4,2,'sm')+'<span class="win-tag bad anim-fade">Hardway loses</span></div>'+
+  '</div>');
+
+renderScene(crContainer, 11, 'The Field and one-roll bets', 'The Field wins on 2, 3, 4, 9, 10, 11 and 12 for one roll &mdash; a 2 pays double and a 12 pays triple. One-roll bets like Any Seven, Any Craps and Yo are settled by the very next throw and pay big, but they carry the highest house edge in the casino.',
+  '<div style="text-align:center;">'+
+    '<div class="rule-row"><div class="chips">'+[2,3,4,9,10,11,12].map(function(n,i){ return numChip(n,'win',i*70); }).join('')+'</div><span class="win-tag good anim-fade" style="animation-delay:520ms">Field wins</span></div>'+
+    '<div class="rule-row"><div class="chips">'+[5,6,7,8].map(function(n,i){ return numChip(n,'lose',600+i*70); }).join('')+'</div><span class="win-tag bad anim-fade" style="animation-delay:900ms">Field loses</span></div>'+
+  '</div>',
+  'Any Seven pays 4:1 &mdash; the casino keeps 16.7%');
+
 function buildProgressRail(game){
   var rail = document.getElementById('progress-rail');
   var scenes = document.getElementById(game+'-scenes').children;
@@ -481,13 +666,50 @@ function switchGame(game){
     newPanel.classList.add('active');
     currentGame = game;
     buildProgressRail(game);
+    updateFloorNote(game);
+    rememberGameInUrl(game);
     requestAnimationFrame(function(){ newPanel.classList.add('fade-in'); });
   }, 260);
+}
+
+/* ---- deep links: /learn/#baccarat opens that game's lesson; the address follows the tabs ---- */
+var GAME_META = {
+  blackjack:{name:'Blackjack', play:'/blackjack/'},
+  baccarat:{name:'Baccarat', play:'/baccarat/'},
+  paigow:{name:'Pai Gow Poker', play:'/pai-gow/'},
+  uth:{name:"Ultimate Texas Hold'em", play:'/ultimate-texas-holdem/'},
+  craps:{name:'Craps', play:'/craps/'}
+};
+function gameFromHash(){
+  var h = (location.hash || '').replace(/^#/, '');
+  return Object.prototype.hasOwnProperty.call(GAME_META, h) ? h : null;
+}
+function rememberGameInUrl(game){
+  try{ history.replaceState(null, '', location.pathname + location.search + '#' + game); }catch(e){}
+}
+function updateFloorNote(game){
+  var note = document.getElementById('floor-note');
+  if(!note || note.getAttribute('data-armed') !== '1') return;
+  document.getElementById('floor-note-game').textContent = GAME_META[game].name;
+  document.getElementById('floor-note-skip').setAttribute('href', GAME_META[game].play);
+}
+// Used only for the very first paint from a deep link: no fade, so the wrong game never flashes.
+function showGameNow(game){
+  if(game === currentGame) return;
+  document.querySelectorAll('.switch-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('switch-'+game).classList.add('active');
+  var oldPanel = document.getElementById('panel-'+currentGame);
+  oldPanel.classList.remove('active'); oldPanel.classList.remove('fade-in');
+  var newPanel = document.getElementById('panel-'+game);
+  newPanel.classList.add('active'); newPanel.classList.add('fade-in');
+  currentGame = game;
+  buildProgressRail(game);
 }
 document.getElementById('switch-blackjack').addEventListener('click', function(){ switchGame('blackjack'); });
 document.getElementById('switch-baccarat').addEventListener('click', function(){ switchGame('baccarat'); });
 document.getElementById('switch-paigow').addEventListener('click', function(){ switchGame('paigow'); });
 document.getElementById('switch-uth').addEventListener('click', function(){ switchGame('uth'); });
+document.getElementById('switch-craps').addEventListener('click', function(){ switchGame('craps'); });
 
 var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.querySelectorAll('.game-hero').forEach(function(heroSection){
@@ -502,6 +724,21 @@ document.querySelectorAll('.game-hero').forEach(function(heroSection){
 });
 
 buildProgressRail('blackjack');
+(function initFromUrl(){
+  var note = document.getElementById('floor-note');
+  var fromFloor = false;
+  try{ fromFloor = new URLSearchParams(location.search).get('from') === 'floor'; }catch(e){}
+  if(note && fromFloor){ note.setAttribute('data-armed', '1'); note.classList.add('show'); }
+  var dismiss = document.getElementById('floor-note-dismiss');
+  if(dismiss) dismiss.addEventListener('click', function(){ note.classList.remove('show'); });
+  var g = gameFromHash();
+  if(g) showGameNow(g);
+  updateFloorNote(currentGame);
+  window.addEventListener('hashchange', function(){
+    var g2 = gameFromHash();
+    if(g2 && g2 !== currentGame) switchGame(g2);
+  });
+})();
 </script>
 </body>
 </html>
