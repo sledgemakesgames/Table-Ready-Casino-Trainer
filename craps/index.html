@@ -142,12 +142,24 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .dice-pick{position:absolute;left:10px;top:10px;z-index:5;padding:5px;border-radius:12px;line-height:0;background:rgba(8,9,11,0.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);cursor:pointer;transition:transform 180ms var(--spring),border-color 160ms ease;}
 .dice-pick .d2{--d:26px;box-shadow:inset 0 0 6px rgba(0,0,0,0.12),inset 0 1px 0 var(--die-shine),0 1px 3px rgba(0,0,0,0.35);}
 .dice-pick:hover{transform:rotate(-8deg) scale(1.06);border-color:rgba(240,196,107,0.4);}
-.keep-toggle{position:absolute;right:10px;bottom:10px;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:6px 11px 6px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:rgba(8,9,11,0.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);color:var(--text-muted);}
-.keep-toggle[aria-checked="true"]{color:var(--brass-bright);border-color:rgba(240,196,107,0.4);}
-.keep-toggle .sw{width:26px;height:15px;border-radius:99px;background:rgba(237,238,240,0.2);position:relative;transition:background 200ms ease;flex-shrink:0;}
-.keep-toggle .sw i{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:transform 260ms var(--spring);}
-.keep-toggle[aria-checked="true"] .sw{background:var(--brass);}
-.keep-toggle[aria-checked="true"] .sw i{transform:translateX(11px);}
+.keep-toggle,.work-toggle{position:absolute;right:10px;bottom:10px;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:6px 11px 6px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:rgba(8,9,11,0.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);color:var(--text-muted);}
+.keep-toggle[aria-checked="true"],.work-toggle[aria-checked="true"]{color:var(--brass-bright);border-color:rgba(240,196,107,0.4);}
+.keep-toggle .sw,.work-toggle .sw{width:26px;height:15px;border-radius:99px;background:rgba(237,238,240,0.2);position:relative;transition:background 200ms ease;flex-shrink:0;}
+.keep-toggle .sw i,.work-toggle .sw i{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:transform 260ms var(--spring);}
+.keep-toggle[aria-checked="true"] .sw,.work-toggle[aria-checked="true"] .sw{background:var(--brass);}
+.keep-toggle[aria-checked="true"] .sw i,.work-toggle[aria-checked="true"] .sw i{transform:translateX(11px);}
+.work-toggle{right:10px;top:10px;bottom:auto;cursor:pointer;}
+.work-toggle[hidden]{display:none;}
+
+.work-toggle:disabled{opacity:0.45;cursor:not-allowed;}
+.work-toggle:disabled:active{transform:none;}
+/* the small ON / OFF marker a casino puts on a bet that is working (or not) for the come-out roll */
+.wk{display:inline-block;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:8.5px;letter-spacing:0.7px;line-height:1;padding:2px 5px;border-radius:99px;vertical-align:middle;white-space:nowrap;}
+.wk.off{color:var(--text-muted);background:rgba(237,238,240,0.09);border:1px solid var(--line);}
+.wk.on{color:#20160A;background:var(--brass-bright);border:1px solid transparent;}
+.num-stack .wk{margin-top:4px;}
+.spot .spot-chips .wk{align-self:center;}
+.tag .wk{margin-left:2px;}
 .die-pos{position:absolute;left:50%;bottom:44px;width:0;height:0;transform-style:preserve-3d;z-index:2;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-tap-highlight-color:transparent;}
 .die-pos.held{cursor:grabbing;}
 .dice-stage.locked .die-pos{cursor:default;touch-action:auto;}
@@ -184,7 +196,20 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .dice-stage.hand .die-pos{cursor:grabbing;}
 
 @keyframes settlePop{0%{transform:scale(0.92);}100%{transform:scale(1);}}
-@media(max-width:560px){ .table-wall{width:16px;} .shoot-hint{font-size:10.5px;padding:4px 10px;top:8px;} .dice-stage{height:196px;--s:48px;--h:24px;} .readout .d2{--d:28px;} .rd-tot{font-size:22px;} .keep-toggle{right:8px;bottom:8px;font-size:11px;} .dice-pick{left:8px;top:8px;} .dice-pick .d2{--d:24px;} .die .face{padding:6px;border-radius:8px;} .die-shadow{left:-27px;width:54px;} .die-pos{bottom:48px;} .callout{margin-top:10px;min-height:52px;} .callout .big{font-size:22px;} }
+@media(max-width:560px){ .table-wall{width:16px;} .shoot-hint{font-size:10.5px;padding:4px 10px;top:8px;} .dice-stage{height:196px;--s:48px;--h:24px;} .readout .d2{--d:28px;} .rd-tot{font-size:22px;} .keep-toggle{right:8px;bottom:8px;font-size:11px;} .work-toggle{right:8px;top:8px;bottom:auto;font-size:11px;padding:5px 9px 5px 7px;gap:6px;} .dice-pick{left:8px;top:8px;} .dice-pick .d2{--d:24px;} .die .face{padding:6px;border-radius:8px;} .die-shadow{left:-27px;width:54px;} .die-pos{bottom:48px;} .callout{margin-top:10px;min-height:52px;} .callout .big{font-size:22px;} }
+/* narrow phones: the switch keeps just "On" / "Off", and the roll read-out and the flick hint stay clear of it */
+@media(max-width:420px){
+  .work-toggle .wt-w{display:none;}
+  .work-toggle #work-state{text-transform:capitalize;}
+  .work-toggle{padding:5px 9px 5px 7px;gap:6px;}
+  .shoot-hint{top:44px;}
+}
+@media(max-width:340px){
+  .readout{padding-right:16px;}
+  .readout .d2{--d:26px;}
+  .rd-tot{font-size:20px;}
+  .rd-pill{gap:5px;padding:5px 10px 5px 6px;}
+}
 
 /* ---- call-out + roll strip ---- */
 .callout{text-align:center;margin:14px 0 4px;min-height:58px;}
@@ -473,6 +498,7 @@ footer{text-align:center;}
   <div class="check-row"><input type="checkbox" id="set-edge" checked><label for="set-edge">Show the house edge on every bet</label></div>
   <div class="check-row"><input type="checkbox" id="set-keep" checked><label for="set-keep">Keep the same bets out after every roll</label></div>
   <div class="check-row"><input type="checkbox" id="set-autopress"><label for="set-autopress">Auto-press — when a Place or Buy number hits, add the winnings to that bet</label></div>
+  <div class="check-row"><input type="checkbox" id="set-work"><label for="set-work">Bets work on the come-out roll — Place, Buy and hardway bets and the odds on Come bets (the casino default is off)</label></div>
   <label for="set-odds" style="display:block;font-size:13px;margin:10px 0 6px;">Maximum free odds</label>
   <select id="set-odds">
     <option value="345" selected>3-4-5x (the common Vegas rule)</option>
@@ -539,6 +565,7 @@ footer{text-align:center;}
     <div class="readout" id="stage-total" aria-hidden="true"></div>
     <button type="button" class="dice-pick" id="btn-dice" title="Change the dice color" aria-label="Dice color: Ivory. Tap to change."></button>
     <button type="button" class="keep-toggle" id="btn-keep" role="switch" aria-checked="true" title="After each roll, put the bets that came down back out"><span class="sw"><i></i></span>Keep same bets out</button>
+    <button type="button" class="work-toggle" id="btn-work" role="switch" aria-checked="false" title="Place, Buy and hardway bets, and odds on Come bets, are off on a come-out roll. Turn this on to have them work."><span class="sw"><i></i></span><span id="work-text"><span class="wt-w">Bets </span><span id="work-state">off</span></span></button>
   </div>
 
   <div class="callout" id="callout" aria-live="polite">
@@ -623,6 +650,7 @@ footer{text-align:center;}
       <li><b>Press</b> adds what a Place or Buy bet just won back onto the same bet. It raises what you can win next time and what you lose on a 7. The house edge stays the same.</li>
       <li><b>The stickman</b> is the casino worker with the long hooked stick. He calls each roll and gathers the dice with it for the next shooter. Here he comes out after every 7: the dice stay where they land for the roll, then he draws them over and sets them back in the middle.</li>
       <li><b>Setting the dice</b> is the little ritual players do before they throw. Drag either die to move it, and tap it to turn it to the next number (Shift-click or right-click turns it back). Push the two dice into each other to pick them both up: a wall slides in on the right, and a flick toward it throws them (let go gently to set them down instead). It is all for show: the roll is always two fresh random dice, whatever you set or however you throw.</li>
+      <li><b>Bets on / off</b> (top right of the dice) is for the come-out roll. Place, Buy and hardway bets, and the odds on Come bets, are normally <b>off</b> then: they cannot win or lose that roll, and a small OFF marker shows on them. Switch it <b>on</b> to have them work on the come-out too, which means a 7 takes them. Once a point is set, they all work either way.</li>
       <li><b>Keep same bets out</b> puts back the bets that came down on the last roll (a Pass Line win, a Field loss). Switch it off to rebuild the table yourself each roll.</li>
     </ul>
   </div>
@@ -1157,7 +1185,7 @@ var G={
   chip:25,
   undo:[], rebet:[], last:null,
   lastAmt:{},
-  settings:{level:'starter', levelSource:null, sharedLevel:null, oddsRule:'345', sound:true, turbo:false, coach:true, keep:true, autopress:false, showEdge:true, dice:'ivory', pbv:2, pb:{4:'buy',5:'buy',6:'place',8:'place',9:'buy',10:'buy'}},   // pb: Buy the outside numbers (4 5 9 10), Place the 6 and 8. pbv: which default the saved choice goes with
+  settings:{level:'starter', levelSource:null, sharedLevel:null, oddsRule:'345', sound:true, turbo:false, coach:true, keep:true, autopress:false, work:false, showEdge:true, dice:'ivory', pbv:2, pb:{4:'buy',5:'buy',6:'place',8:'place',9:'buy',10:'buy'}},   // pb: Buy the outside numbers (4 5 9 10), Place the 6 and 8. pbv: which default the saved choice goes with
   session:freshSession()
 };
 function viewTable(){ return (G.phase==='rolling' && G.pre) ? G.pre.table : G.table; }
@@ -1518,7 +1546,7 @@ function renderSpots(){
     hit.setAttribute('aria-label', def.title+(bet?', $'+bet.amount+' on it':'')+'. '+def.pay+' House edge '+edgePct(E.LEDGER_BY_KEY[def.edge].edge)+'.'+(why?' '+why:''));
     var chips=el.querySelector('.spot-chips');
     var prev=G.lastAmt[key]||0, amt=bet?bet.amount:0;
-    setHTML(chips, bet ? stackHTML(amt, amt>prev)+'<span class="amt">'+formatMoney(amt)+'</span>' : '');
+    setHTML(chips, bet ? stackHTML(amt, amt>prev)+'<span class="amt">'+formatMoney(amt)+'</span>'+(def.type==='hard' ? workBadge(t, 'Hardway bets') : '') : '');
     G.lastAmt[key]=amt;
     var x=el.querySelector('.spot-x'); x.classList.toggle('can', canRemoveBet(t, bet));
     if(def.odds){
@@ -1571,7 +1599,7 @@ function renderNumbers(){
       b.title = locked ? 'Take down your '+(nb.type==='buy'?'Buy':'Place')+' bet on the '+n+' to switch.' : '';
     });
     var prev=G.lastAmt[key]||0, amt=nb?nb.amount:0;
-    setHTML(el.querySelector('.num-stack'), nb ? stackHTML(amt, amt>prev)+'<span class="amt">'+formatMoney(amt)+'</span>' : '');
+    setHTML(el.querySelector('.num-stack'), nb ? stackHTML(amt, amt>prev)+'<span class="amt">'+formatMoney(amt)+'</span>'+workBadge(t, nb.type==='buy'?'Buy bets':'Place bets') : '');
     G.lastAmt[key]=amt;
     var xb=el.querySelector('.spot-x'); xb.setAttribute('data-key', nb?nb.type+n:key); xb.classList.toggle('can', canRemoveBet(t, nb));
     // Come / Don't Come bets that have traveled here, with their odds shown as chips
@@ -1580,7 +1608,7 @@ function renderNumbers(){
       if(!bet) return '';
       var room=E.oddsRoom(t, bet), canAdd=betting && room>0, okey='tag'+bet.id, prevO=G.lastAmt[okey]||0;
       var inner='<span class="tl">'+label+'</span>'+stackHTML(bet.amount,false,true)+'<span class="amt">'+formatMoney(bet.amount)+'</span>';
-      if(bet.odds>0) inner+='<em>+</em>'+stackHTML(bet.odds, bet.odds>prevO, true)+'<span class="amt">'+formatMoney(bet.odds)+'</span>';
+      if(bet.odds>0) inner+='<em>+</em>'+stackHTML(bet.odds, bet.odds>prevO, true)+'<span class="amt">'+formatMoney(bet.odds)+'</span>'+workBadge(t, 'Odds on Come bets');
       else if(canAdd) inner+='<em>+ odds</em>';
       G.lastAmt[okey]=bet.odds;
       return '<button type="button" class="tag '+cls+'" data-act="tag-odds" data-id="'+bet.id+'"'+(canAdd?'':' disabled')+' aria-label="'+full+' bet on '+n+', '+formatMoney(bet.amount)+', odds '+formatMoney(bet.odds)+'. Tap to add odds.">'+inner+'</button>';
@@ -1608,6 +1636,7 @@ function renderTray(){
   $('btn-rebet').disabled=!betting || rb.items.length===0;
   $('btn-rebet').textContent = rb.items.length ? 'Rebet '+formatMoney(rb.total) : 'Rebet';
   $('btn-roll').disabled=!betting;
+  renderWork();
   var hint='Pick a chip, then tap a bet to place it.';
   if(!betting) hint='Dice are rolling...';
   else if(t.bets.length===0 && t.point===null) hint='Start with a Pass Line bet, then roll.';
@@ -1627,6 +1656,7 @@ function renderToggles(){
   $('btn-edge').setAttribute('aria-pressed', S.showEdge?'true':'false');
   $('btn-keep').setAttribute('aria-checked', S.keep?'true':'false');
   $('set-edge').checked=!!S.showEdge; $('set-keep').checked=!!S.keep; $('set-autopress').checked=!!S.autopress;
+  renderWork();
 }
 /* ---- dice colors ---- */
 var DICE_THEMES=[
@@ -1896,8 +1926,8 @@ function setMetrics(){
   var st=$('dice-stage'), phone=(window.innerWidth||1000)<=560, s=phone?48:60;
   var W=(st && st.clientWidth) || (phone?336:860), H=(st && st.clientHeight) || (phone?196:214);
   var R=Math.round(s*0.68), ground=phone?48:44, cube=Math.round(s*1.42), xm=Math.max(0, W/2-R-8);
-  var obst=[];                                              // the two buttons that sit on the tray: dice are kept clear of them
-  ['btn-dice','btn-keep'].forEach(function(id){
+  var obst=[];                                              // the buttons that sit on the tray: dice are kept clear of them
+  ['btn-dice','btn-keep','btn-work'].forEach(function(id){
     var b=$(id); if(!b || !b.offsetWidth || !b.offsetHeight) return;
     obst.push({l:b.offsetLeft-4, t:b.offsetTop-4, r:b.offsetLeft+b.offsetWidth+4, b:b.offsetTop+b.offsetHeight+4});
   });
@@ -2595,7 +2625,23 @@ function betWord(e){
   if((e.type==='come'||e.type==='dontcome') && e.number) return base+' '+e.number;
   return base;
 }
+// When bets are switched on for the come-out, say what that did on this roll.
+function workedLine(res){
+  if(!res.comeOut || !G.settings.work) return '';
+  var hit=res.events.filter(function(e){
+    return e.resolved && (workBetTypes(e) || ((e.type==='come' || e.type==='dontcome') && e.number!==null && e.odds>0 && (e.oddsMode==='win' || e.oddsMode==='lose')));
+  });
+  function name(e){ return (workBetTypes(e) || !e.number) ? betWord(e) : 'odds on your '+betWord(e); }
+  var lost=hit.filter(function(e){ return e.result==='lose' || e.oddsMode==='lose'; }).map(name), won=hit.filter(function(e){ return !(e.result==='lose' || e.oddsMode==='lose'); }).map(name);
+  function list(a){ a=a.slice(0,3); return a.length>1 ? a.slice(0,-1).join(', ')+' and '+a[a.length-1] : a[0]; }
+  if(lost.length) return ' Your bets were on for the come-out, so the '+res.sum+' also took your '+list(lost)+'.';
+  if(won.length) return ' Your bets were on for the come-out, so your '+list(won)+' paid.';
+  return '';
+}
 function rollLesson(res){
+  return rollLessonBase(res)+workedLine(res);
+}
+function rollLessonBase(res){
   var s=res.sum, w=E.WAYS;
   if(res.pointEstablished){
     var p=Math.round(100*w[s]/(w[s]+6));
@@ -2896,7 +2942,7 @@ function applyLoaded(){
       if(s.sharedLevel==='new' || s.sharedLevel==='rules' || s.sharedLevel==='pro') G.settings.sharedLevel=s.sharedLevel;
       if(E.ODDS_RULES[s.oddsRule]) G.settings.oddsRule=s.oddsRule;
       if(diceTheme(s.dice)) G.settings.dice=s.dice;
-      ['sound','turbo','coach','keep','autopress','showEdge'].forEach(function(k){ if(typeof s[k]==='boolean') G.settings[k]=s[k]; });
+      ['sound','turbo','coach','keep','autopress','work','showEdge'].forEach(function(k){ if(typeof s[k]==='boolean') G.settings[k]=s[k]; });
       if(s.pb && typeof s.pb==='object'){
         // a save from before the Buy 4/5/9/10 default that never switched anything (all Place) moves to the new default; anything the player chose stays
         var oldDefault=s.pbv!==2 && E.POINTS.every(function(n){ return s.pb[n]!=='buy'; });
@@ -2927,6 +2973,7 @@ function applyLoaded(){
     }catch(e){}
   }
   G.table.opts.oddsRule=G.settings.oddsRule;
+  applyWork();
   return restored;
 }
 
@@ -3008,6 +3055,8 @@ function wire(){
   $('set-autopress').addEventListener('change', function(){ G.settings.autopress=this.checked; saveSession(); renderToggles(); });
   $('btn-edge').addEventListener('click', function(){ setEdge(!G.settings.showEdge); });
   $('btn-keep').addEventListener('click', function(){ setKeep(!G.settings.keep); });
+  $('btn-work').addEventListener('click', function(){ setWork(!G.settings.work); });
+  $('set-work').addEventListener('change', function(){ setWork(this.checked, false); });
   $('btn-dice').addEventListener('click', nextDiceTheme);
   $('dice-stage').addEventListener('pointerdown', onDieDown);
   $('dice-stage').addEventListener('contextmenu', function(ev){ if(dieIndexOf(ev.target)>=0) ev.preventDefault(); });
@@ -3029,6 +3078,40 @@ function wire(){
   window.addEventListener('pagehide', function(){ persistAll(); });
 }
 function setEdge(v){ G.settings.showEdge=!!v; saveSession(); renderToggles(); say('House edge '+(v?'shown':'hidden')+'.'); }
+/* ---- Bets on / off for the come-out roll. Normally Place, Buy and hardway bets and the odds on Come bets are OFF on a come-out roll (no action).
+   Switched on, they work on it too. The rules live in the engine (placeWork, hardWork, comeOddsWork); this just sets them. ---- */
+function applyWork(){ var o=G.table.opts, on=!!G.settings.work; o.placeWork=on; o.hardWork=on; o.comeOddsWork=on; }
+function workBetTypes(b){ return b.type==='place' || b.type==='buy' || b.type==='hard'; }
+function workRelevant(t){
+  if(levelRank(G.settings.level)>=1 || G.settings.work) return true;
+  return t.bets.some(function(b){ return workBetTypes(b) || ((b.type==='come' || b.type==='dontcome') && b.number!==null); });
+}
+function renderWork(){
+  var b=$('btn-work'); if(!b) return;
+  var on=!!G.settings.work, text=on?'Bets on':'Bets off';
+  b.hidden=!workRelevant(viewTable());
+  b.disabled=G.phase!=='betting';
+  b.setAttribute('aria-checked', on?'true':'false');
+  $('work-state').textContent=on?'on':'off';
+  b.setAttribute('aria-label', text+' for the come-out roll');
+  b.title = on ? 'Bets are ON for the come-out roll: Place, Buy and hardway bets and the odds on Come bets work on it, so a 7 takes them. Tap to turn them off.'
+               : 'Bets are OFF for the come-out roll, the casino default: Place, Buy and hardway bets and the odds on Come bets cannot win or lose on it. Tap to turn them on.';
+  var chk=$('set-work'); if(chk) chk.checked=on;
+}
+// The small ON / OFF marker a casino puts on a bet for the come-out roll. Only shown while the next roll is a come-out; with a point on, every bet works.
+function workBadge(t, what){
+  if(t.point!==null) return '';
+  var on=!!G.settings.work;
+  return '<span class="wk '+(on?'on':'off')+'" title="'+esc(what+(on?' work':' are off')+' on the come-out roll')+'">'+(on?'ON':'OFF')+'</span>';
+}
+function setWork(v, announce){
+  if(G.phase!=='betting') return;
+  v=!!v; if(v===!!G.settings.work){ renderWork(); return; }
+  G.settings.work=v; applyWork(); saveSession(); saveTable(); renderAll();
+  var msg = v ? 'Bets on. Place, Buy and hardway bets and the odds on Come bets now work on a come-out roll too, so a 7 takes them.'
+              : 'Bets off. Place, Buy and hardway bets and the odds on Come bets sit out the come-out roll, the casino default.';
+  if(announce===false) say(msg); else toast(msg);
+}
 function setKeep(v){ G.settings.keep=!!v; saveSession(); renderToggles(); say('Keep same bets out '+(v?'on':'off')+'.'); }
 // Easter egg: tap the P in "Pass Line". A chip pops the P out and the title splits into a chip and "Ass Line".
 function toggleEgg(el){
