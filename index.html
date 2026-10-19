@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Table Ready — free casino strategy trainer</title>
 <meta name="description" content="A free practice casino for learning real strategy — Blackjack, Baccarat, Pai Gow Poker, Ultimate Texas Hold'em, and Craps are all live now, with more tables on the way. No real money, ever.">
+<link rel="canonical" href="https://tableready.xyz/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta property="og:type" content="website">
@@ -16,7 +17,8 @@
 <meta name="twitter:title" content="Table Ready — free casino strategy trainer">
 <meta name="twitter:description" content="A free practice casino for learning real strategy — Blackjack, Baccarat, Pai Gow Poker, Ultimate Texas Hold'em, and Craps are all live now. No real money, ever.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500..700&family=Inter:wght@400..600&display=swap" rel="stylesheet">
 <style>
 @view-transition { navigation: auto; }
 :root{
@@ -29,7 +31,7 @@
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px;}
 a{color:inherit;}
 :focus-visible{outline:2px solid var(--brass-bright);outline-offset:3px;border-radius:4px;}
 
@@ -70,7 +72,7 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
 .chip-back{transform:rotateY(180deg);}
 .chip-face svg{position:absolute;inset:0;width:100%;height:100%;}
 .chip-suit{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;line-height:1;color:#20160A;opacity:0.62;}
-.hero-moment{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 280ms ease;}
+.hero-moment{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 280ms ease;--tc-rgb:214,169,75;}
 .hero-moment.show{opacity:1;}
 .hero-moment-cards{position:relative;width:100%;height:100%;}
 .hero-moment .flip-card{position:absolute;left:50%;top:50%;width:84px;height:116px;perspective:900px;}
@@ -83,17 +85,22 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
 @media(max-width:640px){.hero-anim{margin-top:8px;}}
 
 /* ---------- reveal-on-load ---------- */
-.rv{opacity:0;transform:translateY(14px);transition:opacity 620ms cubic-bezier(.16,1,.3,1),transform 620ms cubic-bezier(.16,1,.3,1);}
+.rv{transition:opacity 620ms cubic-bezier(.16,1,.3,1),transform 620ms cubic-bezier(.16,1,.3,1);}
+/* hidden-until-revealed only when scripts run, so the page is never blank without JavaScript */
+@media (scripting:enabled){ .rv{opacity:0;transform:translateY(14px);} }
 .rv.show{opacity:1;transform:translateY(0);}
 
 /* ---------- floor section ---------- */
 .floor{padding:8px 0 64px;}
 .floor h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:22px;margin:0 0 24px;letter-spacing:-0.3px;}
-.floor-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}
-/* five tables: three on the first row, two centred beneath them */
-.floor-grid .table-card{grid-column:span 2;}
-.floor-grid .table-card:nth-child(4){grid-column:2 / span 2;}
-.floor-grid .table-card:nth-child(5){grid-column:4 / span 2;}
+.floor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+/* five tables in one row on wide screens; on mid-size screens three on the first row, two centred beneath them */
+@media(max-width:1079px){
+  .floor-grid{grid-template-columns:repeat(6,1fr);gap:16px;}
+  .floor-grid .table-card{grid-column:span 2;}
+  .floor-grid .table-card:nth-child(4){grid-column:2 / span 2;}
+  .floor-grid .table-card:nth-child(5){grid-column:4 / span 2;}
+}
 @media(max-width:900px){
   .floor-grid{grid-template-columns:repeat(2,1fr);}
   .floor-grid .table-card,.floor-grid .table-card:nth-child(4),.floor-grid .table-card:nth-child(5){grid-column:auto;}
@@ -104,17 +111,23 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
   .floor-grid .table-card:nth-child(5){width:auto;justify-self:stretch;}
 }
 
-.table-card{position:relative;border-radius:16px;padding:24px 22px 22px;min-height:230px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);opacity:0;transform:translateY(18px);transition:opacity 560ms cubic-bezier(.16,1,.3,1),transform 560ms cubic-bezier(.16,1,.3,1),box-shadow 220ms ease,border-color 220ms ease,background 220ms ease;background:var(--panel);}
+.table-card{position:relative;border-radius:16px;padding:24px 22px 22px;min-height:230px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);transition:opacity 560ms cubic-bezier(.16,1,.3,1),transform 560ms cubic-bezier(.16,1,.3,1),box-shadow 220ms ease,border-color 220ms ease,background 220ms ease;background:var(--panel);}
+@media (scripting:enabled){ .table-card{opacity:0;transform:translateY(18px);} }
 .table-card.show{opacity:1;transform:translateY(0);}
+/* in a row of five the cards are narrower, so they trade a little padding for room */
+@media(min-width:1080px){ .table-card{padding:22px 18px 20px;min-height:0;} }
 .table-card:hover,.table-card:focus-within{transform:translateY(-4px);box-shadow:0 20px 38px -18px var(--tc-shadow, rgba(0,0,0,0.4));border-color:var(--tc-accent);}
 .table-card a.cover{position:absolute;inset:0;z-index:2;}
-.tc-blackjack{--tc-accent:var(--dusty-blue);--tc-shadow:rgba(91,141,224,0.35);}
-.tc-baccarat{--tc-accent:var(--sage-bright);--tc-shadow:rgba(101,199,163,0.35);}
-.tc-paigow{--tc-accent:var(--coral);--tc-shadow:rgba(225,93,69,0.35);}
-.tc-uth{--tc-accent:var(--violet);--tc-shadow:rgba(156,130,224,0.35);}
-.tc-craps{--tc-accent:var(--rose);--tc-shadow:rgba(232,121,159,0.35);}
+.tc-blackjack{--tc-accent:var(--dusty-blue);--tc-rgb:91,141,224;--tc-shadow:rgba(91,141,224,0.35);}
+.tc-baccarat{--tc-accent:var(--sage-bright);--tc-rgb:101,199,163;--tc-shadow:rgba(101,199,163,0.35);}
+.tc-paigow{--tc-accent:var(--coral);--tc-rgb:225,93,69;--tc-shadow:rgba(225,93,69,0.35);}
+.tc-uth{--tc-accent:var(--violet);--tc-rgb:156,130,224;--tc-shadow:rgba(156,130,224,0.35);}
+.tc-craps{--tc-accent:var(--rose);--tc-rgb:232,121,159;--tc-shadow:rgba(232,121,159,0.35);}
 
-.icon-stage{position:relative;height:100px;margin-bottom:18px;}
+.stage-fit{--k:1;height:calc(100px * var(--k));margin-bottom:18px;}
+@media(min-width:1080px){ .stage-fit{--k:0.88;} }
+@media(min-width:1200px){ .stage-fit{--k:0.95;} }
+.icon-stage{position:relative;width:180px;height:100px;transform:scale(var(--k));transform-origin:0 0;}
 .flip-card{position:absolute;width:62px;height:86px;perspective:900px;}
 .flip-inner{position:relative;width:100%;height:100%;transition:transform 520ms cubic-bezier(.34,1.56,.64,1);transform-style:preserve-3d;}
 .flip-card.flipped .flip-inner{transform:rotateY(180deg);}
@@ -146,11 +159,24 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
 .icon-stage[data-count="bp"] .flip-card:nth-child(4){left:118px;top:4px;z-index:2;}
 .icon-stage[data-count="bp"]::after{content:'vs';position:absolute;left:91px;top:50%;transform:translate(-50%,-50%);font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;z-index:0;}
 
-/* two-dice stage (craps): the dice tumble and land on a fresh roll, the way the cards flip at the other tables */
-.die{position:absolute;width:58px;height:58px;padding:9px;border-radius:12px;display:grid;grid-template:repeat(3,1fr) / repeat(3,1fr);--rot:0deg;transform:rotate(var(--rot));
+/* two-dice stage (craps). Same life cycle as a hand of cards: the outline of two dice at rest (like the
+   face-down cards at the other tables), and on open they roll and turn into real dice.
+   .die-back is the outline, .die-face is the real die. */
+.die{position:absolute;width:58px;height:58px;--rot:0deg;transform:rotate(var(--rot));}
+.die-back,.die-face{position:absolute;inset:0;border-radius:12px;transition:opacity 150ms ease;}
+.die-back{background-color:var(--panel-2);border:1.5px solid var(--tc-accent);background-image:repeating-linear-gradient(45deg, var(--tc-accent) 0, var(--tc-accent) 1.5px, transparent 1.5px, transparent 9px);opacity:0.92;
+  --rc:rgba(var(--tc-rgb),0.6);--ring:transparent 3px,var(--rc) 3.5px,var(--rc) 5px,transparent 5.5px;}
+.die-back::before{content:'';position:absolute;inset:0;background:var(--panel-2);opacity:0.72;border-radius:10.5px;}
+.die-back::after{content:'';position:absolute;inset:0;border-radius:inherit;}
+.die-back.r3::after{background:radial-gradient(circle at 27% 27%,var(--ring)),radial-gradient(circle at 50% 50%,var(--ring)),radial-gradient(circle at 73% 73%,var(--ring));}
+.die-back.r5::after{background:radial-gradient(circle at 27% 27%,var(--ring)),radial-gradient(circle at 73% 27%,var(--ring)),radial-gradient(circle at 50% 50%,var(--ring)),radial-gradient(circle at 27% 73%,var(--ring)),radial-gradient(circle at 73% 73%,var(--ring));}
+.die-back.r6::after{background:radial-gradient(circle at 27% 27%,var(--ring)),radial-gradient(circle at 73% 27%,var(--ring)),radial-gradient(circle at 27% 50%,var(--ring)),radial-gradient(circle at 73% 50%,var(--ring)),radial-gradient(circle at 27% 73%,var(--ring)),radial-gradient(circle at 73% 73%,var(--ring));}
+.die-face{padding:9px;display:grid;grid-template:repeat(3,1fr) / repeat(3,1fr);opacity:0;
   background:linear-gradient(145deg,#FBF6EA,#E4DBC4);box-shadow:0 8px 14px -6px rgba(0,0,0,0.6),0 0 0 1px rgba(0,0,0,0.2) inset,0 -3px 0 rgba(0,0,0,0.07) inset;}
-.die i{width:9px;height:9px;border-radius:50%;background:#1A1B1F;place-self:center;box-shadow:0 1px 0 rgba(255,255,255,0.45);}
-.die.one i{width:13px;height:13px;background:var(--coral);}
+.die-face i{width:9px;height:9px;border-radius:50%;background:#1A1B1F;place-self:center;box-shadow:0 1px 0 rgba(255,255,255,0.45);}
+.die.one .die-face i{width:13px;height:13px;background:var(--coral);}
+.die.up .die-face{opacity:1;}
+.die.up .die-back{opacity:0;}
 .icon-stage[data-count="dice"] .die:nth-child(1){left:28px;top:24px;--rot:-9deg;z-index:1;}
 .icon-stage[data-count="dice"] .die:nth-child(2){left:96px;top:12px;--rot:8deg;z-index:2;}
 @keyframes dieTumble{
@@ -165,9 +191,12 @@ header.site{display:flex;align-items:center;justify-content:space-between;paddin
 .hero-moment-dice{position:absolute;inset:0;display:none;}
 .hero-moment.dice-mode .hero-moment-cards{display:none;}
 .hero-moment.dice-mode .hero-moment-dice{display:block;}
-.hero-moment-dice .die{width:70px;height:70px;padding:11px;border-radius:14px;left:50%;top:50%;}
-.hero-moment-dice .die i{width:11px;height:11px;}
-.hero-moment-dice .die.one i{width:16px;height:16px;}
+.hero-moment-dice .die{width:70px;height:70px;left:50%;top:50%;}
+.hero-moment-dice .die-back,.hero-moment-dice .die-face{border-radius:14px;}
+.hero-moment-dice .die-back::before{border-radius:12.5px;}
+.hero-moment-dice .die-face{padding:11px;}
+.hero-moment-dice .die-face i{width:11px;height:11px;}
+.hero-moment-dice .die.one .die-face i{width:16px;height:16px;}
 .hero-moment-dice .die:nth-child(1){margin:-52px 0 0 -84px;--rot:-9deg;}
 .hero-moment-dice .die:nth-child(2){margin:-64px 0 0 -2px;--rot:8deg;}
 
@@ -201,6 +230,7 @@ footer a:hover{color:var(--brass-bright);}
   .hero-moment .flip-inner{transition:none !important;}
   .hero-moment-label{transition:none !important;}
   .die.tumble{animation:none !important;}
+  .die-back,.die-face{transition:none !important;}
 }
 /* ---------- first-visit "how familiar are you?" dialog ---------- */
 .xp-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;background:rgba(6,7,8,0.80);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
@@ -274,7 +304,7 @@ footer a:hover{color:var(--brass-bright);}
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
         </div>
-        <div class="hero-moment-dice" aria-hidden="true"><span class="die"><i style="grid-area:1 / 1"></i><i style="grid-area:1 / 3"></i><i style="grid-area:2 / 2"></i><i style="grid-area:3 / 1"></i><i style="grid-area:3 / 3"></i></span><span class="die"><i style="grid-area:1 / 1"></i><i style="grid-area:1 / 3"></i><i style="grid-area:2 / 1"></i><i style="grid-area:2 / 3"></i><i style="grid-area:3 / 1"></i><i style="grid-area:3 / 3"></i></span></div>
+        <div class="hero-moment-dice" aria-hidden="true"><span class="die"><span class="die-back r5"></span><span class="die-face"></span></span><span class="die"><span class="die-back r6"></span><span class="die-face"></span></span></div>
         <div class="hero-moment-label" id="hero-moment-label"></div>
       </div>
     </div>
@@ -286,10 +316,10 @@ footer a:hover{color:var(--brass-bright);}
 
       <div class="table-card tc-blackjack" data-card>
         <a class="cover" href="/blackjack/" aria-label="Play Blackjack"></a>
-        <div class="icon-stage" data-count="2" data-game="blackjack">
+        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="2" data-game="blackjack">
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div>
+        </div></div>
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Blackjack</h3>
         <p>Beat the dealer to 21 — and know exactly when to hit.</p>
@@ -298,12 +328,12 @@ footer a:hover{color:var(--brass-bright);}
 
       <div class="table-card tc-baccarat" data-card>
         <a class="cover" href="/baccarat/" aria-label="Play Baccarat"></a>
-        <div class="icon-stage" data-count="bp" data-game="baccarat">
+        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="bp" data-game="baccarat">
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div>
+        </div></div>
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Baccarat</h3>
         <p>Bet Banker or Player, and let the cards decide.</p>
@@ -312,11 +342,11 @@ footer a:hover{color:var(--brass-bright);}
 
       <div class="table-card tc-paigow" data-card>
         <a class="cover" href="/pai-gow/" aria-label="Play Pai Gow Poker"></a>
-        <div class="icon-stage" data-count="3" data-game="paigow">
+        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="3" data-game="paigow">
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div>
+        </div></div>
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Pai Gow Poker</h3>
         <p>Seven cards, two hands — set them right and you're ahead.</p>
@@ -325,10 +355,10 @@ footer a:hover{color:var(--brass-bright);}
 
       <div class="table-card tc-uth" data-card>
         <a class="cover" href="/ultimate-texas-holdem/" aria-label="Play Ultimate Texas Hold'em"></a>
-        <div class="icon-stage" data-count="2" data-game="uth">
+        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="2" data-game="uth">
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
           <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div>
+        </div></div>
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Ultimate Texas Hold'em</h3>
         <p>Real hold'em rules, except you're up against the house.</p>
@@ -337,10 +367,10 @@ footer a:hover{color:var(--brass-bright);}
 
       <div class="table-card tc-craps" data-card>
         <a class="cover" href="/craps/" aria-label="Play Craps"></a>
-        <div class="icon-stage" data-count="dice" data-game="craps">
-          <span class="die"><i style="grid-area:1 / 1"></i><i style="grid-area:2 / 2"></i><i style="grid-area:3 / 3"></i></span>
-          <span class="die"><i style="grid-area:1 / 1"></i><i style="grid-area:1 / 3"></i><i style="grid-area:2 / 2"></i><i style="grid-area:3 / 1"></i><i style="grid-area:3 / 3"></i></span>
-        </div>
+        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="dice" data-game="craps">
+          <span class="die"><span class="die-back r3"></span><span class="die-face"></span></span>
+          <span class="die"><span class="die-back r5"></span><span class="die-face"></span></span>
+        </div></div>
         <span class="badge-live"><span class="dot"></span>Live now</span>
         <h3>Craps</h3>
         <p>Two dice, one roll &mdash; learn which bets are worth making.</p>
@@ -502,33 +532,40 @@ function clearFlipTimers(owner){
   if(!owner._flipTimers) owner._flipTimers = [];
   while(owner._flipTimers.length){ clearTimeout(owner._flipTimers.pop()); }
 }
-/* ---------- craps: two dice instead of cards. Same life cycle as a hand: "roll" on open, back to rest on close.
+/* ---------- craps: two dice instead of cards. Same life cycle as a hand: the outline of two dice at rest,
+   "roll" on open (the outlines tumble and turn into real dice), back to the outline on close.
    Each die is its own random 1-6 (cosmetic only, nothing here is a game). ---------- */
 var DIE_PIPS = {1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[1,3],[3,1],[3,3]],5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]};
-var DICE_REST = [3,5];
 function randomDie(){ return Math.floor(Math.random()*6) + 1; }
 function paintDie(el, v){
-  el.innerHTML = DIE_PIPS[v].map(function(q){ return '<i style="grid-area:'+q[0]+' / '+q[1]+'"></i>'; }).join('');
+  var face = el.querySelector('.die-face');
+  if(!face) return;
+  face.innerHTML = DIE_PIPS[v].map(function(q){ return '<i style="grid-area:'+q[0]+' / '+q[1]+'"></i>'; }).join('');
   el.classList.toggle('one', v === 1);
   el.setAttribute('data-face', String(v));
 }
+/* "up" = the real die is showing, "rolled" = it has settled on its final face, "tumble" = mid-roll */
+function clearDie(d){ d.classList.remove('up', 'rolled', 'tumble'); }
 function rollDiceIn(owner, dice, finals){
   clearFlipTimers(owner);
   Array.prototype.forEach.call(dice, function(d, i){
     var fin = finals ? finals[i] : randomDie();
-    d.classList.remove('rolled', 'tumble');
-    if(prefersReducedMotion){ paintDie(d, fin); d.classList.add('rolled'); return; }
+    clearDie(d);
+    if(prefersReducedMotion){ paintDie(d, fin); d.classList.add('up', 'rolled'); return; }
+    paintDie(d, randomDie());
     void d.offsetWidth;                         // restart the tumble if it is already running
     d.classList.add('tumble');
-    for(var k = 0; k < 4; k++){
-      owner._flipTimers.push(setTimeout(function(){ paintDie(d, randomDie()); }, i*70 + k*95));   // faces blur past while it spins
+    // the outline turns into the real die while it is in the air, then faces blur past as it spins
+    owner._flipTimers.push(setTimeout(function(){ d.classList.add('up'); }, i*70 + 90));
+    for(var k = 1; k < 4; k++){
+      owner._flipTimers.push(setTimeout(function(){ paintDie(d, randomDie()); }, i*70 + k*95));
     }
     owner._flipTimers.push(setTimeout(function(){ paintDie(d, fin); d.classList.add('rolled'); }, i*70 + 400));
   });
 }
-function restDice(owner, dice, rest){
+function restDice(owner, dice){
   clearFlipTimers(owner);
-  Array.prototype.forEach.call(dice, function(d, i){ d.classList.remove('rolled', 'tumble'); paintDie(d, rest[i]); });
+  Array.prototype.forEach.call(dice, clearDie);
 }
 
 function dealRandomHand(stage){
@@ -547,10 +584,11 @@ function dealRandomHand(stage){
 }
 function cancelPendingFlips(stage){ clearFlipTimers(stage); }
 function resetHand(stage){
-  if(stage.querySelector('.die')){ restDice(stage, stage.querySelectorAll('.die'), DICE_REST); return; }
+  if(stage.querySelector('.die')){ restDice(stage, stage.querySelectorAll('.die')); return; }
   clearFlipTimers(stage);
   stage.querySelectorAll('.flip-card').forEach(function(fc){ fc.classList.remove('flipped'); });
 }
+
 
 
 /* ---------- per-game hero "moment": hovering a table swaps the hero's resting chip for a
@@ -562,6 +600,7 @@ var HERO_MOMENTS = {
   uth:       { cards: [{rank:'A',sym:'♠',color:'#15171B'},{rank:'A',sym:'♥',color:'#E15D45'}], label: 'Pocket Aces' },
   craps:     { dice: [5,6], label: 'Yo eleven' }
 };
+var GAME_RGB = { blackjack:'91,141,224', baccarat:'101,199,163', paigow:'225,93,69', uth:'156,130,224', craps:'232,121,159' };
 var heroMomentEl = document.getElementById('hero-moment');
 var heroMomentLabelEl = document.getElementById('hero-moment-label');
 var heroChipEl = document.getElementById('hero-chip');
@@ -581,8 +620,9 @@ function showHeroMoment(game){
   heroMomentEl.style.setProperty('--tc-accent', 'var(--' + (
     game==='blackjack' ? 'dusty-blue' : game==='baccarat' ? 'sage-bright' : game==='paigow' ? 'coral' : game==='craps' ? 'rose' : 'violet'
   ) + ')');
+  heroMomentEl.style.setProperty('--tc-rgb', GAME_RGB[game]);
   if(data.dice){
-    // a dice table: the two dice tumble in instead of cards flipping
+    // a dice table: the two die outlines tumble and turn into real dice instead of cards flipping
     heroMomentEl.classList.add('dice-mode');
     heroMomentCards.forEach(function(fc){ fc.classList.remove('flipped'); });
     heroMomentEl.classList.add('show');
@@ -590,7 +630,7 @@ function showHeroMoment(game){
     return;
   }
   heroMomentEl.classList.remove('dice-mode');
-  Array.prototype.forEach.call(heroMomentDice, function(d){ d.classList.remove('rolled', 'tumble'); });
+  Array.prototype.forEach.call(heroMomentDice, clearDie);
   heroMomentCards.forEach(function(fc, i){
     fc.classList.remove('flipped');
     applyCardVisual(fc.querySelector('.flip-front'), data.cards[i], {w:38,h:53}, 34);
@@ -615,7 +655,7 @@ function hideHeroMoment(game){
     heroMomentEl.classList.remove('show');
     heroChipEl.classList.remove('away');
     heroMomentCards.forEach(function(fc){ fc.classList.remove('flipped'); });
-    Array.prototype.forEach.call(heroMomentDice, function(d){ d.classList.remove('rolled', 'tumble'); });
+    Array.prototype.forEach.call(heroMomentDice, clearDie);
   }, 90);
 }
 
@@ -693,39 +733,45 @@ var GAME_ROUTES = {
   uth:      { name:"Ultimate Texas Hold'em",  play:'/ultimate-texas-holdem/',   learn:'/learn/?from=floor#uth' },
   craps:    { name:'Craps',                   play:'/craps/',                   learn:'/learn/?from=floor#craps' }
 };
-function learnFirst(game){ return readLevel() === 'new' && readLearned()[game] !== true; }
+/* snap = { level, learned } lets one routing pass read storage once instead of once per card */
+function learnFirst(game, snap){
+  var level = snap ? snap.level : readLevel();
+  if(level !== 'new') return false;
+  return (snap ? snap.learned : readLearned())[game] !== true;
+}
 
-function routeCard(card){
+function routeCard(card, snap){
   var stage = card.querySelector('.icon-stage');
   var cover = card.querySelector('a.cover');
   if(!stage || !cover) return;
   var game = stage.dataset.game, r = GAME_ROUTES[game];
   if(!r) return;
-  var lf = learnFirst(game);
+  var lf = learnFirst(game, snap);
   cover.setAttribute('href', lf ? r.learn : r.play);
   cover.setAttribute('aria-label', lf ? 'Learn how to play ' + r.name + ' first' : 'Play ' + r.name);
   card.classList.toggle('learn-first', lf);
   var label = card.querySelector('.enter-label');
   if(label) label.textContent = lf ? 'Learn the basics' : 'Sit down';
 }
-function routeHeroCta(){
+function routeHeroCta(snap){
   var cta = document.getElementById('rv-cta'), label = document.getElementById('cta-label');
   if(!cta || !label) return;
-  var lf = learnFirst('blackjack');
+  var lf = learnFirst('blackjack', snap);
   cta.setAttribute('href', lf ? GAME_ROUTES.blackjack.learn : GAME_ROUTES.blackjack.play);
   label.textContent = lf ? 'Learn Blackjack first' : 'Sit down at Blackjack';
 }
-function updateExperienceStatus(){
-  var level = readLevel();
+function updateExperienceStatus(level){
+  if(level === undefined) level = readLevel();
   var text = document.getElementById('xp-status-text'), btn = document.getElementById('xp-change');
   if(!text || !btn) return;
   if(level){ text.textContent = 'Your level: ' + XP_LABELS[level]; btn.textContent = 'Change'; }
   else { text.textContent = ''; btn.textContent = 'How familiar are you with these games?'; }
 }
 function applyRouting(){
-  document.querySelectorAll('.table-card').forEach(routeCard);
-  routeHeroCta();
-  updateExperienceStatus();
+  var snap = { level: readLevel(), learned: readLearned() };
+  document.querySelectorAll('.table-card').forEach(function(card){ routeCard(card, snap); });
+  routeHeroCta(snap);
+  updateExperienceStatus(snap.level);
 }
 
 // Clicking a learn-first link counts as "this game's lesson has been offered": next time it goes
@@ -813,6 +859,7 @@ maybeAskExperience();
 // Coming back via the back button (or from another tab) must show up-to-date labels.
 window.addEventListener('pageshow', applyRouting);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyRouting(); });
+
 
 /* ---------- page-load reveal sequence ---------- */
 var loadOrder = ['rv-wordmark','rv-nav','rv-bankroll','rv-h1','rv-p','rv-cta','rv-hero-anim'];
