@@ -159,6 +159,36 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
 .chip:hover{transform:translateY(-3px);}
 .chip.selected{border-color:var(--brass-bright);box-shadow:0 0 0 2px rgba(240,196,107,0.35);}
 .chip-5{background:#B33F3F;} .chip-10{background:#2F6FB0;} .chip-25{background:#2E8F63;} .chip-50{background:#3A3D44;} .chip-100{background:#7C5CC4;} .chip-500{background:#EDEDE6;color:#1A1A1A;border-color:rgba(0,0,0,0.25);} .chip-1000{background:#D97B29;}
+.bet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);}
+.seg button{font-size:11.5px;padding:3px 11px;border-radius:999px;border:0;background:transparent;color:var(--text-muted);font-weight:600;}
+.seg button:not(.chip):hover{background:transparent;color:var(--text);}
+.seg button.on{background:var(--brass);color:#20160A;}
+.seg.off{opacity:.45;pointer-events:none;}
+.spot-grp{display:flex;align-items:center;gap:8px;border-radius:12px;border:1px solid transparent;}
+.spot-lbl{display:none;font-size:11px;font-weight:600;color:var(--text-muted);min-width:44px;}
+body.two-hands #bet-grp-2 + span{display:none;}
+body.two-hands .spot-lbl{display:inline;}
+body.two-hands .spot-grp{padding:4px 8px;border-color:var(--line);cursor:pointer;}
+body.two-hands .spot-grp.on{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset;}
+body.two-hands .spot-grp.on .spot-lbl{color:var(--brass-bright);}
+.hand-box{position:relative;}
+.hand-tag{position:absolute;top:11px;right:13px;font:700 10px 'Inter',sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-muted);pointer-events:none;}
+.hand-box.active .hand-tag{color:var(--brass-bright);}
+.hands-row.dense{gap:10px;}
+.hands-row.dense .hand-box{min-width:148px;padding:11px;display:flex;flex-direction:column;}
+.hands-row.dense .hand-tag{position:static;order:-1;margin-bottom:6px;font-size:9.5px;}
+.hands-row.dense .cards-row{gap:6px;min-height:84px;}
+.hands-row.dense .card{width:58px;height:82px;border-radius:7px;}
+.hands-row.dense .card-idx{font-size:15px;top:4px;left:5px;}
+.hands-row.dense .card-idx.br{top:auto;left:auto;bottom:4px;right:5px;}
+.hands-row.dense .card-idx .pip{font-size:11px;}
+.hands-row.dense .card-pip{font-size:24px;}
+.hands-row.dense .card svg{width:28px;height:39px;}
+.hands-row.dense .hand-total{font-size:12px;margin-bottom:8px;}
+.hands-row.dense .hand-box > div:nth-child(2){flex-direction:column;align-items:flex-start !important;gap:2px !important;}
+.hands-row.dense .big-total{font-size:22px;text-align:left;min-width:0;}
+@media(min-width:380px) and (max-width:700px){ .hands-row.dense .hand-box{flex:0 0 calc(50% - 5px);} }   /* four hands: two by two, not three and one */
 .bet-value-input{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;width:70px;text-align:center;}
 .stepper{width:30px;height:30px;padding:0;border-radius:50%;font-size:16px;line-height:1;}
 .bankroll-empty-banner{background:rgba(225,93,69,0.10);border:1px solid rgba(225,93,69,0.3);border-radius:11px;padding:12px 14px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
@@ -173,6 +203,398 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
 .win-spark{position:absolute;border-radius:50%;pointer-events:none;opacity:0;}
 @keyframes sparkBurst{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0;}}
 .win-spark.go{animation:sparkBurst 620ms ease-out forwards;}
+/* ============ TABLE SHOW: the dealer, the shoe, hand signals and the blackjack payoff ============
+   Everything here hangs off body.show-on. Switch "Table show" off and none of these rules apply, so the table is exactly as it was. */
+#dealer-stage{display:none;}
+body.show-on #dealer-stage{display:block;}
+
+/* The dealer stands to the right of his own hand on a wide table (no extra height), and above it on a narrow one. */
+body.show-on #dealer-box-row{container-type:inline-size;container-name:dealrow;}
+.ds{position:relative;flex:0 0 100%;order:-1;height:140px;margin:0;z-index:3;pointer-events:none;-webkit-user-select:none;user-select:none;--arm-ms:150ms;}
+@container dealrow (min-width:700px){
+  .ds{flex:0 0 330px;order:0;height:auto;min-height:150px;}
+}
+.ds-dealer,.ds-armwrap{transition:transform 560ms cubic-bezier(.3,1.35,.5,1),opacity 340ms ease;}
+.ds[data-state="away"] .ds-dealer,.ds[data-state="away"] .ds-armwrap{transform:translateY(44px) scale(.96);opacity:0;transition:transform 420ms cubic-bezier(.5,0,.8,.4),opacity 300ms ease 60ms;}
+.ds[data-state="up"] .ds-dealer,.ds[data-state="up"] .ds-armwrap{transform:none;opacity:1;}
+.ds[data-still="1"] .ds-dealer,.ds[data-still="1"] .ds-armwrap{transition:none !important;}
+
+.ds-dealer{position:absolute;left:50%;bottom:0;width:168px;height:126px;margin-left:-84px;z-index:2;transform-origin:50% 100%;}
+.ds-dealer.lean{transform:translateY(5px) scale(1.015);}
+.ds-svg{display:block;width:168px;height:126px;overflow:visible;animation:dsBreath 4.2s ease-in-out infinite;}
+.ds[data-state="away"] .ds-svg,.ds[data-state="away"] .ds-lid{animation-play-state:paused;}
+@keyframes dsBreath{0%,100%{transform:translateY(0);}50%{transform:translateY(-1.3px);}}
+.ds-head{transition:transform 260ms cubic-bezier(.3,.8,.3,1);transform-origin:75px 58px;transform-box:view-box;}
+.ds-dealer[data-look="down"] .ds-head{transform:rotate(-2deg) translateY(1.5px);}
+.ds-dealer[data-nod="1"] .ds-head{animation:dsNod 520ms ease-in-out;}
+@keyframes dsNod{0%,100%{transform:translateY(0);}35%{transform:translateY(3px) rotate(2deg);}70%{transform:translateY(-.5px);}}
+.ds-pupils{transform:translate(var(--lx,0px),var(--ly,0px));transition:transform 160ms ease-out;}
+.ds-lid{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(0);animation:dsBlink 5.4s infinite;}
+.ds-lid.l2{animation-delay:.03s;}
+@keyframes dsBlink{0%,93%,100%{transform:scaleY(0);}96%{transform:scaleY(1);}}
+.ds-face > g{opacity:0;transition:opacity 120ms ease;}
+.ds[data-mood="idle"] .face-idle,.ds[data-mood="focus"] .face-focus,.ds[data-mood="wow"] .face-wow,.ds[data-mood="smirk"] .face-smirk,.ds[data-mood="grin"] .face-grin,.ds[data-mood="sus"] .face-sus,.ds[data-mood="sad"] .face-sad,.ds[data-mood="surp"] .face-surp,.ds[data-mood="sm1"] .face-sm1,.ds[data-mood="sm2"] .face-sm2,.ds[data-mood="sm3"] .face-sm3,.ds[data-mood="sweat"] .face-sweat{opacity:1;}
+.ds-lid{transition:transform 220ms ease;}
+.ds[data-mood="grin"] .ds-lid{animation:none;transform:scaleY(.2);}
+.ds[data-mood="sus"] .ds-lid{animation:none;transform:scaleY(.55);}
+.ds[data-mood="sad"] .ds-lid{animation:none;transform:scaleY(.42);}
+.ds[data-mood="surp"] .ds-lid{animation:none;transform:scaleY(0);}
+.ds[data-mood="sm2"] .ds-lid{animation:none;transform:scaleY(.1);}
+.ds[data-mood="sm3"] .ds-lid{animation:none;transform:scaleY(.24);}
+.ds[data-mood="sweat"] .ds-lid{animation:none;transform:scaleY(0);}
+.ds[data-mood="sweat"] .ds-head{animation:dsFret 1.1s ease-in-out;}
+@keyframes dsFret{0%,100%{transform:translateX(0);}20%{transform:translateX(-1.6px) rotate(-1deg);}45%{transform:translateX(1.4px) rotate(1deg);}70%{transform:translateX(-.8px);}}
+.face-sweat .ds-drop{transform-box:fill-box;transform-origin:50% 0%;animation:dsDrip 1.15s ease-in infinite;}
+@keyframes dsDrip{0%{transform:translateY(-3px) scale(.5);opacity:0;}22%{transform:translateY(0) scale(1);opacity:1;}100%{transform:translateY(15px) scale(.9);opacity:0;}}
+.ds[data-mood="surp"] .ds-head{transform:translateY(-1.4px);animation:dsSurp 360ms ease-out;}
+.ds[data-mood="sm3"] .ds-head{transform:rotate(-1.2deg) translateY(-.4px);}
+@keyframes dsSurp{0%{transform:translateY(0);}38%{transform:translateY(-3.4px);}100%{transform:translateY(-1.4px);}}
+.ds[data-mood="sus"] .ds-head{transform:rotate(3.5deg) translate(-1px,.5px);}
+.ds[data-mood="sad"] .ds-head{transform:rotate(-2deg) translateY(2.4px);animation:dsShake 1.2s ease-in-out .15s;}
+@keyframes dsShake{0%,100%{transform:rotate(-2deg) translateY(2.4px);}18%{transform:rotate(-6deg) translateY(2.4px);}38%{transform:rotate(3deg) translateY(2.4px);}58%{transform:rotate(-5deg) translateY(2.4px);}78%{transform:rotate(1.5deg) translateY(2.4px);}}
+
+/* the counter edge, in front of the dealer's lower half */
+.ds-rail{position:absolute;left:0;right:0;bottom:0;height:26px;z-index:3;border-radius:16px 16px 9px 9px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.10) 0,rgba(255,255,255,0) 7px),linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line);border-top:2px solid var(--brass);box-shadow:0 10px 18px -12px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.08);}
+.ds-rail::after{content:'';position:absolute;left:14px;right:14px;top:9px;height:1px;background:linear-gradient(90deg,transparent,rgba(240,196,107,0.35),transparent);}
+
+/* the chip tray */
+.ds-tray{pointer-events:auto;cursor:default;position:absolute;left:max(0px,calc(50% - 176px));bottom:21px;z-index:4;display:flex;align-items:flex-end;gap:5px;padding:5px 6px 4px;border-radius:8px 8px 3px 3px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.42),rgba(0,0,0,0.22));border:1px solid var(--line);box-shadow:inset 0 2px 5px rgba(0,0,0,0.45);}
+.ds-stack{display:flex;flex-direction:column-reverse;align-items:center;width:15px;}
+.ds-stack i{display:block;width:15px;height:4.5px;margin-top:-1.4px;border-radius:50%;border:1px solid rgba(255,255,255,0.4);box-shadow:0 1px 1px rgba(0,0,0,0.5);}
+.ds-stack i:first-child{margin-top:0;}
+
+/* the shoe */
+.ds-shoe{position:absolute;right:max(0px,calc(50% - 178px));bottom:20px;z-index:4;width:76px;height:50px;pointer-events:auto;cursor:grab;touch-action:none;outline:none;-webkit-tap-highlight-color:transparent;}
+.ds-shoe:active{cursor:grabbing;}
+.ds-idle{position:absolute;left:50%;top:44px;transform:translateX(-50%);width:max-content;max-width:60%;text-align:center;font-size:12px;line-height:1.45;color:var(--text-muted);font-style:italic;opacity:0;transition:opacity 300ms ease;pointer-events:none;}
+body.phase-betting .ds[data-state="away"] .ds-idle{opacity:.85;}
+.ds-shoe:focus-visible .shoe-box{outline:2px solid var(--brass-bright);outline-offset:3px;}
+.shoe-box{position:absolute;left:12px;bottom:0;width:62px;height:36px;border-radius:5px 12px 4px 4px;
+  background:linear-gradient(180deg,#2A2E35,#14161A);border:1px solid rgba(255,255,255,0.12);border-bottom-color:rgba(0,0,0,0.5);box-shadow:0 8px 14px -8px rgba(0,0,0,0.75),inset 0 1px 0 rgba(255,255,255,0.14);overflow:hidden;transition:transform 180ms cubic-bezier(.3,1.4,.5,1);}
+.shoe-box::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(90deg,var(--brass),rgba(214,169,75,0.35));}
+.shoe-box::after{content:'';position:absolute;left:10px;right:7px;top:6px;height:8px;border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.03));}
+.shoe-stack{position:absolute;right:5px;bottom:5px;width:30px;height:11px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--card-face) 0 2px,#C9C5B8 2px 3px);opacity:.9;transform-origin:100% 100%;transition:transform 400ms ease;}
+.shoe-cut{position:absolute;right:5px;bottom:5px;width:1px;height:0;}
+.shoe-card{position:absolute;left:0;bottom:11px;width:25px;height:35px;border-radius:3px;background:var(--panel-2);border:1.5px solid rgba(237,238,240,0.28);transform:rotate(-14deg);transform-origin:80% 100%;box-shadow:0 2px 5px rgba(0,0,0,0.5);transition:transform 220ms cubic-bezier(.3,1.5,.5,1);}
+.shoe-card::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font:700 13px 'Space Grotesk',sans-serif;}
+.ds-shoe.dragging .shoe-card,.ds-shoe.dragging .shoe-box{transition:none;}
+.shoe-tip{position:absolute;right:0;bottom:41px;white-space:nowrap;font:600 10px 'Inter',sans-serif;letter-spacing:.2px;color:var(--text-muted);background:rgba(0,0,0,0.5);border:1px solid var(--line);padding:2px 8px;border-radius:999px;opacity:0;transform:translateY(3px);transition:opacity 200ms ease,transform 200ms ease;pointer-events:none;}
+body.phase-betting .ds-shoe:hover .shoe-tip,body.phase-betting .ds-shoe:focus-visible .shoe-tip,body.phase-betting .ds-shoe.nudge .shoe-tip{opacity:1;transform:none;}
+body:not(.phase-betting) .ds-shoe{cursor:default;opacity:.92;}
+.ds-shoe.nudge .shoe-box{animation:dsNudge 360ms ease;}
+@keyframes dsNudge{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}60%{transform:translateX(3px);}}
+body.phase-betting .ds-shoe:not(:hover) .shoe-card{animation:dsShoeHint 3.2s ease-in-out 1.2s infinite;}
+@keyframes dsShoeHint{0%,86%,100%{transform:rotate(-14deg);}92%{transform:rotate(-14deg) translate(-5px,2px);}}
+
+/* the dealer's arm (two jointed segments, drawn from a point at the shoulder) */
+.ds-armwrap{position:absolute;left:0;top:0;width:100%;height:100%;z-index:6;}
+.ds[data-ease="soft"]{--arm-ease:cubic-bezier(.45,.05,.25,1);}
+/* while he shuffles his arm works behind the counter edge: the elbow never shows below it */
+.ds[data-ease="soft"] .ds-armwrap{z-index:3;clip-path:inset(-90px -70px 0 -70px);}
+.ds-upper,.ds-fore{position:absolute;width:0;height:0;transition:transform var(--arm-ms) var(--arm-ease,cubic-bezier(.3,.75,.25,1)),opacity 240ms ease;will-change:transform;}
+.ds[data-arm="rest"] .ds-upper{opacity:0;transition:transform var(--arm-ms) var(--arm-ease,cubic-bezier(.3,.75,.25,1)),opacity 220ms ease 120ms;}
+.ds-upper-vis{position:absolute;left:-8.5px;top:-8px;width:17px;height:64px;border-radius:8px;background:linear-gradient(90deg,#E9E5D8,var(--card-face) 45%,#CFCABB);box-shadow:0 1px 2px rgba(0,0,0,0.35);}
+.ds-upper-vis::after{content:'';position:absolute;left:0;right:0;top:17px;height:4px;background:var(--brass);opacity:.9;}
+.ds-fore-vis{position:absolute;left:-7.5px;top:-7.5px;width:15px;height:60px;border-radius:7px;background:linear-gradient(90deg,#E9E5D8,var(--card-face) 45%,#CFCABB);box-shadow:0 1px 2px rgba(0,0,0,0.35);}
+.ds-fore-vis::after{content:'';position:absolute;left:-1px;right:-1px;bottom:5px;height:5px;border-radius:2px;background:#D8D3C4;box-shadow:inset 0 -1px 0 rgba(0,0,0,0.12);}
+.ds-fore{left:0;top:52px;}
+.ds-cap{position:absolute;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,0.4);}
+.ds-cap.sh{left:-10.5px;top:-10.5px;width:21px;height:21px;background:linear-gradient(145deg,#2A2E36,#14161B);}
+.ds-cap.el{left:-8.5px;top:-8.5px;width:17px;height:17px;background:linear-gradient(145deg,#ECE8DA,#CFCABB);}
+.ds-hand{position:absolute;left:-8px;top:47px;width:16px;height:16px;border-radius:7px 7px 6px 6px;background:linear-gradient(180deg,#EDB992,#D99D75);box-shadow:0 1px 2px rgba(0,0,0,0.35);}
+.ds-held{position:absolute;left:-10px;top:44px;width:20px;height:28px;border-radius:3px;background:var(--panel-2);border:1.5px solid rgba(237,238,240,0.4);opacity:0;transition:opacity 80ms ease;box-shadow:0 2px 4px rgba(0,0,0,0.5);}
+.ds-held.on{opacity:1;}
+
+.ds-say{position:absolute;left:calc(50% + 62px);top:2px;z-index:7;max-width:112px;padding:7px 11px;border-radius:12px 12px 12px 3px;font:700 12px/1.3 'Inter',sans-serif;color:#12140F;background:var(--brass-bright);box-shadow:0 8px 16px -6px rgba(0,0,0,0.55);opacity:0;transform:translateY(5px) scale(.85);transform-origin:0 100%;transition:opacity 200ms ease,transform 280ms cubic-bezier(.34,1.5,.64,1);pointer-events:none;}
+.ds-say.on{opacity:1;transform:none;}
+
+/* the layer that cards and chips fly across */
+#show-layer{position:absolute;inset:0;z-index:18;pointer-events:none;overflow:visible;}
+.fc{position:absolute;left:0;top:0;width:88px;height:124px;will-change:transform;pointer-events:none;}
+.fc-sc{position:absolute;inset:0;transform-origin:50% 50%;will-change:transform;perspective:800px;}
+.fc-in{position:absolute;inset:0;transform-style:preserve-3d;}
+.fc-face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;}
+.fc-front{transform:rotateY(180deg);}
+.fc .card{position:absolute;inset:0;width:100%;height:100%;opacity:1 !important;transform:none !important;transition:none !important;margin:0;}
+.fc .card.back{border-color:rgba(237,238,240,0.3);background:var(--panel-2);box-shadow:0 6px 14px -6px rgba(0,0,0,0.6);}
+.card.landed{animation:cardLand 200ms ease-out;}
+@keyframes cardLand{0%{transform:translateY(-2px) scale(1.035);}100%{transform:none;}}
+.card.back.peeking{transform-origin:50% 100%;transform:perspective(320px) rotateX(-38deg);box-shadow:0 10px 18px -8px rgba(0,0,0,0.65);transition:transform 220ms cubic-bezier(.3,1.2,.5,1);}
+.card.flipin{animation:holeFlip 340ms cubic-bezier(.3,1.1,.5,1);}
+@keyframes holeFlip{0%{transform:perspective(500px) rotateY(88deg) scale(1.04);}100%{transform:none;}}
+
+/* hand signals */
+body[data-sig="on"] #hands-row .hand-box.active{cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+body[data-sig="on"] #hands-row .hand-box.active:hover{box-shadow:0 0 0 1px var(--brass) inset,0 0 22px -6px rgba(240,196,107,0.35);}
+.hb-bet{display:none;align-items:center;gap:10px;margin-top:4px;}
+body.signals-on .hb-bet{display:flex;}
+.hb-ring{position:relative;flex:0 0 auto;width:56px;height:56px;border-radius:50%;border:2px dashed rgba(240,196,107,0.38);display:flex;align-items:center;justify-content:center;transition:border-color 160ms ease,box-shadow 160ms ease,background 160ms ease,transform 160ms ease;}
+.hb-ring.hot{border-color:var(--brass-bright);border-style:solid;background:rgba(240,196,107,0.14);box-shadow:0 0 0 5px rgba(240,196,107,0.18),0 0 24px rgba(240,196,107,0.35);transform:scale(1.1);}
+/* the bet on the felt: a few flat chips, the biggest on top, same colours as the rack */
+.hb-pile{position:relative;width:38px;height:38px;}
+.hb-d{position:absolute;left:0;bottom:calc(var(--n,0)*4px);width:38px;height:38px;box-sizing:border-box;border-radius:50%;background:var(--c);border:2px solid rgba(255,255,255,0.3);box-shadow:0 1.5px 0 rgba(0,0,0,0.38);
+  display:flex;align-items:center;justify-content:center;font:700 11px 'Space Grotesk',sans-serif;color:var(--tx,#fff);}
+.hb-d.top::before{content:'';position:absolute;inset:3px;border-radius:50%;border:1.5px dashed rgba(255,255,255,0.55);pointer-events:none;}
+.hb-d.chip-500.top::before{border-color:rgba(0,0,0,0.35);}
+.hb-d.chip-500{border-color:rgba(0,0,0,0.22);}
+.hb-bet .hb-label{font-size:11.5px;color:var(--text-muted);line-height:1.35;}
+.hb-bet .hb-label b{display:block;color:var(--text);font:700 15px 'Space Grotesk',sans-serif;}
+.dbl-handle{margin-left:auto;display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 5px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);color:var(--text-muted);font-size:11.5px;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;transition:border-color 140ms ease,background 140ms ease,transform 120ms ease;}
+.dbl-handle:hover{border-color:var(--brass);background:#24272D;}
+.dbl-handle:active{cursor:grabbing;}
+.dbl-handle .dh-chip{width:34px;height:34px;border-radius:50%;border:2px dashed rgba(255,255,255,0.6);box-shadow:inset 0 0 0 3px rgba(0,0,0,0.16),0 3px 7px -2px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font:800 12px 'Space Grotesk',sans-serif;color:#fff;}
+.dbl-handle .dh-chip.chip-500{color:#1A1A1A;}
+.dbl-ghost{position:fixed;left:0;top:0;z-index:60;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;border:2px dashed rgba(255,255,255,0.7);box-shadow:inset 0 0 0 4px rgba(0,0,0,0.16),0 12px 20px -6px rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;font:800 13px 'Space Grotesk',sans-serif;color:#fff;pointer-events:none;will-change:transform;}
+.dbl-ghost.chip-500{color:#1A1A1A;}
+#hint-signals{font-size:11.5px;color:var(--text-muted);font-style:italic;margin:2px 0 10px;display:none;}
+body.signals-on.phase-player #hint-signals{display:block;}
+.sg-ripple{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;border:2px solid var(--brass-bright);pointer-events:none;}
+.sg-tag{position:absolute;transform:translate(-50%,0);font:800 11px 'Space Grotesk',sans-serif;letter-spacing:1px;text-transform:uppercase;color:#20160A;background:var(--brass-bright);padding:3px 10px;border-radius:999px;pointer-events:none;box-shadow:0 6px 14px -6px rgba(0,0,0,0.6);}
+.sg-wave{position:absolute;height:7px;border-radius:7px;pointer-events:none;transform-origin:0 50%;background:linear-gradient(90deg,rgba(240,196,107,0),rgba(240,196,107,0.85) 70%,rgba(255,244,214,0.95));filter:blur(.4px);}
+
+/* the blackjack payoff */
+.pm{position:absolute;left:0;top:0;width:88px;height:88px;margin:-44px 0 0 -44px;box-sizing:border-box;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:var(--panel);border:2px solid var(--brass);box-shadow:0 8px 16px -8px rgba(0,0,0,0.75);pointer-events:none;will-change:transform,opacity;}
+.pm::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1.5px dashed rgba(240,196,107,0.5);}
+.pm b{position:relative;font:700 11px/1 'Inter',sans-serif;letter-spacing:2.6px;text-indent:2.6px;color:var(--brass-bright);}
+.pm i{position:relative;font:700 32px/1 'Space Grotesk',sans-serif;font-style:normal;color:var(--text);}
+body.pm-on #felt-print{opacity:.25;}
+#felt-print{transition:opacity 240ms ease;}
+.pm-ring{position:absolute;left:0;top:0;width:88px;height:88px;margin:-44px 0 0 -44px;box-sizing:border-box;border-radius:50%;border:2px solid rgba(240,196,107,0.7);pointer-events:none;}
+@media (max-width:640px){ .pm,.pm-ring{width:74px;height:74px;margin:-37px 0 0 -37px;} .pm b{font-size:10px;} .pm i{font-size:27px;} }
+.bj-tag{position:absolute;display:flex;align-items:baseline;gap:10px;white-space:nowrap;padding:8px 18px;border-radius:999px;background:var(--panel);border:1px solid var(--brass);pointer-events:none;will-change:transform,opacity;}
+.bj-tag b{font:700 12px 'Inter',sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--brass-bright);}
+.bj-tag span{font:700 16px 'Space Grotesk',sans-serif;color:var(--text);}
+
+/* ============ THE TABLE: pay lines, chip rack, betting circle, option buttons ============
+   Same colours and flat chips as the rest of the site. Everything hangs off body.tbl-on (the Table show switch). */
+#felt-print{display:none;}
+body.tbl-on #felt-print{display:block;color:var(--brass);margin:4px auto 0;max-width:720px;pointer-events:none;-webkit-user-select:none;user-select:none;}
+#felt-print svg{display:block;width:100%;height:auto;overflow:visible;}
+#felt-print .fp-n{display:none;}
+#felt-print text{fill:currentColor;}
+#felt-print .fp-big{font:800 19px 'Space Grotesk','Inter',sans-serif;letter-spacing:3.6px;opacity:.5;}
+#felt-print .fp-small{font:700 10.5px 'Inter',sans-serif;letter-spacing:2.6px;opacity:.4;}
+@media (max-width:640px){
+  #felt-print .fp-w{display:none;}
+  #felt-print .fp-n{display:block;}
+  #felt-print .fp-n .fp-big{font-size:16px;letter-spacing:2.6px;}
+  #felt-print .fp-n .fp-small{font-size:10.5px;letter-spacing:1.8px;}
+}
+
+/* chip colours, shared by the stack on the circle and the chip in your hand */
+.chip-5{--c:#B33F3F;}.chip-10{--c:#2F6FB0;}.chip-25{--c:#2E8F63;}.chip-50{--c:#3A3D44;}.chip-100{--c:#7C5CC4;}.chip-500{--c:#EDEDE6;--tx:#1A1A1A;}.chip-1000{--c:#D97B29;}
+
+/* the chips in the rack stay the site's flat chips; they can now be picked up */
+body.tbl-on .chip{touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;transition:transform 140ms cubic-bezier(.3,1.5,.5,1),box-shadow 140ms ease,opacity 160ms ease;}
+body.tbl-on .chip:active{transform:translateY(0) scale(.95);cursor:grabbing;}
+body.tbl-on .chip.ghosted{opacity:.28;transform:scale(.9);}
+body.tbl-on .chip.rk-off{display:none;}
+body.tbl-on .chip.rk-out{animation:rkOut 230ms ease forwards;pointer-events:none;}
+body.tbl-on .chip.rk-in{animation:rkIn 360ms cubic-bezier(.3,1.6,.5,1) both;}
+@keyframes rkOut{to{opacity:0;transform:scale(.3) translateY(8px);}}
+@keyframes rkIn{0%{opacity:0;transform:scale(.3) translateY(10px);}100%{opacity:1;transform:none;}}
+
+/* the rack: just the chips you can afford */
+body.tbl-on .chip-rack{position:relative;margin-bottom:10px !important;padding:24px 14px 12px;border-radius:13px;min-width:min(100%,376px);min-height:84px;box-sizing:border-box;
+  background:rgba(0,0,0,0.16);border:1px solid var(--line);transition:box-shadow 160ms ease,border-color 160ms ease,background 160ms ease;}
+body.tbl-on .chip-rack::before{content:'YOUR CHIPS';position:absolute;left:14px;top:8px;font:700 9.5px 'Inter',sans-serif;letter-spacing:1.6px;color:var(--text-muted);}
+body.tbl-on .chip-rack.empty::after{content:attr(data-msg);font:italic 12.5px 'Inter',sans-serif;color:var(--text-muted);}
+body.tbl-on .chip-rack.armed{border-color:rgba(240,196,107,0.5);}
+body.tbl-on .chip-rack.hot{border-color:var(--brass-bright);background:rgba(240,196,107,0.08);box-shadow:0 0 0 3px rgba(240,196,107,0.18),0 0 22px rgba(240,196,107,0.25);}
+body.tbl-on #bet-row .field > span:first-child{display:none;}
+body.tbl-on #bet-row .field{min-width:0 !important;max-width:100%;}
+
+/* the betting circle */
+.bc{display:none;}
+.bcs{display:none;}
+body.tbl-on .bcs{display:flex;align-items:flex-end;flex:0 0 auto;}
+body.tbl-on .bc{--chip:46px;--base:38px;--ring:76px;display:block;position:relative;flex:0 0 auto;width:124px;height:106px;margin:0 8px 4px;touch-action:none;-webkit-user-select:none;user-select:none;}
+body.tbl-on #bet-circle-2{display:none;}
+body.tbl-on.two-hands #bet-circle-2{display:block;}
+body.tbl-on.two-hands .bc{width:112px;height:106px;margin:0 5px 4px;cursor:pointer;}
+body.two-hands .bc .bc-ring{border-color:rgba(240,196,107,0.24);}
+body.two-hands .bc.sel .bc-ring{border-color:var(--brass-bright);border-style:solid;box-shadow:0 0 0 1px rgba(240,196,107,0.25);}
+body.two-hands .bc.armed .bc-ring{border-color:rgba(240,196,107,0.8);}
+body.two-hands .bc.sel .bc-label{color:var(--brass-bright);opacity:.95;}
+body.two-hands .bc.has-chips .bc-label{opacity:0;}
+body.tbl-on.two-hands #bet-row .field{flex:0 1 460px;}
+.bc-ring{position:absolute;inset:auto;left:50%;bottom:calc(var(--base) - (var(--ring) - var(--chip))/2);width:var(--ring);height:var(--ring);margin-left:calc(var(--ring)/-2);box-sizing:border-box;border-radius:50%;border:2px dashed rgba(240,196,107,0.4);transition:box-shadow 160ms ease,border-color 160ms ease,background 160ms ease,transform 180ms cubic-bezier(.3,1.5,.5,1);}
+.bc.armed .bc-ring{border-color:rgba(240,196,107,0.8);animation:bcPulse 1.3s ease-in-out infinite;}
+@keyframes bcPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,196,107,0);}50%{box-shadow:0 0 0 6px rgba(240,196,107,0.14);}}
+.bc.hot .bc-ring{animation:none;border-style:solid;border-color:var(--brass-bright);background:rgba(240,196,107,0.14);transform:scale(1.05);box-shadow:0 0 0 5px rgba(240,196,107,0.18),0 0 26px rgba(240,196,107,0.35);}
+.bc-label{position:absolute;left:0;right:0;top:auto;bottom:calc(var(--base) + var(--chip)/2);transform:translateY(50%);text-align:center;font:700 13px 'Space Grotesk',sans-serif;letter-spacing:5px;text-indent:5px;color:var(--text-muted);opacity:.7;transition:opacity 160ms ease;}
+.bc.has-chips .bc-label{opacity:0;}
+.bc-stack{position:absolute;left:0;right:0;bottom:var(--base);height:80px;pointer-events:none;}
+.bc.has-chips{cursor:grab;}
+.bk{position:absolute;left:50%;bottom:calc(var(--n,0)*3px);width:var(--chip,46px);height:var(--chip,46px);margin-left:calc(var(--chip,46px)/-2);box-sizing:border-box;border-radius:50%;background:var(--c);border:2px solid rgba(255,255,255,0.3);box-shadow:0 1.5px 0 rgba(0,0,0,0.38);
+  display:flex;align-items:center;justify-content:center;font:700 0/1 'Space Grotesk',sans-serif;color:var(--tx,#fff);}
+.bk:last-child{font-size:12px;box-shadow:0 2px 0 rgba(0,0,0,0.38),0 6px 10px -4px rgba(0,0,0,0.55);}
+.bk:last-child::before{content:'';position:absolute;inset:4px;border-radius:50%;border:1.5px dashed rgba(255,255,255,0.55);pointer-events:none;}
+.bk.chip-500{border-color:rgba(0,0,0,0.22);}
+.bk.chip-500:last-child::before{border-color:rgba(0,0,0,0.35);}
+.bk.drop{animation:bkDrop 380ms cubic-bezier(.3,1.1,.5,1) both;}
+@keyframes bkDrop{0%{opacity:0;transform:translateY(-30px) scale(1.08);}30%{opacity:1;}60%{transform:translateY(3px) scale(1);}100%{opacity:1;transform:none;}}
+.bc-amt{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);min-width:44px;padding:3px 13px;border-radius:999px;text-align:center;font:700 15px 'Space Grotesk',sans-serif;color:var(--text);background:var(--panel);border:1px solid var(--line);transition:opacity 140ms ease;}
+.bc-amt:empty{opacity:0;}
+.bc-plus{position:absolute;left:50%;top:auto;bottom:calc(var(--base) + (var(--ring) + var(--chip))/2 + 4px);transform:translateX(-50%);font:800 15px 'Space Grotesk',sans-serif;color:var(--brass-bright);text-shadow:0 2px 6px rgba(0,0,0,0.6);pointer-events:none;}
+.bc-rip{position:absolute;left:50%;top:auto;bottom:calc(var(--base) + var(--chip)/2 - 38px);width:76px;height:76px;margin:0 0 0 -38px;border-radius:50%;border:2px solid rgba(240,196,107,0.8);pointer-events:none;animation:bcRip 540ms ease-out forwards;}
+@keyframes bcRip{0%{transform:scale(.4);opacity:.9;}100%{transform:scale(1.5);opacity:0;}}
+
+/* the chip in your hand while you drag it */
+.cg{position:fixed;left:0;top:0;z-index:70;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;box-sizing:border-box;background:var(--c);border:2px solid rgba(255,255,255,0.3);color:var(--tx,#fff);display:flex;align-items:center;justify-content:center;font:700 12px 'Space Grotesk',sans-serif;pointer-events:none;will-change:transform;
+  box-shadow:0 3px 8px -3px rgba(0,0,0,0.5);filter:drop-shadow(0 12px 8px rgba(0,0,0,0.4));}
+.cg.lifted{filter:drop-shadow(0 18px 11px rgba(0,0,0,0.45));}
+
+/* your options, beside your cards when the table is wide */
+.hb-act{display:none;}
+body.act-in-box #actions-row{display:none;}
+body.act-in-box .hand-box.has-act{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:20px;align-items:start;}
+body.act-in-box .hand-box.has-act > *{grid-column:1;}
+body.act-in-box .hand-box.has-act > .hb-act{grid-column:2;grid-row:1 / span 6;align-self:center;justify-self:end;display:flex;flex-direction:column;gap:10px;width:236px;}
+.hb-act-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.hb-act-btn{position:relative;height:50px;padding:0 10px;font-size:15px;font-weight:600;border-radius:12px;}
+.hb-act-btn.act-hit,.hb-act-btn.act-stand{border-color:rgba(240,196,107,0.45);}
+.hb-act-btn.act-surrender{grid-column:1 / -1;}
+.hb-act-btn .kb{position:absolute;right:7px;top:4px;font:700 9px 'Inter',sans-serif;color:var(--text-muted);opacity:.7;}
+.hb-act .dbl-handle{margin-left:0;justify-content:flex-start;}
+body.act-in-box #hint-signals{margin-top:10px;}
+
+@media (max-width:420px){ .ds-idle{top:10px;max-width:80%;} }
+@media (max-width:640px){
+  body.tbl-on .chip-rack{padding:24px 10px 10px;gap:6px !important;min-height:78px;}
+  body.tbl-on .chip-rack .chip{flex:1 1 0;max-width:44px;min-width:0;width:auto;height:auto;aspect-ratio:1;font-size:11px;}
+  body.tbl-on .bc{--chip:40px;--base:37px;--ring:68px;width:100px;height:98px;}
+  body.tbl-on.two-hands .bc{height:98px;}
+  .bk:last-child::before{inset:3px;}
+  .bc-stack{height:66px;}
+  .bc-label{font-size:12px;}
+}
+@media (prefers-reduced-motion: reduce){
+  .ds-dealer,.ds-armwrap,.ds-upper,.ds-fore{transition:none !important;}
+  .ds-svg,.ds-lid,.shoe-card,.ds-head,.bc-ring,.bk{animation:none !important;}
+}
+
+/* ============ table limits, the shuffle, more markers, dealer chatter ============ */
+/* the settings rows */
+.lim-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:8px;font-size:12.5px;color:var(--text-muted);}
+.lim-row label{margin:0;}
+.lim-row input[type="number"]{width:78px;}
+.lim-row select{max-width:100%;}
+.lim-row .lim-sub{font-size:11.5px;font-style:italic;}
+.lim-row input:disabled,.lim-row select:disabled{opacity:.45;}
+
+/* the placard: a small printed card on the counter, top left of the dealer's corner */
+.ds-placard{display:none;position:absolute;left:6px;top:6px;z-index:5;flex-direction:column;gap:2px;min-width:78px;padding:6px 10px 7px;border-radius:8px;box-sizing:border-box;
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);border-top:2px solid var(--brass);box-shadow:0 8px 14px -10px rgba(0,0,0,0.75);pointer-events:none;-webkit-user-select:none;user-select:none;}
+body.lim-on .ds-placard{display:flex;}
+.pl-t{font:700 8px/1 'Inter',sans-serif;letter-spacing:1.7px;color:var(--brass);margin-bottom:2px;white-space:nowrap;}
+.pl-r{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:1px 3px;margin:0 -3px;border-radius:4px;transition:background 160ms ease,color 160ms ease;}
+.pl-r i{font:700 8.5px/1 'Inter',sans-serif;font-style:normal;letter-spacing:1.4px;color:var(--text-muted);}
+.pl-r b{font:700 14px/1.15 'Space Grotesk',sans-serif;color:var(--text);font-variant-numeric:tabular-nums;}
+.pl-r.hit{background:rgba(240,196,107,0.16);animation:plHit 420ms ease-out;}
+.pl-r.hit i,.pl-r.hit b{color:var(--brass-bright);}
+@keyframes plHit{0%{transform:translateX(0);}20%{transform:translateX(-3px);}45%{transform:translateX(3px);}70%{transform:translateX(-1.5px);}100%{transform:none;}}
+@media (max-width:640px){ .ds-placard{left:4px;top:4px;min-width:70px;padding:5px 8px 6px;} .pl-r b{font-size:13px;} }
+/* the line by your chips when you run into a limit */
+#limit-note{display:none;margin:6px 0 0;font:600 12px 'Inter',sans-serif;color:var(--brass-bright);}
+body.tbl-on #limit-note{display:block;min-height:0;max-height:0;overflow:hidden;opacity:0;transition:opacity 180ms ease,max-height 180ms ease;margin-top:0;}
+body.tbl-on #limit-note.on{max-height:24px;opacity:1;margin-top:6px;}
+
+/* the other round markers (same flat disc as PUSH 22) */
+.pm u{position:relative;text-decoration:none;font:700 8.5px/1 'Inter',sans-serif;letter-spacing:1.5px;text-indent:1.5px;color:var(--brass-bright);}
+.pm.dbj{gap:2px;}
+.pm.dbj b{font-size:10.5px;letter-spacing:2.4px;text-indent:2.4px;}
+.pm.dbj i{font-size:27px;}
+.pm.ins b{font-size:8.5px;letter-spacing:1.6px;text-indent:1.6px;}
+.pm.ins i{font-size:23px;letter-spacing:-.2px;}
+@media (max-width:640px){ .pm.dbj i{font-size:23px;} .pm.dbj b{font-size:9.5px;} .pm u{font-size:7.5px;} .pm.ins i{font-size:20px;} .pm.ins b{font-size:7.5px;} }
+
+/* the shuffle, side-on across the counter: two half decks, a middle stack that grows, single cards that drop in from either side; then the cut card in the shoe */
+.ds-riffle{position:absolute;left:calc(50% - 40px);bottom:23px;width:0;height:0;z-index:5;opacity:0;pointer-events:none;transition:opacity 180ms ease;}
+.ds-riffle.on{opacity:1;}
+.rf-half,.rf-mid,.ds-riffle i{display:block;box-sizing:border-box;border:1px solid rgba(0,0,0,0.45);box-shadow:0 2px 3px rgba(0,0,0,0.4);}
+/* a deck seen from the side: cream card edges under a card back */
+.rf-half,.rf-mid{width:38px;height:11px;border-radius:2px;background:linear-gradient(180deg,var(--panel-2) 0 3px,var(--card-face) 3px),repeating-linear-gradient(180deg,#C9C5B8 0 1px,transparent 1px 2px);background-blend-mode:normal;}
+.ds-riffle i{background:linear-gradient(180deg,var(--panel-2) 0 2px,var(--card-face) 2px);}
+.rf-half,.rf-mid{position:absolute;left:-19px;bottom:0;transform-origin:50% 100%;will-change:transform,opacity;}
+.rf-half{opacity:0;transform:translateX(calc(var(--s)*36px));}
+.rf-mid{opacity:0;transform:scaleY(.12);}
+.ds-riffle i{position:absolute;left:-17px;bottom:2px;width:34px;height:5px;border-radius:1.5px;opacity:0;will-change:transform,opacity;}
+.ds-riffle.on .rf-half{animation:rfIn 280ms cubic-bezier(.3,.7,.3,1) both;}
+.ds-riffle.go .rf-half{animation:rfHalf 1080ms cubic-bezier(.4,0,.5,1) both;}
+.ds-riffle.go .rf-mid{animation:rfMid 1080ms cubic-bezier(.4,0,.5,1) both;}
+.ds-riffle.go i{animation:rfDrop 360ms cubic-bezier(.4,0,.3,1) calc(var(--j)*68ms) both;}
+.ds-riffle.sq .rf-mid{animation:rfSq 400ms ease-in-out both;}
+.ds-riffle.take .rf-half,.ds-riffle.take i{animation:none;opacity:0;}
+.ds-riffle.take .rf-mid{animation:none;opacity:1;transform:none;}
+.ds-riffle.slide{transform:translateX(var(--dx,0px));transition:opacity 180ms ease,transform 580ms cubic-bezier(.22,.7,.3,1);}
+.ds-riffle.into{opacity:0;transform:translateX(calc(var(--dx,0px) + 24px));transition:opacity 220ms ease 80ms,transform 280ms cubic-bezier(.5,0,.8,.6);}
+.ds-riffle.into .rf-mid{transform:scale(.8,.5);transition:transform 280ms ease-in;}
+@keyframes rfIn{from{opacity:0;transform:translateX(calc(var(--s)*36px));}to{opacity:1;transform:translateX(calc(var(--s)*25px));}}
+@keyframes rfHalf{
+  0%{opacity:1;transform:translateX(calc(var(--s)*25px)) scaleY(1);}
+  70%{opacity:1;}
+  100%{opacity:0;transform:translateX(calc(var(--s)*12px)) scaleY(.14);}}
+@keyframes rfMid{
+  0%{opacity:0;transform:scaleY(.12);}
+  10%{opacity:1;}
+  100%{opacity:1;transform:scaleY(1);}}
+@keyframes rfDrop{
+  0%{opacity:0;transform:translate(calc(var(--s)*23px),-12px) rotate(calc(var(--s)*-9deg));}
+  14%{opacity:1;}
+  55%{opacity:1;transform:translate(calc(var(--s)*9px),-22px) rotate(calc(var(--s)*-4deg));}
+  86%{opacity:1;}
+  100%{opacity:0;transform:translate(0,calc(var(--j)*-.85px - 3px)) rotate(0deg);}}
+@keyframes rfSq{
+  0%,100%{opacity:1;transform:scaleY(1);}
+  30%{opacity:1;transform:scaleY(.86) scaleX(1.03);}
+  46%{opacity:1;transform:scaleY(1);}
+  70%{opacity:1;transform:scaleY(1);}
+  88%{opacity:1;transform:scaleY(.88) scaleX(1.03);}}
+.shoe-cut{position:absolute;right:20px;bottom:4px;width:3px;height:16px;border-radius:1px;background:var(--brass-bright);box-shadow:0 0 0 1px rgba(0,0,0,0.35);opacity:0;transform-origin:50% 100%;
+  transition:right 650ms cubic-bezier(.3,.7,.3,1),opacity 200ms ease,transform 240ms cubic-bezier(.45,.05,.25,1);z-index:1;}
+.shoe-cut.on{opacity:.95;}
+.shoe-cut.lift{transform:scaleY(1.7);}
+.shoe-cut.due{animation:cutDue 1.6s ease-in-out infinite;}
+@keyframes cutDue{0%,100%{opacity:.95;}50%{opacity:.4;}}
+.shoe-cut.in{animation:cutSeat 700ms ease-out both;}
+@keyframes cutSeat{0%{box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 0 0 0 rgba(240,196,107,0.7);opacity:.95;}100%{box-shadow:0 0 0 1px rgba(0,0,0,0.35),0 0 9px 6px rgba(240,196,107,0);opacity:.95;}}
+@media (prefers-reduced-motion: reduce){ .face-sweat .ds-drop,.shoe-cut,.ds-riffle i,.rf-half,.rf-mid{animation:none !important;} .shoe-stack,.shoe-cut,.ds-riffle{transition:none;} }
+
+/* side-bet circles: small circles beside your bet, one for each side bet that is switched on */
+body.tbl-on .bc.side{display:none;}
+body.tbl-on #bet-row #sb-pp-amt-wrap,body.tbl-on #bet-row #sb-tp-amt-wrap,body.tbl-on #bet-row #sb-tl-amt-wrap,body.tbl-on #bet-row #sb-bb-amt-wrap{display:none !important;}
+body.tbl-on .bcs{flex-wrap:wrap;max-width:100%;}
+body.tbl-on .bc.side.sb-on{--chip:32px;--base:26px;--ring:52px;display:block;width:68px;height:88px;margin:0 3px 4px;cursor:pointer;outline:none;}
+body.tbl-on .bc.side.sb-first{margin-left:18px;}
+body.tbl-on .bc.side.sb-first::before{content:'';position:absolute;left:-11px;top:10px;bottom:16px;width:1px;background:var(--line);}
+.bc.side .bc-ring{border-color:rgba(240,196,107,0.32);border-width:1.5px;}
+.bc.side.armed .bc-ring{border-color:rgba(240,196,107,0.8);}
+.bc.side:focus-visible .bc-ring{border-color:var(--brass-bright);border-style:solid;box-shadow:0 0 0 3px rgba(240,196,107,0.22);}
+.bc.side .bc-label{top:auto;bottom:calc(var(--base) - (var(--ring) - var(--chip))/2 + var(--ring) + 4px);transform:none;font-size:9px;letter-spacing:1.3px;text-indent:1.3px;opacity:.85;white-space:nowrap;}
+.bc.side.has-chips .bc-label{opacity:.85;}
+.bc.side.hot .bc-label{opacity:0;}
+.bc.side .bc-stack{height:56px;}
+.bc.side .bk:last-child{font-size:10px;}
+.bc.side .bk:last-child::before{inset:3px;}
+.bc.side .bc-amt{min-width:30px;padding:2px 9px;font-size:12px;bottom:-5px;}
+.bc.side .bc-rip{width:52px;height:52px;margin-left:-26px;bottom:calc(var(--base) + var(--chip)/2 - 26px);}
+.bc.side .bc-plus{font-size:13px;}
+@media (max-width:640px){
+  body.tbl-on .bc.side.sb-on{--chip:30px;--base:24px;--ring:48px;width:58px;height:82px;margin:0 2px 4px;}
+  body.tbl-on .bc.side.sb-first{margin-left:14px;}
+  body.tbl-on .bc.side.sb-first::before{left:-9px;}
+  .bc.side .bc-stack{height:50px;}
+  .bc.side .bc-label{font-size:8px;letter-spacing:1px;text-indent:1px;}
+}
+
+/* the idle line sits beside the placard, not under it */
+body.lim-on .ds-idle{left:110px;right:6px;top:40px;transform:none;width:auto;max-width:none;text-align:center;}
+@media (max-width:420px){ body.lim-on .ds-idle{left:102px;right:4px;top:12px;} }
+
 </style>
 </head>
 <body>
@@ -287,6 +709,14 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
       <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablereactions" checked><label for="set-tablereactions">Table reactions — jokes on hot/cold streaks</label></div>
       <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tooltips" checked><label for="set-tooltips">Term tooltips — hover jargon for a quick definition</label></div>
     </div>
+    <div>
+      <p class="side-note" style="margin:0 0 8px;color:var(--text);font-weight:600;">Table show</p>
+      <div class="check-row"><input type="checkbox" id="set-tableshow" checked><label for="set-tableshow">Dealer, shoe and table effects — switch off for the plain table</label></div>
+      <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablesignals" checked><label for="set-tablesignals">Hand signals — tap your hand to hit, swipe across it to stand, drag a chip onto your bet to double</label></div>
+      <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablelimits" checked><label for="set-tablelimits">Table limits — a placard by the dealer, and he holds you to it</label></div>
+      <div class="lim-row" id="lim-row"><label for="set-minbet">Min bet</label><input type="number" id="set-minbet" value="5" min="1" step="1" inputmode="numeric"><label for="set-maxbet">Max bet</label><input type="number" id="set-maxbet" value="500" min="1" step="1" inputmode="numeric"><span class="lim-sub">per hand</span></div>
+      <div class="lim-row" style="margin-top:8px;"><label for="set-chatter">Dealer chatter</label><select id="set-chatter"><option value="chatty">Chatty</option><option value="quiet">Quiet — only what matters</option><option value="off">Off</option></select></div>
+    </div>
   </div>
   <p class="side-note">Multiplayer: bots always play textbook basic strategy (no splitting, surrender, or insurance) and never wager — they're there purely to fill seats and consume the shoe realistically. When enabled, choosing a fresh shoe first asks how many bots to seat and where you'd like to sit before the cut-card prompt.</p>
   <p class="side-note">Double Down Madness: you start with just one card, can hit or double repeatedly in any order (doubling doesn't end your turn), no splitting — but if your first card is an ace, you get exactly one more card no matter what. Dealer busting on exactly 22 pushes your bets instead of paying them. Free Bet Blackjack: doubles on hard 9/10/11 and splits (except tens) cost nothing extra — in exchange, any dealer bust on exactly 22 pushes your remaining hands instead of paying them. Side bet paytables are common versions — casinos vary.</p>
@@ -308,7 +738,7 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
     <p style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin:0 0 6px;">Table manners</p>
     <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 18px;max-width:340px;">The strategy matters, but so does not looking like a first-timer. A few real-table habits worth knowing.</p>
     <ul style="text-align:left;max-width:360px;margin:0 0 20px;padding:0 0 0 18px;font-size:13px;line-height:1.7;color:var(--text);">
-      <li>Use hand signals along with talking — tap the felt for hit, wave your hand for stand. Dealers rely on the gesture, not just the word.</li>
+      <li>Use hand signals along with talking — tap the felt for hit, wave your hand for stand. Dealers rely on the gesture, not just the word. (Try it here: with Table show on, tap your hand to hit and swipe across it to stand.)</li>
       <li>Once your cards are dealt face up, don't touch them. The dealer moves everything; you only touch chips.</li>
       <li>Chips go in the betting circle in front of you — never handed straight to the dealer.</li>
       <li>Tipping the dealer (called a "toke") is optional, but common after a win.</li>
@@ -356,7 +786,9 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
   </div>
   <div id="bet-row" class="bet-row">
     <div class="field" style="min-width:300px;">
-      <span>Main bet</span>
+      <div class="bet-head"><span id="bet-title">Main bet</span>
+        <span class="seg" id="hands-seg" role="group" aria-label="Hands you play"><button type="button" id="hands-1" class="on" aria-pressed="true">1 hand</button><button type="button" id="hands-2" aria-pressed="false">2 hands</button></span>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <button class="chip chip-5" id="chip-5">5</button>
         <button class="chip chip-10" id="chip-10">10</button>
@@ -367,9 +799,16 @@ h2.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px
         <button class="chip chip-1000" id="chip-1000">1K</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <button class="stepper" id="bet-minus">−</button>
-        <input type="number" id="bet-amount" value="10" min="1" step="1" class="bet-value-input">
-        <button class="stepper" id="bet-plus">+</button>
+        <div class="spot-grp on" id="bet-grp-1"><span class="spot-lbl">Hand 1</span>
+          <button class="stepper" id="bet-minus">−</button>
+          <input type="number" id="bet-amount" value="10" min="1" step="1" class="bet-value-input">
+          <button class="stepper" id="bet-plus">+</button>
+        </div>
+        <div class="spot-grp" id="bet-grp-2" style="display:none;"><span class="spot-lbl">Hand 2</span>
+          <button class="stepper" id="bet-minus-2">−</button>
+          <input type="number" id="bet-amount-2" value="0" min="0" step="1" class="bet-value-input">
+          <button class="stepper" id="bet-plus-2">+</button>
+        </div>
         <span style="width:1px;height:22px;background:var(--line);margin:0 2px;"></span>
         <button id="bet-half" style="font-size:12px;">½x</button>
         <button id="bet-double" style="font-size:12px;">2x</button>
@@ -600,6 +1039,7 @@ function T(ms){ return G.turbo ? 0 : ms; }
 
 var G={
   decks:2, payout:1.5, variant:'standard', hitSoft17:true,
+  numHands:1, betSpot:0, roundSpots:1,   // numHands: how many hands you play (1 or 2); betSpot: which bet your chips go to; roundSpots: how many this round was dealt with
   sidebets:{pp:false,tp:false,tl:false,bb:false},
   showCount:true, showSeen:false, turbo:false, insuranceEnabled:false, insuranceBet:0, showOdds:true, surrenderEnabled:false, splitAnyTens:false, drillsMode:false, soundOn:true, showDeviations:false, needsReshuffle:false, cutCardThreshold:0,
   multiplayerEnabled:true, numBots:0, userSeatIndex:0, bots:[], dealerHadNaturalBJ:false, dealerStreak:0, tableReactionsEnabled:true, tooltipsEnabled:true, userWinStreak:0, seenFirstHandHints:false, seenChipsHint:false,
@@ -607,6 +1047,7 @@ var G={
   bankroll:1000, phase:'betting',
   dealer:{cards:[]}, hands:[], activeIdx:0,
   history:[], sbAmounts:{}, holeRevealed:false, locked:false, feedbackLog:[], lastClass:null, activeTab:'hard',
+  tableShow:true, tableSignals:true, tableLimits:true, minBet:5, maxBet:500, chatter:'chatty',
   openBet:null, openTC:null   // this round's opening bet and the true count when it was dealt (feeds the bet advice)
 };
 
@@ -871,7 +1312,7 @@ function betRoomForMainBet(){
     var cb=document.getElementById('sb-'+k);
     if(cb && cb.checked){ sb += parseInt(document.getElementById('sb-'+k+'-amt').value,10)||0; }
   });
-  return G.bankroll - sb;
+  return G.bankroll - sb - (typeof otherSpotBet==='function' ? otherSpotBet() : 0);
 }
 
 // Pure text builder: tc = true count, usualAvg = session average opening bet at low counts (0 if none yet),
@@ -1155,16 +1596,24 @@ function readSettings(){
   G.multiplayerEnabled=document.getElementById('set-multiplayer').checked;
   G.tableReactionsEnabled=document.getElementById('set-tablereactions').checked;
   G.tooltipsEnabled=document.getElementById('set-tooltips').checked;
+  G.tableShow=document.getElementById('set-tableshow').checked;
+  G.tableSignals=document.getElementById('set-tablesignals').checked;
+  G.tableLimits=document.getElementById('set-tablelimits').checked;
+  G.minBet=parseInt(document.getElementById('set-minbet').value,10)||0;
+  G.maxBet=parseInt(document.getElementById('set-maxbet').value,10)||0;
+  G.chatter=document.getElementById('set-chatter').value;
+  try{ if(typeof Show!=='undefined' && Show.sync) Show.sync(); }catch(e){}
   document.body.classList.toggle('tooltips-off', !G.tooltipsEnabled);
   document.getElementById('sb-pp-amt-wrap').style.display=G.sidebets.pp?'flex':'none';
   document.getElementById('sb-tp-amt-wrap').style.display=G.sidebets.tp?'flex':'none';
   document.getElementById('sb-tl-amt-wrap').style.display=G.sidebets.tl?'flex':'none';
   document.getElementById('sb-bb-amt-wrap').style.display=G.sidebets.bb?'flex':'none';
   document.getElementById('seen-panel').style.display=G.showSeen?'block':'none';
+  applyHandsUi();
   renderCountBar();
 }
 
-['set-decks','set-payout','set-variant','set-hitsoft17','sb-pp','sb-tp','sb-tl','sb-bb','set-showcount','set-showseen','set-turbo','set-insurance','set-surrender','set-splitanytens','set-showodds','set-drills','set-sound','set-showdeviations','set-multiplayer','set-tablereactions','set-tooltips'].forEach(function(id){
+['set-decks','set-payout','set-variant','set-hitsoft17','sb-pp','sb-tp','sb-tl','sb-bb','set-showcount','set-showseen','set-turbo','set-insurance','set-surrender','set-splitanytens','set-showodds','set-drills','set-sound','set-showdeviations','set-multiplayer','set-tablereactions','set-tooltips','set-tableshow','set-tablesignals','set-tablelimits','set-minbet','set-maxbet','set-chatter'].forEach(function(id){
   document.getElementById(id).addEventListener('change', function(){
     readSettings();
     if(id==='set-decks'){ buildShoe(); }
@@ -1230,7 +1679,8 @@ function saveHandState(){
       sbAmounts: G.sbAmounts,
       sidebets: G.sidebets,
       openBet: G.openBet,
-      openTC: G.openTC
+      openTC: G.openTC,
+      roundSpots: G.roundSpots
     }));
   }catch(e){}
 }
@@ -1269,7 +1719,9 @@ function saveSession(){
         decks:G.decks, payout:G.payout, variant:G.variant, hitSoft17:G.hitSoft17,
         sidebets:G.sidebets, showCount:G.showCount, showSeen:G.showSeen, turbo:G.turbo,
         insuranceEnabled:G.insuranceEnabled, showOdds:G.showOdds, surrenderEnabled:G.surrenderEnabled, splitAnyTens:G.splitAnyTens,
-        drillsMode:G.drillsMode, soundOn:G.soundOn, showDeviations:G.showDeviations, multiplayerEnabled:G.multiplayerEnabled, tableReactionsEnabled:G.tableReactionsEnabled, tooltipsEnabled:G.tooltipsEnabled
+        drillsMode:G.drillsMode, soundOn:G.soundOn, showDeviations:G.showDeviations, multiplayerEnabled:G.multiplayerEnabled, tableReactionsEnabled:G.tableReactionsEnabled, tooltipsEnabled:G.tooltipsEnabled, numHands:G.numHands,
+        tableShow:G.tableShow, tableSignals:G.tableSignals,
+        tableLimits:G.tableLimits, minBet:G.minBet, maxBet:G.maxBet, chatter:G.chatter
       }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1322,6 +1774,13 @@ function applyLoadedSession(){
     document.getElementById('set-multiplayer').checked=!!s.multiplayerEnabled;
     document.getElementById('set-tablereactions').checked = s.tableReactionsEnabled!==false;
     document.getElementById('set-tooltips').checked = s.tooltipsEnabled!==false;
+    document.getElementById('set-tableshow').checked = s.tableShow!==false;
+    document.getElementById('set-tablesignals').checked = s.tableSignals!==false;
+    document.getElementById('set-tablelimits').checked = s.tableLimits!==false;
+    document.getElementById('set-minbet').value = (parseInt(s.minBet,10)>=1) ? parseInt(s.minBet,10) : 5;
+    document.getElementById('set-maxbet').value = (parseInt(s.maxBet,10)>=1) ? parseInt(s.maxBet,10) : 500;
+    document.getElementById('set-chatter').value = (s.chatter==='quiet' || s.chatter==='off') ? s.chatter : 'chatty';
+    G.numHands = (s.numHands===2) ? 2 : 1;
   }
   readSettings();
   if(data.theme && THEMES[data.theme]){
@@ -1358,43 +1817,95 @@ document.getElementById('btn-manners-close').addEventListener('click', function(
   hideMannersOverlay();
 });
 
-function setBet(amount){
+/* Two-handed play: two bets ("spots"). Your chips and the amount buttons always act on the selected spot. */
+function spotCount(){ return (G.numHands===2 && !G.drillsMode) ? 2 : 1; }
+function activeSpot(){ return (spotCount()===2 && G.betSpot===1) ? 1 : 0; }
+function betEl(spot){ return document.getElementById(spot===1 ? 'bet-amount-2' : 'bet-amount'); }
+function betOf(spot){ return parseInt(betEl(spot).value,10)||0; }
+function otherSpotBet(){ return spotCount()===2 ? betOf(1-activeSpot()) : 0; }
+function markSelectedChip(){
+  var v=betOf(activeSpot());
+  ['5','10','25','50','100','500','1000'].forEach(function(c){ document.getElementById('chip-'+c).classList.toggle('selected', parseInt(c,10)===v); });
+}
+function selectSpot(spot){
+  G.betSpot = (spot===1 && spotCount()===2) ? 1 : 0;
+  document.getElementById('bet-grp-1').classList.toggle('on', G.betSpot===0);
+  document.getElementById('bet-grp-2').classList.toggle('on', G.betSpot===1);
+  markSelectedChip();
+}
+function applyHandsUi(){
+  var two = spotCount()===2;
+  document.body.classList.toggle('two-hands', two);
+  document.getElementById('bet-grp-2').style.display = two ? 'flex' : 'none';
+  document.getElementById('bet-title').textContent = two ? 'Your bets' : 'Main bet';
+  document.getElementById('hands-1').classList.toggle('on', !two);
+  document.getElementById('hands-2').classList.toggle('on', two);
+  document.getElementById('hands-1').setAttribute('aria-pressed', two ? 'false' : 'true');
+  document.getElementById('hands-2').setAttribute('aria-pressed', two ? 'true' : 'false');
+  var seg=document.getElementById('hands-seg');
+  seg.classList.toggle('off', !!G.drillsMode);
+  seg.title = G.drillsMode ? 'Drills deal one hand at a time' : '';
+  if(!two) G.betSpot = 0;
+  document.getElementById('bet-grp-1').classList.toggle('on', G.betSpot===0);
+  document.getElementById('bet-grp-2').classList.toggle('on', G.betSpot===1);
+  markSelectedChip();
+}
+function setHands(n){
+  if(G.drillsMode) return;
+  n = (n===2) ? 2 : 1;
+  if(G.numHands===n) return;
+  G.numHands = n;
+  if(n===2 && betOf(1)<1){   // the second hand starts out matching the first, as far as the bankroll allows
+    var sb=0;
+    ['pp','tp','tl','bb'].forEach(function(k){ if(document.getElementById('sb-'+k).checked){ sb += parseInt(document.getElementById('sb-'+k+'-amt').value,10)||0; } });
+    betEl(1).value = Math.max(0, Math.min(betOf(0), G.bankroll - betOf(0) - sb));
+  }
+  G.betSpot = 0;
+  applyHandsUi();
+  renderBetTip();
+  renderAll();
+  saveSession();
+}
+document.getElementById('hands-1').addEventListener('click', function(){ setHands(1); });
+document.getElementById('hands-2').addEventListener('click', function(){ setHands(2); });
+function setBet(amount, spot){
+  if(spot!==0 && spot!==1) spot = activeSpot();
   amount = Math.max(0, amount);
-  document.getElementById('bet-amount').value = amount;
-  ['5','10','25','50','100','500','1000'].forEach(function(v){
-    document.getElementById('chip-'+v).classList.toggle('selected', parseInt(v,10)===amount);
-  });
+  betEl(spot).value = amount;
+  if(spot===activeSpot()) markSelectedChip();
   sfxChip();
   renderBetTip();
 }
 [5,10,25,50,100,500,1000].forEach(function(v){
   document.getElementById('chip-'+v).addEventListener('click', function(){
-    var current=parseInt(document.getElementById('bet-amount').value,10)||0;
-    setBet(current+v);
+    setBet(betOf(activeSpot())+v);
   });
 });
-document.getElementById('bet-plus').addEventListener('click', function(){ setBet((parseInt(document.getElementById('bet-amount').value,10)||0)+5); });
-document.getElementById('bet-minus').addEventListener('click', function(){ setBet((parseInt(document.getElementById('bet-amount').value,10)||0)-5); });
-document.getElementById('bet-amount').addEventListener('input', function(){
-  var v=parseInt(this.value,10)||0;
-  ['5','10','25','50','100','500','1000'].forEach(function(c){ document.getElementById('chip-'+c).classList.toggle('selected', parseInt(c,10)===v); });
-  renderBetTip();
+document.getElementById('bet-plus').addEventListener('click', function(){ selectSpot(0); setBet(betOf(0)+5); });
+document.getElementById('bet-minus').addEventListener('click', function(){ selectSpot(0); setBet(betOf(0)-5); });
+document.getElementById('bet-plus-2').addEventListener('click', function(){ selectSpot(1); setBet(betOf(1)+5); });
+document.getElementById('bet-minus-2').addEventListener('click', function(){ selectSpot(1); setBet(betOf(1)-5); });
+['bet-amount','bet-amount-2'].forEach(function(id, i){
+  var el=document.getElementById(id);
+  el.addEventListener('focus', function(){ selectSpot(i); });
+  el.addEventListener('input', function(){ selectSpot(i); renderBetTip(); });
+});
+[['bet-grp-1',0],['bet-grp-2',1]].forEach(function(g){
+  document.getElementById(g[0]).addEventListener('click', function(e){ if(spotCount()===2 && e.target.tagName!=='BUTTON') selectSpot(g[1]); });
 });
 document.getElementById('bet-clear').addEventListener('click', function(){ setBet(0); });
 document.getElementById('bet-double').addEventListener('click', function(){
-  var current=parseInt(document.getElementById('bet-amount').value,10)||0;
-  setBet(current*2);
+  setBet(betOf(activeSpot())*2);
 });
 document.getElementById('bet-half').addEventListener('click', function(){
-  var current=parseInt(document.getElementById('bet-amount').value,10)||0;
-  setBet(Math.floor(current/2));
+  setBet(Math.floor(betOf(activeSpot())/2));
 });
 document.getElementById('bet-allin').addEventListener('click', function(){
   var sbTotal=0;
   ['pp','tp','tl','bb'].forEach(function(k){
     if(document.getElementById('sb-'+k).checked){ sbTotal += parseInt(document.getElementById('sb-'+k+'-amt').value,10)||0; }
   });
-  setBet(G.bankroll - sbTotal);
+  setBet(G.bankroll - sbTotal - otherSpotBet());
 });
 function resetBankroll(){ if(G.phase!=='betting' && G.phase!=='result') return; G.bankroll=1000; renderAll(); saveSession(); }
 document.getElementById('btn-reset-bankroll').addEventListener('click', resetBankroll);
@@ -1619,7 +2130,7 @@ function renderHistory(){
     var dt=handTotal(r.dealerCards);
     var handsHTML = r.hands.map(function(hh, i){
       var t=handTotal(hh.cards);
-      return '<div style="margin-top:6px;"><span style="color:var(--text-muted);">Hand '+(i+1)+' ('+hh.status+', bet '+hh.bet+'):</span><br>'+cardsToHTML(hh.cards)+' <span style="color:var(--text-muted);">= '+t.total+(t.soft?' soft':'')+'</span></div>';
+      return '<div style="margin-top:6px;"><span style="color:var(--text-muted);">'+handNameFrom(r.hands, i, r.roundSpots)+' ('+hh.status+', bet '+hh.bet+'):</span><br>'+cardsToHTML(hh.cards)+' <span style="color:var(--text-muted);">= '+t.total+(t.soft?' soft':'')+'</span></div>';
     }).join('');
     var resultsHTML = r.results.map(function(res){
       return '<div class="result-line" style="border-color:var(--line);"><span>'+res.label+'</span><span style="color:'+(res.amount>=0?'var(--sage-bright)':'var(--coral)')+';">'+(res.amount>=0?'+':'')+res.amount+'</span></div>';
@@ -1696,7 +2207,10 @@ document.getElementById('tab-pair').addEventListener('click', function(){ G.acti
 function runDealSequence(totalSeats, cardsPerSeat, onComplete){
   var steps=[];
   for(var round=0; round<cardsPerSeat; round++){
-    for(var i=0;i<totalSeats;i++) steps.push({seat:i});
+    for(var i=0;i<totalSeats;i++){
+      if(i===G.userSeatIndex){ for(var uh=0; uh<G.hands.length; uh++) steps.push({seat:i, hand:uh}); }   // one hand, or two side by side
+      else steps.push({seat:i});
+    }
     if(round===0) steps.push({dealer:'up'});
   }
   steps.push({dealer:'hole'});
@@ -1707,8 +2221,9 @@ function runDealSequence(totalSeats, cardsPerSeat, onComplete){
     var isDDM = G.variant==='ddm';
     var c=draw();
     if(step.seat===G.userSeatIndex){
-      G.hands[0].cards.push(c);
-      if(isDDM && G.hands[0].cards.length===1){ G.hands[0].aceLimited = (c.r==='A'); }
+      var mine=G.hands[step.hand||0];
+      mine.cards.push(c);
+      if(isDDM && mine.cards.length===1){ mine.aceLimited = (c.r==='A'); }
     } else {
       var bot=G.bots.find(function(b){ return b.seatIndex===step.seat; });
       if(!bot){ bot={seatIndex:step.seat, cards:[], status:'active', aceLimited:false}; G.bots.push(bot); }
@@ -1753,20 +2268,24 @@ function startDeal(){
     return;
   }
   readSettings();
+  var nSpots=spotCount();
   var bet=parseInt(document.getElementById('bet-amount').value,10)||0;
-  if(bet<1){ alert('Place a bet before dealing — pick a chip or type an amount.'); return; }
+  var bet2=nSpots===2 ? (parseInt(document.getElementById('bet-amount-2').value,10)||0) : 0;
+  if(bet<1 || (nSpots===2 && bet2<1)){ alert(nSpots===2 ? 'Place a bet on both hands before dealing — or switch to one hand.' : 'Place a bet before dealing — pick a chip or type an amount.'); return; }
   var sbTotal=0; G.sbAmounts={};
   ['pp','tp','tl','bb'].forEach(function(k){
     if(G.sidebets[k]){ var amt=parseInt(document.getElementById('sb-'+k+'-amt').value,10)||0; G.sbAmounts[k]=amt; sbTotal+=amt; }
   });
-  if(bet+sbTotal>G.bankroll){ alert("That's more than your bankroll — lower the bet."); return; }
-  G.openBet=bet; G.openTC=trueCount(); // opening bet + count at the deal, recorded before any card is drawn (feeds the bet advice)
-  G.bankroll -= (bet+sbTotal);
+  if(bet+bet2+sbTotal>G.bankroll){ alert("That's more than your bankroll — lower the bet."); return; }
+  G.openBet=nSpots===2 ? Math.round((bet+bet2)/2) : bet; G.openTC=trueCount(); // opening bet (per hand) + count at the deal, recorded before any card is drawn (feeds the bet advice)
+  G.bankroll -= (bet+bet2+sbTotal);
   saveSharedBankroll(); // persist immediately -- a hand in progress must not be escapable by refreshing
   document.getElementById('feedback-zone').innerHTML='';
   document.getElementById('result-zone').innerHTML='';
   G.dealer={cards:[]};
-  G.hands=[{cards:[], bet:bet, status:'active', fromSplit:false, isSplitAces:false, decision:null, aceLimited:false}];
+  G.hands=[{cards:[], bet:bet, status:'active', fromSplit:false, isSplitAces:false, decision:null, aceLimited:false, spot:0}];
+  if(nSpots===2) G.hands.push({cards:[], bet:bet2, status:'active', fromSplit:false, isSplitAces:false, decision:null, aceLimited:false, spot:1});
+  G.roundSpots=nSpots;
   G.bots=[];
   G.activeIdx=0; G.holeRevealed=false; G.locked=true; G.phase='dealing'; G.feedbackLog=[]; G.lastClass=null; G.insuranceBet=0;
   renderAll();
@@ -1827,7 +2346,8 @@ function offerInsuranceOrProceed(){
 }
 
 function showInsuranceOffer(){
-  var mainBet=G.hands[0].bet;
+  var mainBet=G.hands.reduce(function(sum,h){ return sum+h.bet; }, 0);   // two hands: insurance is sized on both bets together
+  var betWord=G.hands.length>1 ? 'your two original bets' : 'your original bet';
   var maxIns=Math.max(1, Math.floor(mainBet/2));
   var tc=trueCount();
   var tip = tc>=3
@@ -1836,7 +2356,7 @@ function showInsuranceOffer(){
   var z=document.getElementById('feedback-zone');
   z.innerHTML = '<div class="insurance-offer">'+
     '<p class="ft">Dealer shows an ace — insurance?</p>'+
-    '<p style="margin:0;">Insurance pays 2:1 if the dealer has blackjack, and costs up to half your original bet ('+mainBet+') whether or not it hits.</p>'+
+    '<p style="margin:0;">Insurance pays 2:1 if the dealer has blackjack, and costs up to half '+betWord+' ('+mainBet+') whether or not it hits.</p>'+
     '<p class="fd">'+tip+'</p>'+
     '<div style="display:flex;align-items:center;gap:8px;margin-top:10px;">'+
       '<input type="number" id="insurance-amt" value="'+maxIns+'" min="0" max="'+maxIns+'" style="width:70px;">'+
@@ -1877,19 +2397,20 @@ function logInsuranceDecision(took, tc){
   });
 }
 
+function isNatural(h){ return h.cards.length===2 && handTotal(h.cards).total===21; }
 function checkForNaturalsAndResolve(){
-  var pt=handTotal(G.hands[0].cards);
   var dUp=G.dealer.cards[0];
   var dealerMayHaveBJ = dUp.v===11 || dUp.v===10;
-  if(pt.total===21 || dealerMayHaveBJ){
+  var anyNat = G.hands.some(isNatural);
+  if(anyNat || dealerMayHaveBJ){
     var dt=handTotal(G.dealer.cards);
-    var playerBJ = pt.total===21 && G.hands.length===1;
+    var allNat = G.hands.every(isNatural);
     var dealerBJ = dt.total===21 && G.dealer.cards.length===2;
-    if(playerBJ || dealerBJ){
+    if(allNat || dealerBJ){
       G.locked=true;
       setTimeout(function(){
         revealHole(); G.holeRevealed=true; renderAll();
-        G.hands[0].status = playerBJ ? 'blackjack' : (dealerBJ?'lose':'active');
+        G.hands.forEach(function(h){ h.status = isNatural(h) ? 'blackjack' : (dealerBJ?'lose':'active'); });
         if(G.multiplayerEnabled && !dealerBJ){ resolveBotsAfter(dUp.r); renderAll(); }
         var botsStillLive = G.multiplayerEnabled && G.bots.some(function(b){ return b.status!=='bust'; });
         if(!dealerBJ && botsStillLive){
@@ -1899,6 +2420,15 @@ function checkForNaturalsAndResolve(){
           setTimeout(finishRound, T(HOLE_FLIP_DELAY));
         }
       }, T(HOLE_FLIP_DELAY));
+      return;
+    }
+    if(anyNat){
+      // two hands, only one of them a blackjack: it waits, paid at the end, while you play the other
+      G.hands.forEach(function(h){ if(isNatural(h)) h.status='blackjack'; });
+      for(var i=0;i<G.hands.length;i++){ if(G.hands[i].status==='active'){ G.activeIdx=i; break; } }
+      document.getElementById('dealer-total').textContent='';
+      renderAll();
+      syncChartTabToHand();
       return;
     }
     document.getElementById('dealer-total').textContent='';
@@ -2017,7 +2547,7 @@ function doAction(action){
     var c2=h.cards.pop();
     h.cards.push(draw());
     h.fromSplit=true;
-    var newHand={cards:[c2, draw()], bet:h.bet, status:'active', fromSplit:true, isSplitAces:aceSplit, decision:null};
+    var newHand={cards:[c2, draw()], bet:h.bet, status:'active', fromSplit:true, isSplitAces:aceSplit, decision:null, spot:h.spot};
     if(aceSplit){ h.isSplitAces=true; h.status='stand'; newHand.status='stand'; }
     G.hands.splice(G.activeIdx+1, 0, newHand);
     renderAll();
@@ -2036,7 +2566,7 @@ function advanceHand(){
 }
 
 function anyLiveHandAtTable(){
-  var userAlive = G.hands.some(function(h){ return h.status!=='bust' && h.status!=='surrender'; });
+  var userAlive = G.hands.some(function(h){ return h.status!=='bust' && h.status!=='surrender' && h.status!=='blackjack'; });
   var botsAlive = G.bots.some(function(b){ return b.status!=='bust'; });
   return userAlive || botsAlive;
 }
@@ -2077,6 +2607,15 @@ function dealerDrawStep(){
   }
 }
 
+/* "Hand 1", "Hand 2" ... and, when you played two hands and split, "Hand 1A", "Hand 1B", "Hand 2". */
+function handNameFrom(hands, idx, roundSpots){
+  var h=hands[idx];
+  if(roundSpots===2 && h && typeof h.spot==='number'){
+    var same=hands.filter(function(x){ return x.spot===h.spot; });
+    return 'Hand '+(h.spot+1)+(same.length>1 ? String.fromCharCode(65+same.indexOf(h)) : '');
+  }
+  return 'Hand '+(idx+1);
+}
 function finishRound(){
   clearHandState();
   G.phase='result';
@@ -2101,7 +2640,7 @@ function finishRound(){
       var bonus = (h.freeDoubleBonus||0)*2;
       if(dealerBJ){ net=0; label='Dealer blackjack'; h.status='lose'; }
       else if(dt.total>21){
-        if((G.variant==='freebet' || G.variant==='ddm') && dt.total===22 && !h.fromSplitBJ){ net=h.bet; label='Dealer busts with 22 — push'; h.status='push'; }
+        if((G.variant==='freebet' || G.variant==='ddm') && dt.total===22 && !h.fromSplitBJ){ net=h.bet; label='Dealer busts with 22 — push'; h.status='push'; h.push22=true; }
         else { net=h.bet*2+bonus; label='Dealer busts — you win'+(bonus?' (free double)':''); h.status='win'; }
       } else if(pt.total>dt.total){ net=h.bet*2+bonus; label='You win'+(bonus?' (free double)':''); h.status='win'; }
       else if(pt.total===dt.total){ net=h.bet; label='Push'; h.status='push'; }
@@ -2112,7 +2651,7 @@ function finishRound(){
     else pushLike++;
     totalNet += (net - h.bet);
     G.bankroll += net;
-    results.push({label: (G.hands.length>1 ? 'Hand '+(idx+1)+': '+label : label), amount:net-h.bet});
+    results.push({label: (G.hands.length>1 ? handNameFrom(G.hands, idx, G.roundSpots)+': '+label : label), amount:net-h.bet});
   });
 
   var hasUserBJ = G.hands.some(function(h){ return h.status==='bj'; });
@@ -2183,7 +2722,8 @@ function finishRound(){
     label:'Hand #'+(G.history.length+1)+' ('+G.hands.length+(G.hands.length>1?' hands':' hand')+')',
     net:totalNet, headline:headline,
     dealerCards: G.dealer.cards.slice(),
-    hands: G.hands.map(function(h){ return {cards:h.cards.slice(), status:h.status, bet:h.bet}; }),
+    roundSpots: G.roundSpots,
+    hands: G.hands.map(function(h){ return {cards:h.cards.slice(), status:h.status, bet:h.bet, spot:h.spot}; }),
     results: results.slice(),
     feedback: G.feedbackLog.slice()
   };
@@ -2339,7 +2879,7 @@ function renderAll(){
     var badgeEl=box.children[0];
     if(h.status==='bust'){ badgeEl.textContent='Bust'; badgeEl.className='badge bust'; badgeEl.style.display='inline-block'; }
     else if(h.status==='surrender'){ badgeEl.textContent='Surrendered'; badgeEl.className='badge lose'; badgeEl.style.display='inline-block'; }
-    else if(h.status==='bj'){ badgeEl.textContent='Blackjack'; badgeEl.className='badge bj'; badgeEl.style.display='inline-block'; }
+    else if(h.status==='bj' || h.status==='blackjack'){ badgeEl.textContent='Blackjack'; badgeEl.className='badge bj'; badgeEl.style.display='inline-block'; }
     else if(h.status==='win'){ badgeEl.textContent='Win'; badgeEl.className='badge win'; badgeEl.style.display='inline-block'; }
     else if(h.status==='push'){ badgeEl.textContent='Push'; badgeEl.className='badge push'; badgeEl.style.display='inline-block'; }
     else if(h.status==='lose'){ badgeEl.textContent='Lose'; badgeEl.className='badge lose'; badgeEl.style.display='inline-block'; }
@@ -2352,7 +2892,13 @@ function renderAll(){
     totalEl.classList.toggle('bust', h.status==='bust');
     var subP=box.children[2];
     subP.textContent = (t.soft?'soft':'')+' · bet '+h.bet;
+    var tag=box.querySelector('.hand-tag');
+    if(G.roundSpots===2 && G.hands.length>1){
+      if(!tag){ tag=document.createElement('span'); tag.className='hand-tag'; box.appendChild(tag); }
+      tag.textContent=handNameFrom(G.hands, idx, G.roundSpots);
+    } else if(tag){ tag.parentNode.removeChild(tag); }
   });
+  hr.classList.toggle('dense', G.hands.length>=3);   // three or four hands (splits): smaller cards so they sit side by side
 
   var ar=document.getElementById('actions-row');
   if(G.phase==='player'){
@@ -2445,6 +2991,7 @@ function resumeHand(saved){
   if(saved.sidebets) G.sidebets = saved.sidebets;
   G.openBet = (typeof saved.openBet==='number' && isFinite(saved.openBet) && saved.openBet>0) ? saved.openBet : null;
   G.openTC = (typeof saved.openTC==='number' && isFinite(saved.openTC)) ? saved.openTC : null;
+  G.roundSpots = (saved.roundSpots===2 || G.hands.some(function(h){ return h.spot===1; })) ? 2 : 1;
   G.locked = false;
   G.bots = [];
 
@@ -2485,6 +3032,1918 @@ if(savedHand){
 renderHistory();
 buildChart(G.activeTab);
 maybeShowChipsHint();
+</script>
+<script>
+/* ============ TABLE SHOW ============
+   A dealer who rises to deal, passes cards to every seat, peeks at the hole card, and pays out blackjacks with a chip cascade;
+   a shoe you can tap or flick to deal; and hand signals (tap = hit, swipe = stand, drag a chip onto your bet = double).
+   It sits on top of the game: it wraps a handful of functions, never changes the rules or the shoe, and when "Table show" is
+   switched off (Table settings) the table behaves exactly as it did before. */
+var Show = (function(){
+  'use strict';
+  var W = window;
+  var S = {
+    ready:false, built:false, wasOn:false, st:null, layer:null,
+    state:'away', upAt:0, mood:'idle', moodT:0, sayT:0,
+    queue:[], busy:false, idleWaiters:[], essential:[], timers:[], watch:0,
+    flights:[], flightSeq:0, hidden:[], snap:null, needSnap:true,
+    orig:null, errors:[], peekCb:null, sig:null, drag:null, tapAt:0,
+    k:1, T:{deal:470, hit:780, result:2600}, stats:{flights:0, quick:0, peeks:0, retargets:0, eggs:0, surprises:0, smiles:0, frowns:0}, dmKey:'', tbuilt:false, spots:[{i:0, chips:[], val:0, init:false, cache:null}, {i:1, chips:[], val:0, init:false, cache:null}, {i:2, side:'pp', chips:[], val:0, init:false, cache:null}, {i:3, side:'tp', chips:[], val:0, init:false, cache:null}, {i:4, side:'tl', chips:[], val:0, init:false, cache:null}, {i:5, side:'bb', chips:[], val:0, init:false, cache:null}], nextDrop:null, cd:null, suppressClick:0, egg:null, eggEnd:0, eggLast:'', eggLine:{sus:0, sad:0}, armPt:null, shoeDrag:null, seed:7919, enterCbs:[], gen:0, idleRec:null, lowerRec:null, peekedFor:null
+  };
+
+  S.nudge = {first:30000, again:60000, hold:4200, retry:5000, max:3, off:false};   // the idle dealer visit (ms; scaled by S.k)
+  S.nudgeRec = null; S.visit = null; S.nudgeLine = -1; S.nudgeCount = 0; S.stats.nudges = 0;
+  S.eggDwell = 1000; S.dwellRec = null; S.dwellEv = null;   // hover over his chip tray for this long (ms; scaled by S.k) before he reacts
+  S.run = {w:0, l:0}; S.shufRec = null; S.limRec = null; S.limNoteRec = null; S.limLast = {kind:'', t:0}; S.limKey = ''; S.shuf = null; S.lastChip = 5;   // win / loss runs, table limits, the shuffle
+  S.stats.limits = 0; S.stats.shuffles = 0; S.stats.markers = 0; S.stats.streaks = 0;
+
+  /* ---------- small helpers ---------- */
+  function $(id){ return document.getElementById(id); }
+  function now(){ return (W.performance && performance.now) ? performance.now() : Date.now(); }
+  function rnd(){ S.seed = (S.seed*16807) % 2147483647; return (S.seed-1)/2147483646; } // private stream, never touches Math.random (the shoe)
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+  function err(where, e){ try{ S.errors.push(where+': '+(e && e.message || e)); if(W.console && console.warn) console.warn('[table show] '+where, e); }catch(_){} }
+  function guard(where, fn){ return function(){ try{ return fn.apply(this, arguments); }catch(e){ err(where, e); } }; }
+  function on(){ return !!(W.G && G.tableShow && !G.turbo); }
+  function sigOn(){ return !!(W.G && G.tableShow && G.tableSignals); }
+  /* how much he talks: chatty (everything), quiet (only what you need to know), off (faces and gestures only) */
+  function chatLvl(){ var c = W.G && G.chatter; return (c === 'quiet' || c === 'off') ? c : 'chatty'; }
+  /* table limits: a placard by the dealer, and he holds you to it (only while the table show is running) */
+  function limOn(){ return !!(W.G && on() && S.built && G.tableLimits); }
+  function limMin(){ var v = parseInt(G.minBet, 10); return v >= 1 ? Math.min(v, 1000000) : 5; }
+  function limMax(){ var v = parseInt(G.maxBet, 10); return Math.max(limMin(), v >= 1 ? Math.min(v, 1000000) : 500); }
+  function effMin(){ return Math.max(1, Math.min(limMin(), Math.floor(G.bankroll / Math.max(1, spotN())))); }   // a short stack can still bet what is left
+  function money(n){ return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function reduced(){ try{ return !!(W.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; } }
+  function canAnim(){ return typeof Element!=='undefined' && typeof Element.prototype.animate==='function'; }
+  function fx(){ return on() && S.built && !reduced() && canAnim(); }
+  function later(fn, ms, essential){
+    var rec = {fn:fn, essential:!!essential, id:0};
+    rec.id = setTimeout(function(){
+      var i = S.timers.indexOf(rec); if(i>=0) S.timers.splice(i,1);
+      try{ fn(); }catch(e){ err('timer', e); }
+    }, ms * S.k);
+    S.timers.push(rec);
+    return rec;
+  }
+  function unlater(rec){ if(!rec) return; clearTimeout(rec.id); var i=S.timers.indexOf(rec); if(i>=0) S.timers.splice(i,1); }
+  function cssVar(n){ try{ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }catch(e){ return ''; } }
+
+  /* ---------- sound (shares the page's sound switch) ---------- */
+  function ctxOk(){ if(!G.soundOn) return null; var c = ensureAudioCtx(); if(!c) return null; try{ if(c.state==='suspended' && c.resume) c.resume(); }catch(e){} return c; }
+  function noise(dur, freq, q, vol, sweep){
+    var c = ctxOk(); if(!c) return;
+    var n = Math.floor(c.sampleRate*dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i] = (rnd()*2-1) * Math.pow(1-i/n, 1.8);
+    var src = c.createBufferSource(); src.buffer = b;
+    var f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 0.8;
+    if(sweep){ try{ f.frequency.setValueAtTime(freq, c.currentTime); f.frequency.exponentialRampToValueAtTime(sweep, c.currentTime+dur); }catch(e){} }
+    var g = c.createGain(); g.gain.setValueAtTime(vol, c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+dur);
+    src.connect(f); f.connect(g); g.connect(c.destination); src.start();
+  }
+  function sfxFlick(){ noise(0.07, 3200, 0.9, 0.05, 1500); }
+  function sfxLand(){ noise(0.035, 1300, 1.2, 0.035); }
+  function sfxSlide(){ noise(0.09, 2400, 0.7, 0.03, 1800); }
+  function sfxKnock(){ if(G.soundOn){ playTone(150, 0.07, 'sine', 0.09); setTimeout(function(){ playTone(120, 0.06, 'sine', 0.06); }, 70); } }
+  function sfxSwish(){ noise(0.2, 2600, 0.6, 0.05, 700); }
+  function sfxClack(){ if(G.soundOn){ playTone(1100, 0.03, 'square', 0.025); playTone(2300, 0.02, 'triangle', 0.02); } }
+  function sfxChime(){ if(!G.soundOn) return; [784, 988, 1175, 1568].forEach(function(f,i){ setTimeout(function(){ playTone(f, 0.22, 'sine', 0.045); }, i*85); }); }
+  function sfxCoin(i){ if(!G.soundOn) return; playTone(1500 + (i%5)*140 + rnd()*60, 0.05, 'triangle', 0.028); }
+  function sfxHm(){ if(G.soundOn){ playTone(196, 0.16, 'sine', 0.05); setTimeout(function(){ playTone(174, 0.2, 'sine', 0.045); }, 150); } }
+  function sfxSigh(){ if(G.soundOn){ playTone(330, 0.14, 'sine', 0.04); setTimeout(function(){ playTone(262, 0.3, 'sine', 0.04); }, 130); } }
+  function sfxTick(){ noise(0.03, 2600, 1.4, 0.022); }
+  function sfxPick(){ noise(0.05, 1700, 1.0, 0.04, 900); }
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+  /* ---------- the dealer (inline SVG, decorative) ---------- */
+  var DEALER_SVG =
+  '<svg class="ds-svg" viewBox="0 0 150 112" aria-hidden="true" focusable="false">'+
+  '<defs>'+
+    '<linearGradient id="dsSkin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4CBA8"/><stop offset="1" stop-color="#DDA37A"/></linearGradient>'+
+    '<linearGradient id="dsVest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A2F3E"/><stop offset="1" stop-color="#4A1722"/></linearGradient>'+
+    '<linearGradient id="dsHair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3A271A"/><stop offset="1" stop-color="#1F140D"/></linearGradient>'+
+  '</defs>'+
+  '<path d="M6 112 C6 88 22 74 44 70 L58 66 L92 66 L106 70 C128 74 144 88 144 112 Z" fill="url(#dsVest)"/>'+
+  '<path d="M44 70 L58 66 L75 98 L62 112 L28 112 C28 92 34 78 44 70 Z" fill="#240A10" opacity=".45"/>'+
+  '<path d="M106 70 L92 66 L75 98 L88 112 L122 112 C122 92 116 78 106 70 Z" fill="#240A10" opacity=".45"/>'+
+  '<rect x="67" y="54" width="16" height="18" rx="4" fill="#CE946C"/>'+
+  '<path d="M60 66 L75 98 L90 66 L82 61 L75 71 L68 61 Z" fill="#F4F2EA"/>'+
+  '<path d="M60 66 L68 61 L75 71 L70 75 Z" fill="#DDD9CB"/>'+
+  '<path d="M90 66 L82 61 L75 71 L80 75 Z" fill="#E9E5D8"/>'+
+  '<g style="fill:var(--brass-bright)"><path d="M75 74 L60.5 67.5 L60.5 80.5 Z"/><path d="M75 74 L89.5 67.5 L89.5 80.5 Z"/><rect x="72" y="70.5" width="6" height="7" rx="2"/></g>'+
+  '<circle cx="75" cy="86" r="1.6" fill="#8A8F98"/><circle cx="75" cy="94" r="1.6" fill="#8A8F98"/>'+
+  '<g transform="translate(0,-11)"><g class="ds-head">'+
+    '<circle cx="53.5" cy="49" r="4.4" fill="#E2A982"/><circle cx="96.5" cy="49" r="4.4" fill="#E2A982"/>'+
+    '<ellipse cx="75" cy="46" rx="21.5" ry="25" fill="url(#dsSkin)"/>'+
+    '<path d="M52.5 45 C49 22 64 13 75 13 C89 13 101 23 97.5 45 C94 35 87 29.5 75 29.5 C63 29.5 56 35 52.5 45 Z" fill="url(#dsHair)"/>'+
+    '<path d="M63 18.5 C70 15.5 80 15.5 87 18.5" stroke="#6B4A33" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".7"/>'+
+    '<g><ellipse cx="66" cy="46" rx="4.9" ry="5.2" fill="#fff"/><ellipse cx="84" cy="46" rx="4.9" ry="5.2" fill="#fff"/></g>'+
+    '<g class="ds-pupils"><circle cx="66" cy="46.5" r="2.6" fill="#21150D"/><circle cx="84" cy="46.5" r="2.6" fill="#21150D"/><circle cx="66.8" cy="45.5" r=".8" fill="#fff" opacity=".85"/><circle cx="84.8" cy="45.5" r=".8" fill="#fff" opacity=".85"/></g>'+
+    '<rect class="ds-lid" x="60.6" y="40" width="10.8" height="12" fill="#EBB48D"/><rect class="ds-lid l2" x="78.6" y="40" width="10.8" height="12" fill="#EBB48D"/>'+
+    '<path d="M75 49.5 q-3.2 6 0.4 8.2" stroke="#C98F68" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    '<g class="ds-face">'+
+      '<g class="face-idle"><path d="M60 38.4 q6 -1.8 12 -0.6 M78 37.8 q6 -1.2 12 0.6" stroke="#2B1D14" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M69.5 63 q5.5 3.6 11 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-focus"><path d="M60 39 l11.5 -2.2 M78.5 36.8 l11.5 2.2" stroke="#2B1D14" stroke-width="2.3" fill="none" stroke-linecap="round"/><path d="M70.5 63 h9" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-wow"><path d="M60 34.6 q6 -3.6 12 0 M78 34.6 q6 -3.6 12 0" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/><ellipse cx="75" cy="63.6" rx="3.3" ry="4.2" fill="#5A2A22"/></g>'+
+      '<g class="face-smirk"><path d="M60 38.2 q6 -2.4 12 0.4 M78 35.8 q6 -3.2 12 -0.4" stroke="#2B1D14" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M69 63.6 q7 3 13 -3.4" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-grin"><path d="M60 37.4 q6 -2.8 12 -0.2 M78 37.2 q6 -2.6 12 0.2" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/><ellipse cx="59.6" cy="57.2" rx="4.4" ry="2.6" fill="#E58B7C" opacity=".26"/><ellipse cx="90.4" cy="57.2" rx="4.4" ry="2.6" fill="#E58B7C" opacity=".26"/><path d="M67.4 61.6 q7.6 5.8 15.2 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-sus"><path d="M60 40.4 l11.5 -2.6 M78.5 33.6 q6 -3.4 12 -0.2" stroke="#2B1D14" stroke-width="2.3" fill="none" stroke-linecap="round"/><path d="M70.2 63.8 q5.4 -1.8 10.4 0.4" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-sad"><path d="M60 41 l11.6 -4.6 M78.4 36.4 l11.6 4.6" stroke="#2B1D14" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M69 66.2 q6 -4.8 12 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      // a small "oh?" for a bad play: brows lifted a little, a little round mouth (the big open "wow" face is for blackjacks)
+      '<g class="face-surp"><path d="M60 35.8 q6 -3 12 -0.4 M78 35.4 q6 -2.6 12 0.4" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/><ellipse cx="75" cy="63.4" rx="2.3" ry="3" fill="#5A2A22"/></g>'+
+      // a smile that grows: his 4th card, 5th card, 6th and beyond
+      '<g class="face-sm1"><path d="M60 38 q6 -2 12 -0.4 M78 37.6 q6 -1.6 12 0.4" stroke="#2B1D14" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M68.4 62.4 q6.6 4.8 13.2 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-sm2"><path d="M60 37.6 q6 -2.4 12 -0.3 M78 37.4 q6 -2.2 12 0.3" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/><ellipse cx="59.8" cy="57" rx="4.2" ry="2.5" fill="#E58B7C" opacity=".16"/><ellipse cx="90.2" cy="57" rx="4.2" ry="2.5" fill="#E58B7C" opacity=".16"/><path d="M67.4 61.9 q7.6 6 15.2 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      '<g class="face-sm3"><path d="M60 37 q6 -2.8 12 -0.2 M78 37 q6 -2.6 12 0.2" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/><ellipse cx="59.4" cy="57.2" rx="4.8" ry="2.8" fill="#E58B7C" opacity=".32"/><ellipse cx="90.6" cy="57.2" rx="4.8" ry="2.8" fill="#E58B7C" opacity=".32"/><path d="M66.6 61.5 q8.4 7 16.8 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>'+
+      // a little nervous: brows pinched up in the middle, a wobbly mouth, and a drop at the temple
+      '<g class="face-sweat"><path d="M60 39.8 l11.4 -4.2 M78.6 35.6 l11.4 4.2" stroke="#2B1D14" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M68.6 64 q2.2 -2.2 4.4 0 t4.4 0 t4.4 0" stroke="#8A4B3A" stroke-width="1.8" fill="none" stroke-linecap="round"/><path class="ds-drop" d="M92.8 29.6 q3.8 5.4 0 9 q-3.8 -3.6 0 -9 Z" fill="#9CCBF0"/></g>'+
+    '</g>'+
+  '</g></g>'+
+  '</svg>';
+
+  /* the riffle, seen side-on across the counter: two half decks, a middle stack that grows, and twelve single cards that drop in alternately
+     (all CSS; --s is the side a card comes from, --j its place in the order) */
+  function riffleHtml(){
+    var h = '<b class="rf-half" style="--s:-1"></b><b class="rf-half" style="--s:1"></b><b class="rf-mid"></b>';
+    for(var j = 0; j < 12; j++) h += '<i style="--s:'+(j % 2 ? 1 : -1)+';--j:'+j+'"></i>';
+    return h;
+  }
+  var TRAY = [['chip-5',4],['chip-25',6],['chip-100',5],['chip-500',3],['chip-50',4]];
+
+  function build(){
+    if(S.built) return true;
+    var felt = document.querySelector('.table-felt'), row = $('dealer-box-row');
+    if(!felt || !row) return false;
+    var st = document.createElement('div');
+    st.id = 'dealer-stage'; st.className = 'ds'; st.setAttribute('data-state','away'); st.setAttribute('data-mood','idle'); st.setAttribute('data-still','1');
+    var tray = TRAY.map(function(t){ var h=''; for(var i=0;i<t[1];i++) h += '<i class="'+t[0]+'"></i>'; return '<div class="ds-stack">'+h+'</div>'; }).join('');
+    st.innerHTML =
+      '<div class="ds-dealer" data-look="fwd">'+DEALER_SVG+'</div>'+
+      '<div class="ds-armwrap"><div class="ds-upper"><div class="ds-upper-vis"></div><div class="ds-cap sh"></div>'+
+        '<div class="ds-fore"><div class="ds-fore-vis"></div><div class="ds-held"></div><div class="ds-hand"></div><div class="ds-cap el"></div></div></div></div>'+
+      '<div class="ds-rail"></div>'+
+      '<div class="ds-placard" role="note" aria-label="Table limits"><span class="pl-t">TABLE LIMITS</span><span class="pl-r pl-min"><i>MIN</i><b></b></span><span class="pl-r pl-max"><i>MAX</i><b></b></span></div>'+
+      '<div class="ds-riffle" aria-hidden="true">'+riffleHtml()+'</div>'+
+      '<div class="ds-tray" aria-hidden="true">'+tray+'</div>'+
+      '<div class="ds-shoe" role="button" tabindex="0" aria-label="Deal the hand: tap the shoe or flick a card out of it"><div class="shoe-card"></div><div class="shoe-box"><div class="shoe-stack"></div><div class="shoe-cut"></div></div><span class="shoe-tip">Tap or flick to deal</span></div>'+
+      '<div class="ds-idle">Place your bet, then tap the shoe — or press Deal.</div>'+
+      '<div class="ds-say" aria-live="polite"></div>';
+    row.appendChild(st);
+    S.st = st;
+    S.dealer = st.querySelector('.ds-dealer');
+    S.up = st.querySelector('.ds-upper'); S.fore = st.querySelector('.ds-fore');
+    S.held = st.querySelector('.ds-held'); S.hand = st.querySelector('.ds-hand');
+    S.shoe = st.querySelector('.ds-shoe'); S.shoeCard = st.querySelector('.shoe-card'); S.shoeStack = st.querySelector('.shoe-stack');
+    S.shoeTip = st.querySelector('.shoe-tip'); S.say = st.querySelector('.ds-say'); S.tray = st.querySelector('.ds-tray');
+    S.shoeCut = st.querySelector('.shoe-cut'); S.shoeBox = st.querySelector('.shoe-box'); S.placard = st.querySelector('.ds-placard'); S.riffle = st.querySelector('.ds-riffle');
+
+    var layer = document.createElement('div'); layer.id = 'show-layer'; layer.setAttribute('aria-hidden','true');
+    felt.appendChild(layer); S.layer = layer;
+
+    var ar = $('actions-row');
+    if(ar && ar.parentNode){
+      var hint = document.createElement('p'); hint.id = 'hint-signals';
+      hint.textContent = 'Table signals: tap your hand to hit, swipe across it to stand, drag the chip onto your bet to double.';
+      ar.parentNode.insertBefore(hint, ar.nextSibling);
+    }
+    wireShoe(); wireSignals(); wireTray(); wireLimits(); wireMarkers();
+    W.addEventListener('resize', guard('resize', function(){ if(S.built) restPose(); }));
+    S.built = true;
+    restPose();
+    return true;
+  }
+
+  /* ---------- the dealer's presence ---------- */
+  function setMood(m, hold){
+    if(!S.st) return;
+    clearTimeout(S.moodT);
+    S.mood = m; S.st.setAttribute('data-mood', m);
+    if(hold){ S.moodT = setTimeout(function(){ S.moodT = 0; setMood(baseMood()); }, hold); }
+  }
+  function baseMood(){ return (G.phase==='dealing' || G.phase==='dealer') ? 'focus' : 'idle'; }
+  function sayIt(text, ms, flavor){
+    if(!S.say) return;
+    var c = chatLvl(); if(c === 'off' || (flavor && c === 'quiet')) return;     // flavor = small talk; the rest is information
+    S.say.textContent = text; S.say.classList.add('on');
+    clearTimeout(S.sayT);
+    S.sayT = setTimeout(function(){ S.say.classList.remove('on'); }, ms || 1900);
+  }
+  function setState(next){
+    if(!S.st || S.state===next) return;
+    var still = !fx();
+    if(still) S.st.setAttribute('data-still','1');
+    S.state = next; S.st.setAttribute('data-state', next);
+    if(next==='up'){ S.upAt = now(); setMood(baseMood()); }
+    else { held(false); S.say.classList.remove('on'); }
+    if(still) later(function(){ if(S.st) S.st.removeAttribute('data-still'); }, 60);
+  }
+  function presence(){
+    var want = G.phase !== 'betting' || !!S.egg || !!S.visit || !!S.shuf;
+    if(want && S.state !== 'up'){ setState('up'); restPose(); }
+    else if(!want && S.state === 'up'){ if(!S.lowerRec){ S.lowerRec = later(function(){ S.lowerRec = null; if(G.phase==='betting' && !S.busy && S.queue.length===0) setState('away'); }, 160); } }
+  }
+  /* Called by the deal sequence: bring the dealer up first, then run cb. */
+  function enter(cb){
+    if(!on() || !S.built || !fx()){ cb(); return; }
+    if(S.state !== 'up') setState('up');
+    var wait = Math.max(0, 400 - (now() - S.upAt));
+    var rec = later(function(){ var i = S.enterCbs.indexOf(rec); if(i>=0) S.enterCbs.splice(i,1); cb(); }, wait, true);
+    S.enterCbs.push(rec);
+  }
+
+
+  /* ---------- easter egg: wander over his chip tray ---------- */
+  var EGG = {
+    sus: ['Help you with something?', 'Those aren’t yours.', 'I’m watching you.', 'Hands where I can see them.'],
+    sad: ['I thought we were friends.', 'Really?', 'Those are the house’s…', 'That hurts a little.']
+  };
+  function eggLook(e){
+    if(!S.st || !e) return;
+    var r = S.st.getBoundingClientRect();
+    look(e.clientX - r.left, e.clientY - r.top);
+  }
+  function eggStop(quiet){
+    var g = S.egg; if(!g) return;
+    S.egg = null; S.eggEnd = now();
+    unlater(g.startRec); unlater(g.endRec); unlater(g.capRec);
+    if(S.dealer) S.dealer.classList.remove('lean');
+    if(quiet) return;
+    setMood(baseMood());
+    if(S.say) S.say.classList.remove('on');
+    if(S.st) look((S.st.clientWidth||300)/2, 90);
+    presence();
+  }
+  function eggStart(e){
+    if(!on() || !S.built || S.egg || !idleNow() || overlayOpen()) return;
+    if(S.eggEnd && now() - S.eggEnd < 700) return;
+    if(G.phase==='dealing' || G.phase==='dealer') return;
+    if(S.visit) endVisit(true);
+    var kind = rnd() < 0.5 ? 'sus' : 'sad';
+    if(kind === S.eggLast) kind = kind === 'sus' ? 'sad' : 'sus';
+    S.eggLast = kind;
+    var g = S.egg = {kind:kind, over:true};
+    S.stats.eggs++;
+    var wasAway = S.state !== 'up';
+    if(wasAway) setState('up');
+    eggLook(e);
+    g.startRec = later(function(){
+      g.startRec = null;
+      if(S.egg !== g) return;
+      setMood(g.kind);
+      if(S.dealer) S.dealer.classList.add('lean');
+      var lines = EGG[g.kind], n = S.eggLine[g.kind]++ % lines.length;
+      sayIt(lines[n], 2600, true);
+      if(g.kind==='sad') sfxSigh(); else sfxHm();
+      g.capRec = later(function(){ g.capRec = null; if(S.egg === g) eggStop(); }, 4200);
+    }, wasAway && fx() ? 360 : 80);
+  }
+  function eggLeave(){
+    var g = S.egg; if(!g) return;
+    g.over = false; unlater(g.endRec);
+    g.endRec = later(function(){ g.endRec = null; if(S.egg === g && !g.over) eggStop(); }, 900);
+  }
+  function dwellStop(){ if(S.dwellRec){ unlater(S.dwellRec); S.dwellRec = null; } S.dwellEv = null; }
+  function wireTray(){
+    var t = S.tray; if(!t) return;
+    t.addEventListener('pointerenter', guard('tray in', function(e){
+      var g = S.egg;
+      if(g){ g.over = true; unlater(g.endRec); g.endRec = null; return; }
+      if(e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;   // a finger has no hover: its tap is handled below
+      // sweeping the mouse across the tray is not interest: he only reacts once the pointer has stayed on it for a moment
+      dwellStop(); S.dwellEv = {clientX:e.clientX, clientY:e.clientY};
+      S.dwellRec = later(guard('tray dwell', function(){ S.dwellRec = null; var ev = S.dwellEv; S.dwellEv = null; if(ev) eggStart(ev); }), S.eggDwell);
+    }));
+    t.addEventListener('pointermove', guard('tray move', function(e){ if(S.egg) eggLook(e); else if(S.dwellRec) S.dwellEv = {clientX:e.clientX, clientY:e.clientY}; }));
+    t.addEventListener('pointerleave', guard('tray out', function(){ dwellStop(); eggLeave(); }));
+    t.addEventListener('pointerdown', guard('tray down', function(e){ if(e.pointerType !== 'mouse'){ dwellStop(); if(S.egg){ eggStop(true); S.egg = null; } eggStart(e); } }));
+  }
+
+  /* ---------- an idle table: when no hand has been played for a while, the dealer comes up and says something ---------- */
+  var NUDGE_LINES = ['Ready when you are.', 'Bets are open.', 'Still with me?', 'Take your time. No rush.', 'The shoe’s getting lonely.', 'Feeling lucky?', 'The table’s all yours.', 'Cards are getting cold.'];
+  function nudgeWanted(){ return on() && S.built && G.phase === 'betting' && !S.nudge.off && chatLvl() === 'chatty'; }
+  function nudgeBusy(){
+    if(W.document.hidden) return true;                                // nobody is looking
+    if(S.egg || S.cd || S.drag || !idleNow()) return true;            // he is already busy, or a chip / a double is in the player's hand
+    if(overlayOpen() || insuranceOpen()) return true;
+    var sp = $('settings-panel'); if(sp && sp.style.display === 'block') return true;
+    var ae = document.activeElement; if(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return true;   // typing a bet
+    return false;
+  }
+  /* Keeps one countdown running while the table sits in the betting phase; leaving it (a hand, show off, turbo) ends everything. */
+  function nudgeSync(force){
+    if(!S.ready) return;
+    if(!nudgeWanted()){
+      if(S.nudgeRec){ unlater(S.nudgeRec); S.nudgeRec = null; }
+      if(S.visit) endVisit(true);
+      if(G.phase !== 'betting') S.nudgeCount = 0;
+      return;
+    }
+    if(force && S.nudgeRec){ unlater(S.nudgeRec); S.nudgeRec = null; }
+    if(!S.nudgeRec && !S.visit && S.nudgeCount < S.nudge.max) S.nudgeRec = later(guard('nudge', nudgeTick), S.nudgeCount ? S.nudge.again : S.nudge.first);
+  }
+  function nudgeTick(){
+    S.nudgeRec = null;
+    if(!nudgeWanted()) return;
+    if(nudgeBusy()){ S.nudgeRec = later(guard('nudge', nudgeTick), S.nudge.retry); return; }   // not now -- try again shortly
+    visitStart();
+  }
+  function visitStart(){
+    var n = S.nudgeLine < 0 ? Math.floor(rnd() * NUDGE_LINES.length) : S.nudgeLine + 1;
+    n = n % NUDGE_LINES.length; S.nudgeLine = n;
+    var v = S.visit = {line:n, sayRec:null, endRec:null};
+    S.nudgeCount++; S.stats.nudges++;
+    var wasAway = S.state !== 'up';
+    if(S.lowerRec){ unlater(S.lowerRec); S.lowerRec = null; }      // a lowering timer left over from just before
+    if(wasAway){ setState('up'); restPose(); }
+    v.sayRec = later(function(){
+      v.sayRec = null; if(S.visit !== v) return;
+      setMood('sm1', S.nudge.hold);
+      sayIt(NUDGE_LINES[n], S.nudge.hold - 300, true);
+      v.endRec = later(function(){ v.endRec = null; if(S.visit === v) endVisit(); }, S.nudge.hold);
+    }, wasAway && fx() ? 420 : 60);
+  }
+  function endVisit(quiet){
+    var v = S.visit; if(!v) return;
+    S.visit = null; unlater(v.sayRec); unlater(v.endRec);
+    if(S.say) S.say.classList.remove('on');
+    if(!S.egg) setMood(baseMood());
+    if(quiet) return;
+    presence();      // nothing else wants him up: he lowers again
+    nudgeSync();     // and, if the table stays quiet, he comes back a minute later
+  }
+
+  /* He comes up (if he is down), says one thing, and goes back down -- for the things that are about you, not about the clock. */
+  function visitSay(text, mood, hold){
+    if(!on() || !S.built || S.egg || S.shuf || chatLvl() === 'off') return false;
+    if(S.visit) endVisit(true);
+    hold = hold || 2200;
+    var v = S.visit = {line:-1, text:text, sayRec:null, endRec:null};
+    var wasAway = S.state !== 'up';
+    if(S.lowerRec){ unlater(S.lowerRec); S.lowerRec = null; }
+    if(wasAway){ setState('up'); restPose(); }
+    v.sayRec = later(function(){
+      v.sayRec = null; if(S.visit !== v) return;
+      setMood(mood || 'idle', hold);
+      sayIt(text, hold - 300);
+      v.endRec = later(function(){ v.endRec = null; if(S.visit === v) endVisit(); }, hold);
+    }, wasAway && fx() ? 420 : 60);
+    return true;
+  }
+
+  /* ---------- reactions: an "oh?" at a bad play, a smile that grows as he draws, a frown when he busts ---------- */
+  function surprise(){
+    if(!on() || !S.built || S.state!=='up' || S.egg || G.phase!=='player') return;
+    S.stats.surprises++;
+    if(S.mood==='surp' && S.st){ S.st.setAttribute('data-mood', 'idle'); void S.st.offsetWidth; }   // a second slip replays the little start
+    setMood('surp', 1150);
+  }
+  /* Only a play he could really have made counts (a greyed-out Double key does nothing, so it should not make him blink). */
+  function misplay(action){
+    var h = currentHand(); if(!h) return;
+    var legal = action==='D' ? (canDouble(h) && canAffordDouble(h)) : action==='P' ? canSplit(h) : action==='R' ? canSurrender(h) : true;
+    if(legal) surprise();
+  }
+  /* His cards that have actually landed (a card still in the air has not happened yet). */
+  function shownDealerCards(){
+    var n = G.dealer.cards.length;
+    S.flights.forEach(function(f){ if(f.kind==='d' && f.state!=='landed' && f.idx < n) n = f.idx; });
+    return n;
+  }
+  /* While he plays his hand: from his 4th card he smiles a little more with every card; if the cards take him over 21 he frowns. */
+  function push22Rule(){ return G.variant === 'freebet' || G.variant === 'ddm'; }
+  function dealerDrawMood(){
+    if(!on() || !S.built || S.egg || G.phase!=='dealer' || !G.holeRevealed) return;
+    var n = shownDealerCards(); if(n < 3) return;
+    var total = handTotal(G.dealer.cards.slice(0, n)).total, m = '', key;
+    if(total > 21) m = (total === 22 && push22Rule()) ? 'smirk' : 'sad';   // a 22 that only pushes is a relief, not a bust
+    else if(n >= 4) m = 'sm' + Math.min(3, n - 3);
+    if(!m) return;
+    key = n + ':' + m;
+    if(key === S.dmKey) return;
+    S.dmKey = key;
+    if(S.mood !== m){ if(m === 'sad'){ S.stats.frowns++; sfxSigh(); } else S.stats.smiles++; }   // a card that keeps the same face just holds it a little longer
+    setMood(m, m === 'sad' ? 2400 : 2600);
+  }
+
+  /* ---------- the arm (two jointed segments, solved toward a target) ---------- */
+  var L1 = 52, L2 = 54;
+  function shoulder(){ return {x:(S.st.clientWidth||300)/2 + 46, y:(S.st.clientHeight||140) - 43}; }
+  function stageXY(el){ var sr = S.st.getBoundingClientRect(), r = el.getBoundingClientRect(); return {x:r.left+r.width/2-sr.left, y:r.top+r.height/2-sr.top}; }
+  function setArmMs(ms){ S.st.style.setProperty('--arm-ms', ms+'ms'); }
+  function armTo(tx, ty, tucked){
+    if(S.st) S.st.setAttribute('data-arm', tucked ? 'rest' : 'out');
+    var sh = shoulder(), dx = tx-sh.x, dy = ty-sh.y, r = Math.sqrt(dx*dx+dy*dy) || 1;
+    var rr = clamp(r, 34, L1+L2-3), ux = dx/r, uy = dy/r;
+    var px = sh.x+ux*rr, py = sh.y+uy*rr;
+    var a = (L1*L1 - L2*L2 + rr*rr)/(2*rr), h = Math.sqrt(Math.max(0, L1*L1 - a*a));
+    var e1 = {x: sh.x+ux*a - uy*h, y: sh.y+uy*a + ux*h}, e2 = {x: sh.x+ux*a + uy*h, y: sh.y+uy*a - ux*h};
+    var E = (e1.y + 0.35*(e1.x-sh.x)) >= (e2.y + 0.35*(e2.x-sh.x)) ? e1 : e2;
+    var t1 = Math.atan2(-(E.x-sh.x), E.y-sh.y)*180/Math.PI, t2 = Math.atan2(-(px-E.x), py-E.y)*180/Math.PI;
+    var rel = t2 - t1; while(rel>180) rel -= 360; while(rel<-180) rel += 360;
+    S.up.style.transform = 'translate('+sh.x+'px,'+sh.y+'px) rotate('+t1.toFixed(2)+'deg)';
+    S.fore.style.transform = 'rotate('+rel.toFixed(2)+'deg)';
+    S.fore.style.setProperty('--fa', t2.toFixed(2)+'deg');      // what he carries turns against his forearm, so it stays level
+    S.armPt = {x:px, y:py};
+  }
+  function restPose(){ if(!S.st) return; setArmMs(260); var sh = shoulder(); armTo(sh.x+8, sh.y+34, true); }
+  function held(v){ if(S.held) S.held.classList.toggle('on', !!v); }
+  function look(x, y){
+    if(!S.dealer) return;
+    var cx = (S.st.clientWidth||300)/2, cy = (S.st.clientHeight||140) - 87;
+    var dx = x-cx, dy = y-cy, d = Math.sqrt(dx*dx+dy*dy) || 1, k = Math.min(1, d/120);
+    S.dealer.style.setProperty('--lx', (dx/d*2.3*k).toFixed(2)+'px');
+    S.dealer.style.setProperty('--ly', (dy/d*1.9*k).toFixed(2)+'px');
+    S.dealer.setAttribute('data-look', dy > 60 ? 'down' : 'fwd');
+  }
+
+  /* ---------- the job queue: one dealer action at a time ---------- */
+  function idleNow(){ return S.queue.length===0 && !S.busy && !S.flights.some(function(f){ return f.state==='flying'; }); }
+  function checkIdle(){
+    if(!idleNow()) return;
+    var w = S.idleWaiters.splice(0);
+    w.forEach(function(cb){ try{ cb(); }catch(e){ err('idle waiter', e); } });
+    if(idleNow() && S.st && S.state==='up'){
+      unlater(S.idleRec);
+      S.idleRec = later(function(){ if(idleNow()){ if(S.st){ setArmMs(300); held(false); restPose(); look((S.st.clientWidth||300)/2, 90); } if(G.phase==='betting') presence(); } }, 380);
+    }
+  }
+  function whenIdle(cb){
+    if(idleNow()){ cb(); return; }
+    var done = false, rec = null;
+    function once(){ if(done) return; done = true; unlater(rec); cb(); }
+    rec = later(function(){ var i = S.idleWaiters.indexOf(once); if(i>=0) S.idleWaiters.splice(i,1); err('idle timeout', 'forced'); once(); }, 6000);
+    S.idleWaiters.push(once);
+  }
+  function enqueue(job){ S.queue.push(job); pump(); }
+  function pump(){
+    if(S.busy) return;
+    var job = S.queue.shift();
+    if(!job){ checkIdle(); return; }
+    S.busy = true;
+    var finished = false, wd = 0, gen = S.gen;
+    function finish(){
+      if(finished || gen !== S.gen) return; finished = true; clearTimeout(wd);
+      S.busy = false; pump();
+    }
+    wd = setTimeout(function(){ if(gen === S.gen && !finished){ err('job watchdog', job.name||'job'); } finish(); }, job.max || 2600);
+    try{ job.run(finish); }catch(e){ err('job', e); finish(); }
+  }
+
+  /* ---------- finding where a card lives ---------- */
+  function handBoxEl(hi){ var hr = $('hands-row'); return hr ? hr.children[hi] : null; }
+  function targetEl(f){
+    if(f.kind==='d'){ var dc = $('dealer-cards'); return dc ? dc.children[f.idx] : null; }
+    if(f.kind==='h'){ var b = handBoxEl(f.hi); return (b && b.children[1] && b.children[1].children[0]) ? b.children[1].children[0].children[f.idx] : null; }
+    if(f.kind==='b'){
+      var row = $('bots-row'); if(!row) return null;
+      var sorted = G.bots.slice().sort(function(a,b){ return a.seatIndex-b.seatIndex; }), ix = -1;
+      for(var i=0;i<sorted.length;i++) if(sorted[i].seatIndex===f.seat) ix = i;
+      var seat = ix>=0 ? row.children[ix] : null, cards = seat ? seat.querySelector('.bs-cards') : null;
+      return cards ? cards.children[f.idx] : null;
+    }
+    return null;
+  }
+  function totalElFor(f){
+    if(f.kind==='d') return $('dealer-total');
+    if(f.kind==='h'){ var b = handBoxEl(f.hi); return (b && b.children[1]) ? b.children[1].children[1] : null; }
+    if(f.kind==='b'){
+      var row = $('bots-row'); if(!row) return null;
+      var sorted = G.bots.slice().sort(function(a,b){ return a.seatIndex-b.seatIndex; }), ix = -1;
+      for(var i=0;i<sorted.length;i++) if(sorted[i].seatIndex===f.seat) ix = i;
+      var seat = ix>=0 ? row.children[ix] : null;
+      return seat ? seat.querySelector('.bs-total') : null;
+    }
+    return null;
+  }
+  function cardFor(f){
+    if(f.kind==='d') return G.dealer.cards[f.idx];
+    if(f.kind==='h') return G.hands[f.hi] ? G.hands[f.hi].cards[f.idx] : null;
+    var bot = G.bots.filter(function(b){ return b.seatIndex===f.seat; })[0];
+    return bot ? bot.cards[f.idx] : null;
+  }
+  function flightAlive(f){
+    if(f.state==='landed') return false;
+    if(f.kind==='d') return f.idx < G.dealer.cards.length;
+    if(f.kind==='h') return !!G.hands[f.hi] && f.idx < G.hands[f.hi].cards.length;
+    var bot = G.bots.filter(function(b){ return b.seatIndex===f.seat; })[0];
+    return !!bot && f.idx < bot.cards.length;
+  }
+  /* Cards that are still on their way stay invisible (and so do the totals they feed). Re-run after every render because bots are rebuilt each time. */
+  function applyHides(){
+    var want = [];
+    S.flights.forEach(function(f){
+      if(f.state==='landed') return;
+      var a = targetEl(f), t = totalElFor(f);
+      if(a) want.push(a);
+      if(t) want.push(t);
+    });
+    S.hidden.forEach(function(el){ if(want.indexOf(el)<0) el.style.visibility = ''; });
+    want.forEach(function(el){ el.style.visibility = 'hidden'; });
+    S.hidden = want;
+  }
+  function releaseAll(){ S.hidden.forEach(function(el){ el.style.visibility = ''; }); S.hidden = []; }
+
+  /* ---------- what's new on the felt? ---------- */
+  function key(c, hidden){ return hidden ? 'back' : c.r + c.suit; }
+  function snapshot(){
+    var b = {};
+    (G.bots||[]).forEach(function(bt){ b[bt.seatIndex] = bt.cards.map(function(c){ return key(c,false); }); });
+    return {
+      d: G.dealer.cards.map(function(c,i){ return key(c, i===1 && !G.holeRevealed); }),
+      h: G.hands.map(function(hh){ return hh.cards.map(function(c){ return key(c,false); }); }),
+      b: b
+    };
+  }
+  function diff(prev, cur){
+    var out = [], reveal = false;
+    cur.d.forEach(function(k,i){
+      var p = prev.d[i];
+      if(p===undefined) out.push({kind:'d', idx:i, back:k==='back'});
+      else if(p==='back' && k!=='back') reveal = true;
+      else if(p!==k) out.push({kind:'d', idx:i, back:k==='back'});
+    });
+    var ph = prev.h.slice();
+    if(cur.h.length === ph.length+1) ph.splice(Math.min(G.activeIdx+1, ph.length), 0, null); // a split inserts the new hand next to the active one
+    cur.h.forEach(function(cards, hi){
+      var pc = ph[hi];
+      cards.forEach(function(k,i){
+        if(pc===null || pc===undefined){ if(i===0 && hi>0) return; out.push({kind:'h', hi:hi, idx:i}); }
+        else if(pc[i]===undefined || pc[i]!==k) out.push({kind:'h', hi:hi, idx:i});
+      });
+    });
+    Object.keys(cur.b).forEach(function(seat){
+      var pc = prev.b[seat];
+      cur.b[seat].forEach(function(k,i){
+        if(!pc || pc[i]===undefined || pc[i]!==k) out.push({kind:'b', seat:+seat, idx:i});
+      });
+    });
+    return {flights:out, reveal:reveal};
+  }
+
+  /* ---------- a card in the air ---------- */
+  function rectInLayer(el){
+    var lr = S.layer.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return {x:r.left+r.width/2-lr.left, y:r.top+r.height/2-lr.top, w:r.width, h:r.height, l:r.left-lr.left, t:r.top-lr.top};
+  }
+  function makeFlyer(card, faceDown){
+    var fl = document.createElement('div'); fl.className = 'fc';
+    var sc = document.createElement('div'); sc.className = 'fc-sc'; fl.appendChild(sc);
+    var inn = document.createElement('div'); inn.className = 'fc-in';
+    var back = document.createElement('div'); back.className = 'fc-face fc-back';
+    back.appendChild(cardEl(card, true));
+    inn.appendChild(back);
+    if(!faceDown){ var front = document.createElement('div'); front.className = 'fc-face fc-front'; front.appendChild(cardEl(card, false)); inn.appendChild(front); }
+    sc.appendChild(inn);
+    return {el:fl, sc:sc, inner:inn};
+  }
+  function land(f){
+    if(f.state==='landed') return;
+    f.state = 'landed';
+    if(f.fl && f.fl.parentNode) f.fl.parentNode.removeChild(f.fl);
+    if(f.lt) unlater(f.lt);
+    var i = S.flights.indexOf(f); if(i>=0) S.flights.splice(i,1);
+    var el = targetEl(f);
+    applyHides();
+    if(el && f.kind!=='b'){ el.classList.add('landed'); setTimeout(function(){ try{ el.classList.remove('landed'); }catch(e){} }, 240); }
+    sfxLand();
+    if(f.kind==='d'){ try{ dealerDrawMood(); }catch(e){ err('draw mood', e); } }
+    checkIdle();
+  }
+  function launch(f, from){
+    var el = targetEl(f), card = cardFor(f);
+    if(!el || !card || !S.layer){ land(f); return; }
+    var lr = S.layer.getBoundingClientRect(), r = el.getBoundingClientRect();
+    var shown = el.classList.contains('show');
+    var tw = shown ? r.width : r.width/0.94;
+    var x1 = r.left + r.width/2 - lr.left, y1 = r.top + r.height/2 - lr.top + (shown ? 0 : 8);
+    var mini = f.kind==='b';
+    var s1 = mini ? 0.3 : clamp(tw/88, 0.5, 1.2);
+    var faceDown = !!f.back;
+    var fly = makeFlyer(card, faceDown);
+    f.fl = fly.el;
+    S.layer.appendChild(fly.el);
+    var x0 = from.x, y0 = from.y, dx = x1-x0, dy = y1-y0, dist = Math.sqrt(dx*dx+dy*dy);
+    var dir = dx >= 0 ? 1 : -1, arc = Math.min(64, 16 + dist*0.12);
+    var dur = Math.round(clamp(250 + dist*0.5, 300, 520));
+    if(f.quick) dur = Math.round(dur*0.62);
+    dur = Math.max(1, Math.round(dur * S.k));
+    var r0 = (-26 - rnd()*14) * dir, rm = r0*0.35;
+    function tr(x,y){ return 'translate('+(x-44).toFixed(1)+'px,'+(y-62).toFixed(1)+'px)'; }
+    function sr(sc,r){ return 'scale('+sc.toFixed(3)+') rotate('+r.toFixed(1)+'deg)'; }
+    fly.el.style.transform = tr(x0,y0); fly.sc.style.transform = sr(0.3,r0);
+    var xm = x0 + dx*0.55, ym = y0 + dy*0.55 - arc, e1 = 'cubic-bezier(.2,.7,.3,1)', e2 = 'cubic-bezier(.3,.2,.4,1)';
+    var kfT = [
+      {transform:tr(x0,y0), offset:0, easing:e1},
+      {transform:tr(xm,ym), offset:0.55, easing:e2},
+      {transform:tr(x1,y1), offset:1}
+    ];
+    var kfS = [
+      {transform:sr(0.3,r0), offset:0, easing:e1},
+      {transform:sr((0.3+s1)/2*1.12,rm), offset:0.55, easing:e2},
+      {transform:sr(s1,0), offset:1}
+    ];
+    if(mini){ kfS[0].opacity = 1; kfS[1].opacity = 1; kfS[2].opacity = 0; }
+    var a, b;
+    try{
+      a = fly.el.animate(kfT, {duration:dur, fill:'forwards'});
+      b = fly.sc.animate(kfS, {duration:dur, fill:'forwards'});
+      if(!faceDown) fly.inner.animate([
+        {transform:'rotateY(0deg)', offset:0}, {transform:'rotateY(0deg)', offset:0.18},
+        {transform:'rotateY(180deg)', offset:0.7}, {transform:'rotateY(180deg)', offset:1}
+      ], {duration:dur, fill:'forwards'});
+    }catch(e){ err('animate', e); land(f); return; }
+    f.state = 'flying';
+    f.anim = a; f.animS = b; f.tr = tr; f.plan = {x:x1, y:y1, t:now(), dur:dur};
+    f.lt = later(function(){ land(f); }, dur + 700);   // never leave a card stranded if the animation event is missed
+    a.onfinish = function(){ land(f); };
+    if(!f.quick) sfxFlick(); else sfxSlide();
+  }
+  /* If the layout moves while a card is in the air (a bot's seat wraps onto another row, say), steer the rest of the flight to the new spot. */
+  function retarget(f){
+    if(f.state!=='flying' || !f.plan || !f.fl || !f.anim) return;
+    var el = targetEl(f); if(!el) return;
+    var lr = S.layer.getBoundingClientRect(), r = el.getBoundingClientRect(), shown = el.classList.contains('show');
+    var x = r.left + r.width/2 - lr.left, y = r.top + r.height/2 - lr.top + (shown ? 0 : 8);
+    if(Math.abs(x - f.plan.x) < 5 && Math.abs(y - f.plan.y) < 5) return;
+    var remain = Math.max(70, f.plan.dur - (now() - f.plan.t));
+    var c = f.fl.getBoundingClientRect(), cx = c.left + c.width/2 - lr.left, cy = c.top + c.height/2 - lr.top;
+    f.anim.onfinish = null; try{ f.anim.cancel(); }catch(e){}
+    f.fl.style.transform = f.tr(cx, cy);
+    var a = f.fl.animate([{transform:f.tr(cx,cy)}, {transform:f.tr(x,y)}], {duration:remain, easing:'ease-out', fill:'forwards'});
+    a.onfinish = function(){ land(f); };
+    f.anim = a; f.plan = {x:x, y:y, t:now(), dur:remain};
+    S.stats.retargets++;
+  }
+  function shoePoint(){ return stageXY(S.shoeCard); }
+  function kickShoe(){
+    try{ if(S.shoeCard.animate) S.shoeCard.animate([{transform:'rotate(-14deg)'},{transform:'rotate(-24deg) translate(-9px,-2px)'},{transform:'rotate(-14deg)'}], {duration:180}); }catch(e){}
+    try{ if(S.shoeStack) S.shoeStack.animate([{transform:'translateX(0)'},{transform:'translateX(-1.5px)'},{transform:'translateX(0)'}], {duration:160}); }catch(e){}
+  }
+  function dealRun(f, done){
+    if(!flightAlive(f) || !targetEl(f)){ land(f); done(); return; }
+    var quick = S.queue.length >= 2;       // a backlog (bots hitting all at once) is cleared faster
+    f.quick = quick; S.stats.flights++; if(quick) S.stats.quick++;
+    if(quick){
+      var sp = rectInLayer(S.shoeCard);
+      launch(f, {x:sp.x, y:sp.y});
+      later(done, 70);
+      return;
+    }
+    var sp0 = shoePoint();
+    setArmMs(110); armTo(sp0.x, sp0.y); kickShoe(); sfxSlide();
+    later(function(){
+      held(true);
+      var el = targetEl(f);
+      if(!el){ held(false); land(f); done(); return; }
+      var t = stageXY(el);
+      setArmMs(150); armTo(t.x, t.y); look(t.x, t.y);
+    }, 115);
+    later(function(){
+      var hp = rectInLayer(S.hand);
+      held(false);
+      launch(f, {x:hp.x, y:hp.y});
+      // the flick: the hand pushes out a touch further, then eases back
+      if(S.armPt){ var sh = shoulder(), vx = S.armPt.x-sh.x, vy = S.armPt.y-sh.y, vl = Math.sqrt(vx*vx+vy*vy)||1; setArmMs(70); armTo(S.armPt.x + vx/vl*7, S.armPt.y + vy/vl*7); }
+    }, 275);
+    later(done, 340);
+  }
+  function holeFlip(){
+    var el = $('dealer-cards') && $('dealer-cards').children[1];
+    if(!el) return;
+    el.classList.add('flipin');
+    setTimeout(function(){ try{ el.classList.remove('flipin'); }catch(e){} }, 420);
+    sfxClack();
+    enqueue({name:'flip', max:900, run:function(done){
+      var t = stageXY(el); setArmMs(120); armTo(t.x, t.y); look(t.x, t.y);
+      later(function(){ setArmMs(200); restPose(); }, 240);
+      later(done, 320);
+    }});
+  }
+
+  /* ---------- after every render ---------- */
+  function syncBody(){
+    var b = document.body;
+    b.classList.toggle('show-on', on());
+    b.classList.toggle('tbl-on', !!(W.G && G.tableShow));
+    b.classList.toggle('signals-on', sigOn());
+    b.classList.toggle('lim-on', limOn());
+    if(sigOn()) b.setAttribute('data-sig','on'); else b.removeAttribute('data-sig');
+    ['betting','dealing','player','dealer','result'].forEach(function(p){ b.classList.toggle('phase-'+p, G.phase===p); });
+  }
+  function afterRender(){
+    if(!S.ready) return;
+    syncBody();
+    try{ tableUi(); }catch(e){ err('tableUi', e); }
+    try{ updateActs(); }catch(e){ err('acts', e); }
+    if(!sigOn()) stripSignalUi();
+    if(!on()) return;
+    updateShoe();
+    if(sigOn()) updateSignalUi();
+    var cur = snapshot();
+    if(S.needSnap || !S.snap){ S.snap = cur; S.needSnap = false; }
+    else {
+      var res = fx() ? diff(S.snap, cur) : {flights:[], reveal:false};
+      S.snap = cur;
+      res.flights.forEach(function(f){
+        f.id = ++S.flightSeq; f.state = 'queued';
+        if(f.kind==='d' && f.idx===1 && !G.holeRevealed) f.back = true;
+        S.flights.push(f);
+        enqueue({name:'deal', max:2400, run:function(done){ dealRun(f, done); }});
+      });
+      if(res.reveal && fx()) holeFlip();
+    }
+    S.flights = S.flights.filter(function(f){ if(flightAlive(f)) return true; if(f.fl && f.fl.parentNode) f.fl.parentNode.removeChild(f.fl); if(f.lt) unlater(f.lt); return false; });
+    applyHides();
+    S.flights.forEach(retarget);
+    if(G.phase!=='dealer') S.dmKey = '';
+    try{ dealerDrawMood(); }catch(e){ err('draw mood', e); }
+    try{ nudgeSync(); }catch(e){ err('nudge', e); }
+    presence();
+    if(S.state==='up' && G.phase==='player' && idleNow()){
+      var hb = handBoxEl(G.activeIdx); if(hb){ var p = stageXY(hb); look(p.x, p.y); }
+    }
+    checkIdle();
+  }
+
+  /* ---------- table limits: a placard by the dealer, and he holds you to it ---------- */
+  function limitIssue(){
+    if(!limOn() || G.needsReshuffle || G.phase !== 'betting') return null;
+    var two = spotN() === 2, mx = limMax(), mn = effMin(), bets = two ? [betN(0), betN(1)] : [betN(0)], i;
+    for(i = 0; i < bets.length; i++) if(bets[i] > mx) return {kind:'max', text:'Table max is ' + money(mx) + '.'};
+    for(i = 0; i < bets.length; i++) if(bets[i] >= 1 && bets[i] < mn) return {kind:'min', text:'Table min is ' + money(mn) + '.'};
+    return null;
+  }
+  function fitsLimit(i, d){ return !limOn() || betN(i) + d <= limMax(); }
+  /* You hit a limit: the row on the placard lights up, a line appears by your chips, and he says it (unless he is set to be silent). */
+  function limitNote(kind, text){
+    if(!S.built) return;
+    var t = now(), fresh = !(S.limLast.kind === kind && t - S.limLast.t < 1400);
+    S.limLast = {kind:kind, t:t}; S.stats.limits++;
+    var row = S.placard && S.placard.querySelector(kind === 'min' ? '.pl-min' : '.pl-max');
+    if(row){
+      row.classList.remove('hit'); void row.offsetWidth; row.classList.add('hit');
+      unlater(S.limRec); S.limRec = later(function(){ S.limRec = null; row.classList.remove('hit'); }, 1700);
+    }
+    var n = $('limit-note');
+    if(n){
+      n.textContent = text; n.classList.add('on');
+      unlater(S.limNoteRec); S.limNoteRec = later(function(){ S.limNoteRec = null; n.classList.remove('on'); }, 2800);
+    }
+    if(fresh) visitSay(text, kind === 'max' ? 'focus' : 'idle', 2200);
+    sfxClack();
+  }
+  /* Bets that are over the max (after you lower it, or load a saved table) come down to it. */
+  function limClampBets(loud){
+    if(!limOn() || G.phase !== 'betting') return;
+    var mx = limMax(), hit = false;
+    for(var i = 0; i < spotN(); i++) if(betN(i) > mx){ W.setBet(mx, i); hit = true; }      // (setBet at exactly the max says nothing itself)
+    if(hit && loud) limitNote('max', 'Table max is ' + money(mx) + '.');
+  }
+  function updatePlacard(){
+    if(!S.placard) return;
+    var mn = limMin(), mx = limMax(), k = mn + '|' + mx;
+    if(S.placard.getAttribute('data-k') === k) return;
+    S.placard.setAttribute('data-k', k);
+    S.placard.querySelector('.pl-min b').textContent = money(mn);
+    S.placard.querySelector('.pl-max b').textContent = money(mx);
+    S.placard.setAttribute('aria-label', 'Table limits: minimum ' + money(mn) + ', maximum ' + money(mx));
+  }
+  function limitsSync(){
+    var sub = ['set-tablelimits', 'set-chatter'];
+    sub.forEach(function(id){ var e = $(id); if(e) e.disabled = !G.tableShow; });
+    ['set-minbet', 'set-maxbet'].forEach(function(id){ var e = $(id); if(e) e.disabled = !G.tableShow || !G.tableLimits; });
+    updatePlacard();
+    var key = (limOn() ? 1 : 0) + '|' + limMin() + '|' + limMax();
+    if(key !== S.limKey){ S.limKey = key; limClampBets(false); }
+  }
+  /* taking insurance: his disc slides out onto the felt */
+  function wireMarkers(){
+    document.addEventListener('click', guard('insurance click', function(e){
+      var t = e.target; if(!t || t.id !== 'btn-insurance-yes' || !on() || !S.built) return;
+      var amt = G.insuranceBet | 0;               // the game's own handler has just set it
+      if(amt > 0) later(guard('ins marker', function(){ throwMarker('ins', amt); }), 40);
+    }));
+  }
+  function wireLimits(){
+    var btn = $('btn-deal');
+    // in front of the game's own Deal handler: a bet outside the limits does not get dealt
+    if(btn) btn.addEventListener('click', guard('limit deal', function(e){
+      var li = limitIssue(); if(!li) return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      limitNote(li.kind, li.text);
+    }), true);
+    ['bet-amount', 'bet-amount-2'].forEach(function(id){
+      var el = $(id); if(el) el.addEventListener('change', guard('limit change', function(){ limClampBets(true); }));
+    });
+    // the min and max fields in the settings: whichever you just typed in wins, and the other one moves out of the way
+    ['set-minbet', 'set-maxbet'].forEach(function(id){
+      var el = $(id); if(!el) return;
+      el.addEventListener('change', guard('limit field', function(){
+        var a = parseInt($('set-minbet').value, 10), b = parseInt($('set-maxbet').value, 10);
+        a = a >= 1 ? Math.min(a, 1000000) : 5; b = b >= 1 ? Math.min(b, 1000000) : 500;
+        if(b < a){ if(id === 'set-minbet') b = a; else a = b; }
+        $('set-minbet').value = a; $('set-maxbet').value = b;
+      }), true);
+    });
+  }
+
+  /* ---------- the shuffle: once the cut card is in, he riffles the cards, squares them, and slides the cut card into the shoe ---------- */
+  function sfxRiffle(){ if(!G.soundOn) return; for(var i = 0; i < 12; i++) (function(i){ setTimeout(function(){ noise(0.025, 2100 + (i % 3) * 500, 1.1, 0.02); }, 380 + i * 62); })(i); }
+  /* everything the shuffle puts on the table, taken away again */
+  function riffleReset(){
+    var r = S.riffle; if(!r) return;
+    r.style.transition = 'none';                                   // put away without sliding back
+    r.classList.remove('on', 'go', 'sq', 'take', 'slide', 'into');
+    r.style.removeProperty('--dx'); void r.offsetWidth; r.style.transition = '';
+  }
+  function shuffleReset(){
+    riffleReset();
+    if(S.shoeCut) S.shoeCut.classList.remove('in', 'lift');
+    if(S.st) S.st.removeAttribute('data-ease');
+  }
+  function shuffleStop(quiet){
+    var h = S.shuf; if(!h) return;
+    S.shuf = null;
+    h.recs.forEach(unlater);
+    shuffleReset();
+    var d = h.done; h.done = null; if(d) d();
+    try{ updateShoe(); }catch(e){ err('shuffle shoe', e); }
+    if(quiet) return;
+    if(S.st){ setArmMs(260); restPose(); }
+    if(!S.egg) setMood(baseMood());
+    if(S.say) S.say.classList.remove('on');
+    presence(); nudgeSync();
+  }
+  /* The whole shuffle, as one run of small, eased moves: he settles over the deck, the cards drop in from both halves, he taps it square
+     and lets go; the deck slides along the counter into the shoe while his hand draws back and comes over to meet it, and then he
+     pushes the cut card down into the stack. (He never carries it across: from the deck to the shoe the hand would have to pass
+     under his own shoulder, and that is the one move a two-jointed arm cannot make look right.) */
+  function shuffleMoment(){
+    S.shufRec = null;
+    if(!fx() || G.phase !== 'betting' || S.egg || !S.riffle) return;      // (fx() already means: show on, built, motion allowed)
+    if(S.shuf) shuffleStop(true);
+    if(S.visit) endVisit(true);
+    S.stats.shuffles++;
+    var h = S.shuf = {recs:[], done:null, hold:true};
+    var wasAway = S.state !== 'up';
+    if(S.lowerRec){ unlater(S.lowerRec); S.lowerRec = null; }
+    if(wasAway){ setState('up'); restPose(); }
+    updateShoe();
+    enqueue({name:'shuffle', max:7500, run:function(done){
+      if(S.shuf !== h){ done(); return; }
+      h.done = done;
+      function at(fn, ms){ h.recs.push(later(guard('shuffle step', fn), ms)); }
+      function deckAt(dy){ var p = stageXY(S.riffle); return {x:p.x, y:p.y + dy}; }          // the deck lies on the counter: its baseline, and up from it
+      function slotAt(dy){ var b = stageXY(S.shoeBox); return {x:b.x + 11, y:b.y + dy}; }   // the mouth of the shoe
+      function move(p, ms){ setArmMs(ms); armTo(p.x, p.y); }
+      function shoeEdge(){ var sr = S.st.getBoundingClientRect(), r = S.shoeBox.getBoundingClientRect(); return {x:r.left - sr.left, y:r.top + r.height/2 - sr.top}; }   // where the shoe begins
+      var t0 = wasAway ? 480 : 90;
+      at(function(){                                   // he settles in over the deck
+        setMood('focus'); sayIt('Shuffling…', 2100);
+        S.st.setAttribute('data-ease', 'soft');
+        var p = deckAt(-26); move(p, 380); look(p.x, p.y);
+        S.riffle.classList.add('on');
+      }, t0);
+      at(function(){ S.riffle.classList.add('go'); sfxRiffle(); }, t0 + 420);                    // the cards drop in, one from each side in turn
+      [[640, -20], [830, -26], [1020, -20], [1210, -26]].forEach(function(m){ at(function(){ move(deckAt(m[1]), 170); }, t0 + m[0]); });   // his hand pumps along
+      at(function(){ S.riffle.classList.add('sq'); move(deckAt(-17), 110); }, t0 + 1620);        // squaring it: two taps
+      at(function(){ sfxClack(); move(deckAt(-26), 120); }, t0 + 1730);
+      at(function(){ move(deckAt(-17), 110); }, t0 + 1880);
+      at(function(){                                   // lets go of it: the squared stack stays on the counter, his hand draws back
+        sfxClack(); S.riffle.classList.add('take');
+        setArmMs(320); restPose();
+      }, t0 + 2000);
+      at(function(){                                   // the stack slides along the counter to the shoe
+        var e = shoeEdge(), d = stageXY(S.riffle);
+        S.riffle.style.setProperty('--dx', (e.x - 21 - d.x).toFixed(1) + 'px');
+        S.riffle.classList.add('slide'); sfxSlide();
+      }, t0 + 2090);
+      at(function(){                                   // he reaches over the shoe to meet it
+        if(S.shoeCut) S.shoeCut.classList.add('lift');
+        var e = shoeEdge(), p = {x:e.x + 12, y:deckAt(0).y - 40}; move(p, 440); look(p.x, p.y);
+      }, t0 + 2340);
+      at(function(){                                   // and pushes it in: the shoe fills
+        var e = shoeEdge(); move({x:e.x + 12, y:deckAt(0).y - 28}, 200);
+        S.riffle.classList.add('into');
+        h.hold = false; updateShoe(); kickShoe();
+      }, t0 + 2800);
+      at(function(){ riffleReset(); }, t0 + 3100);
+      at(function(){ var c = S.shoeCut ? stageXY(S.shoeCut) : slotAt(0); move({x:c.x, y:c.y - 28}, 300); look(c.x, c.y); }, t0 + 3030);   // over the cut card
+      at(function(){                                   // and pushes it down into the stack
+        if(S.shoeCut){ S.shoeCut.classList.remove('lift'); void S.shoeCut.offsetWidth; S.shoeCut.classList.add('in'); }
+        var c = S.shoeCut ? stageXY(S.shoeCut) : slotAt(0); move({x:c.x, y:c.y - 22}, 220);
+        sfxLand(); sfxClack(); setMood('sm1', 1500); sayIt('Cut card’s in.', 1500, true);
+      }, t0 + 3430);
+      at(function(){ restPose(); }, t0 + 3730);
+      at(function(){ shuffleStop(); }, t0 + 4080);
+    }});
+  }
+
+  /* ---------- the shoe: tap it, or flick a card out of it ---------- */
+  function dealIssue(){
+    if(G.needsReshuffle) return null;
+    var two = spotN() === 2, bet = betN(0), bet2 = two ? betN(1) : 0;
+    if(bet < 1 || (two && bet2 < 1)) return two ? 'Place a bet on both hands' : 'Place a bet first';
+    var li = limitIssue(); if(li) return li.text;
+    var sb = 0;
+    ['pp','tp','tl','bb'].forEach(function(k){ if(G.sidebets[k]) sb += parseInt($('sb-'+k+'-amt').value,10)||0; });
+    if(bet + bet2 + sb > G.bankroll) return "That's more than your bankroll";
+    return null;
+  }
+  function overlayOpen(){ return ['tablesetup-overlay','manners-overlay','cutcard-overlay'].some(function(id){ var e=$(id); return e && e.style.display==='flex'; }); }
+  function shoeDeal(){
+    if(!on() || G.phase!=='betting' || G.locked || overlayOpen()) return false;
+    var issue = dealIssue();
+    if(issue){
+      S.shoeTip.textContent = issue;
+      S.shoe.classList.remove('nudge'); void S.shoe.offsetWidth; S.shoe.classList.add('nudge');
+      sfxClack();
+      setTimeout(function(){ if(S.shoe){ S.shoe.classList.remove('nudge'); S.shoeTip.textContent = 'Tap or flick to deal'; } }, 1600);
+      return false;
+    }
+    var btn = $('btn-deal'); if(btn) btn.click();
+    return true;
+  }
+  function updateShoe(){
+    if(!S.shoeStack) return;
+    var total = (G.decks||2)*52, frac = total ? clamp(G.shoe.length/total, 0, 1) : 1;
+    var held = !!(S.shuf && S.shuf.hold);                      // while he shuffles the shoe is empty, then it fills
+    var w = held ? 9 : 9 + 22*frac;
+    S.shoeStack.style.width = w.toFixed(1)+'px';
+    if(S.shoeCut){
+      // the cut card sits where the last cards of the shoe begin; when the stack has shrunk to it, it is time to shuffle
+      var cf = total ? clamp((G.cutCardThreshold||0)/total, 0, 1) : 0, off = Math.min(9 + 22*cf, w);
+      S.shoeCut.style.right = (5 + off).toFixed(1)+'px';
+      S.shoeCut.classList.toggle('on', !held && cf > 0);
+      S.shoeCut.classList.toggle('due', G.shoe.length <= (G.cutCardThreshold||0));
+    }
+    S.shoe.setAttribute('aria-disabled', G.phase==='betting' ? 'false' : 'true');
+    S.shoe.tabIndex = G.phase==='betting' ? 0 : -1;
+  }
+  function wireShoe(){
+    var sh = S.shoe;
+    sh.addEventListener('pointerdown', guard('shoe down', function(e){
+      if(G.phase!=='betting') return;
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      S.shoeDrag = {id:e.pointerId, x:e.clientX, y:e.clientY, dx:0, dy:0};
+      try{ sh.setPointerCapture(e.pointerId); }catch(_){}
+      sh.classList.add('dragging');
+    }));
+    sh.addEventListener('pointermove', guard('shoe move', function(e){
+      var d = S.shoeDrag; if(!d || d.id!==e.pointerId) return;
+      d.dx = e.clientX-d.x; d.dy = e.clientY-d.y;
+      var m = Math.sqrt(d.dx*d.dx+d.dy*d.dy), k = m>46 ? 46/m : 1;
+      S.shoeCard.style.transform = 'rotate(-14deg) translate('+(d.dx*k).toFixed(1)+'px,'+(d.dy*k).toFixed(1)+'px)';
+    }));
+    function end(e, cancelled){
+      var d = S.shoeDrag; if(!d || d.id!==e.pointerId) return;
+      S.shoeDrag = null; sh.classList.remove('dragging');
+      try{ sh.releasePointerCapture(e.pointerId); }catch(_){}
+      var m = Math.sqrt(d.dx*d.dx+d.dy*d.dy);
+      var flicked = m >= 26, tapped = m < 10;
+      if(S.shoeCard){
+        try{ S.shoeCard.animate([{transform:S.shoeCard.style.transform || 'rotate(-14deg)'},{transform:'rotate(-14deg)'}], {duration:160}); }catch(_){}
+        S.shoeCard.style.transform = '';
+      }
+      if(!cancelled && (flicked || tapped)) shoeDeal();
+    }
+    sh.addEventListener('pointerup', guard('shoe up', function(e){ end(e, false); }));
+    sh.addEventListener('pointercancel', guard('shoe cancel', function(e){ end(e, true); }));
+    sh.addEventListener('click', guard('shoe click', function(e){ if(e.detail===0) shoeDeal(); }));
+    sh.addEventListener('keydown', guard('shoe key', function(e){
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); shoeDeal(); }
+    }));
+  }
+
+  /* ---------- the dealer peeks ---------- */
+  function peekThen(orig){
+    var dUp = G.dealer.cards[0];
+    var may = dUp && (dUp.v===11 || dUp.v===10);
+    var hole = $('dealer-cards') && $('dealer-cards').children[1];
+    if(!may || !hole || !fx() || S.peekedFor===G.dealer.cards){ return orig(); }
+    S.peekedFor = G.dealer.cards;                 // once per hand
+    var wasLocked = G.locked;
+    S.stats.peeks++;
+    G.locked = true;                                 // the action buttons rest while he looks
+    Array.prototype.forEach.call(document.querySelectorAll('#actions-row button, .hb-act button, .dbl-handle'), function(b){ if(b.tagName==='BUTTON') b.disabled = true; else b.style.display = 'none'; });
+    var dt = handTotal(G.dealer.cards), dealerBJ = dt.total===21 && G.dealer.cards.length===2;
+    var finished = false;
+    function after(){
+      if(finished) return; finished = true; S.peekCb = null;
+      G.locked = wasLocked;
+      orig();
+    }
+    S.peekCb = after;
+    enqueue({name:'peek', max:2800, run:function(done){
+      hole = ($('dealer-cards') && $('dealer-cards').children[1]) || hole;
+      var t = stageXY(hole);
+      setArmMs(190); armTo(t.x - 14, t.y - 22); look(t.x, t.y); setMood('focus');
+      later(function(){
+        hole.classList.add('peeking'); sfxSlide();
+        if(S.dealer){ S.dealer.setAttribute('data-nod','1'); }
+        sayIt('Checking…', 900);
+      }, 230);
+      later(function(){
+        hole.classList.remove('peeking'); sfxClack();
+        if(dealerBJ){ setMood('smirk', 1800); }
+        else { setMood('idle'); if(S.dealer){ S.dealer.removeAttribute('data-nod'); void S.dealer.offsetWidth; S.dealer.setAttribute('data-nod','1'); } }
+        setArmMs(220); restPose();
+      }, 1080);
+      later(function(){ if(S.dealer) S.dealer.removeAttribute('data-nod'); done(); after(); }, 1330);
+    }});
+  }
+
+  /* ---------- payoff: chips from the tray, a bigger burst for blackjack ---------- */
+  // A payout arrives as a handful of chips, so split big ones into smaller ones until there are enough to make a cascade.
+  function ringPoint(hi){
+    var hb = handBoxEl(hi); if(!hb) return null;
+    var ring = hb.querySelector('.hb-ring');
+    var p = rectInLayer(ring || hb);
+    return {x:p.x, y:ring ? p.y : p.y, box:rectInLayer(hb)};
+  }
+  /* The blackjack moment, kept quiet: one small tag above the hand and a single soft ring around it. */
+  function blackjackTag(box, profit){
+    var tag = document.createElement('div'); tag.className = 'bj-tag';
+    tag.innerHTML = '<b>Blackjack</b><span>+'+profit+'</span>';
+    tag.style.left = box.x+'px'; tag.style.top = (box.t + 6)+'px';
+    S.layer.appendChild(tag);
+    try{
+      var a = tag.animate([
+        {transform:'translate(-50%,-100%) translateY(8px) scale(.96)', opacity:0, offset:0},
+        {transform:'translate(-50%,-100%) scale(1)', opacity:1, offset:0.14},
+        {transform:'translate(-50%,-100%) scale(1)', opacity:1, offset:0.8},
+        {transform:'translate(-50%,-100%) translateY(-6px) scale(1)', opacity:0, offset:1}
+      ], {duration:2100, easing:'ease-out', fill:'forwards'});
+      a.onfinish = function(){ if(tag.parentNode) tag.parentNode.removeChild(tag); };
+    }catch(e){ if(tag.parentNode) tag.parentNode.removeChild(tag); }
+  }
+  function ringPulse(hb){
+    if(!hb || !hb.animate) return;
+    var base = ''; try{ base = getComputedStyle(hb).boxShadow; base = (base && base !== 'none') ? base + ', ' : ''; }catch(e){}
+    try{ hb.animate([{boxShadow:base+'0 0 0 0 rgba(240,196,107,0.5)'}, {boxShadow:base+'0 0 0 12px rgba(240,196,107,0)'}], {duration:900, easing:'ease-out'}); }catch(e){}
+  }
+  /* PUSH 22: the dealer throws a round marker into the middle of the table (Free Bet and Double Down Madness, when his 22 pushes your hand). */
+  function pushSpot(){
+    // the middle of the table: halfway between the dealer's cards and your hands
+    var hr = $('hands-row'), db = $('dealer-box'), lr = S.layer.getBoundingClientRect();
+    var top = db ? db.getBoundingClientRect().bottom : lr.top, bot = hr ? hr.getBoundingClientRect().top : top + 80;
+    return {x:lr.width/2, y:(top + bot)/2 - lr.top};
+  }
+  /* The round markers: PUSH 22, INSURANCE and DEALER BLACKJACK. The first and last are thrown into the middle of the table; the insurance disc slides out of his tray. */
+  var MARKERS = {
+    push:{cls:'', html:function(){ return '<b>PUSH</b><i>22</i>'; }},
+    dbj:{cls:'dbj', html:function(){ return '<b>DEALER</b><i>21</i><u>BLACKJACK</u>'; }},
+    ins:{cls:'ins', html:function(a){ return '<b>INSURANCE</b><i>' + money(a) + '</i>'; }}
+  };
+  function pushMarker(){ throwMarker('push'); }
+  function throwMarker(kind, amt){
+    if(!S.layer || !MARKERS[kind]) return;
+    var def = MARKERS[kind];
+    var old = S.layer.querySelectorAll('.pm'); Array.prototype.forEach.call(old, function(o){ if(o.parentNode) o.parentNode.removeChild(o); });
+    S.stats.markers++;
+    var sp = pushSpot();
+    document.body.classList.add('pm-on');       // the printed pay lines fade back while it sits there
+    var el = document.createElement('div'); el.className = 'pm' + (def.cls ? ' ' + def.cls : ''); el.setAttribute('data-kind', kind);
+    el.innerHTML = def.html(amt);
+    S.layer.appendChild(el);
+    var life = kind === 'ins' ? 2800 : Math.max(1500, (W.RESULT_PAUSE || 2600) - 450);      // it stays through the result, then goes
+    function put(x, y){ el.style.transform = 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'; }
+    function ring(){
+      if(!fx()) return;
+      var rg = document.createElement('div'); rg.className = 'pm-ring'; rg.style.transform = 'translate('+sp.x.toFixed(1)+'px,'+sp.y.toFixed(1)+'px)';
+      S.layer.appendChild(rg);
+      try{ var a = rg.animate([{transform:rg.style.transform+' scale(.9)', opacity:.7}, {transform:rg.style.transform+' scale(1.8)', opacity:0}], {duration:700, easing:'ease-out', fill:'forwards'}); a.onfinish = function(){ if(rg.parentNode) rg.parentNode.removeChild(rg); }; }
+      catch(e){ if(rg.parentNode) rg.parentNode.removeChild(rg); }
+    }
+    function done(){ if(el.parentNode) el.parentNode.removeChild(el); if(!S.layer.querySelector('.pm')) document.body.classList.remove('pm-on'); }
+    function fade(){
+      if(!el.parentNode){ if(!S.layer.querySelector('.pm')) document.body.classList.remove('pm-on'); return; }
+      try{ var a = el.animate([{transform:el.style.transform+' scale(1)', opacity:1}, {transform:el.style.transform+' scale(.92)', opacity:0}], {duration:300, easing:'ease-in', fill:'forwards'}); a.onfinish = done; }
+      catch(e){ done(); }
+    }
+    el.setAttribute('data-spot', Math.round(sp.x)+','+Math.round(sp.y));
+    if(!fx() || !S.hand){ put(sp.x, sp.y); later(done, life); return; }
+    var tf = function(x, y, sc, rot){ return 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+sc+') rotate('+rot+'deg)'; };
+    if(kind === 'ins'){
+      // slid out of his tray along the felt, a little flat spin, and it settles
+      var tp = S.tray ? rectInLayer(S.tray) : {x:sp.x + 60, y:sp.y + 40};
+      el.style.opacity = '0';
+      var kfs = [
+        {transform:tf(tp.x, tp.y, .5, 0), opacity:0, offset:0},
+        {transform:tf(tp.x + (sp.x - tp.x)*.45, tp.y + (sp.y - tp.y)*.45, .85, 190), opacity:1, offset:0.4},
+        {transform:tf(sp.x, sp.y, 1.04, 350), opacity:1, offset:0.88},
+        {transform:tf(sp.x, sp.y, 1, 360), opacity:1, offset:1}
+      ];
+      var as;
+      try{ as = el.animate(kfs, {duration:560, easing:'cubic-bezier(.25,.7,.35,1)', fill:'forwards'}); }
+      catch(e){ err('ins marker', e); put(sp.x, sp.y); el.style.opacity = '1'; return; }
+      as.onfinish = function(){ put(sp.x, sp.y); el.style.opacity = '1'; };
+      sfxSlide();
+      later(function(){ sfxLand(); sfxClack(); ring(); }, 470);
+      later(fade, life);
+      return;
+    }
+    // the throw: he draws his hand back, snaps it toward the middle, and the marker leaves it spinning
+    var lr = S.layer.getBoundingClientRect(), sr = S.st.getBoundingClientRect(), sh = shoulder();
+    var tgt = {x:sp.x + lr.left - sr.left, y:sp.y + lr.top - sr.top};
+    el.style.opacity = '0';
+    setArmMs(120); armTo(sh.x - 2, sh.y + 26, false); look(tgt.x, tgt.y);
+    later(function(){
+      var hp = rectInLayer(S.hand), x0 = hp.x, y0 = hp.y, x1 = sp.x, y1 = sp.y;
+      var apex = Math.min(y0, y1) - 46 - (y1 > y0 ? 0 : 20);
+      setArmMs(70); armTo(tgt.x, tgt.y);
+      sfxSwish();
+      var kf = [
+        {transform:tf(x0, y0, .4, 0), opacity:0, offset:0},
+        {transform:tf(x0 + (x1-x0)*.12, y0 + (apex-y0)*.3, .7, 80), opacity:1, offset:0.12},
+        {transform:tf(x0 + (x1-x0)*.5, apex, 1.16, 380), opacity:1, offset:0.52},
+        {transform:tf(x1, y1, 1, 700), opacity:1, offset:0.82},
+        {transform:tf(x1, y1 - 7, 1.05, 714), opacity:1, offset:0.91},
+        {transform:tf(x1, y1, 1, 720), opacity:1, offset:1}
+      ];
+      var a;
+      try{ a = el.animate(kf, {duration:720, easing:'cubic-bezier(.3,.55,.4,1)', fill:'forwards'}); }
+      catch(e){ err('push marker', e); put(x1, y1); el.style.opacity = '1'; return; }
+      a.onfinish = function(){ put(x1, y1); el.style.opacity = '1'; };
+      later(function(){ sfxLand(); sfxClack(); ring(); }, 590);
+      later(function(){ restPose(); }, 330);
+    }, 130);
+    later(fade, life);
+  }
+
+  var HOT_LINES = ['You’re running hot.', 'Okay… okay.', 'Easy there.', 'Is it warm in here?'];
+  var COLD_LINES = ['Shoe’s cold. Hang in there.', 'It’ll turn around.', 'Next one’s yours.', 'The cards are due.'];
+  function payoff(results, headline){
+    if(!on() || !S.built) return;
+    var bjIdx = -1, anyWin = headline.cls==='win', anyLose = headline.cls==='lose';
+    G.hands.forEach(function(h,i){ if(h.status==='bj' && bjIdx<0) bjIdx = i; });
+    var push22 = push22Rule() && G.hands.some(function(h){ return !!h.push22; });
+    var dt = handTotal(G.dealer.cards), dealerBJ = dt.total===21 && G.dealer.cards.length===2;
+    // hold the result a little longer when there is something to enjoy
+    // runs: a few wins in a row make him sweat a little, a long dry spell gets a kind word
+    if(headline.cls === 'win'){ S.run.w++; S.run.l = 0; } else if(headline.cls === 'lose'){ S.run.l++; S.run.w = 0; }
+    var hot = headline.cls === 'win' && S.run.w >= 3 && (S.run.w - 3) % 2 === 0;
+    var cold = headline.cls === 'lose' && !dealerBJ && S.run.l >= 4 && (S.run.l - 4) % 2 === 0;
+    W.RESULT_PAUSE = fx() ? Math.round(S.T.result * (bjIdx>=0 ? 1.2 : (push22 ? 1.25 : (dealerBJ ? 1.2 : (anyWin||anyLose ? 1.1 : 0.88))))) : S.orig.RESULT_PAUSE;
+    if(bjIdx>=0){ setMood('wow', 900); later(function(){ setMood('grin', 2400); }, 900); }
+    else if(push22 && !anyWin){ setMood('smirk', 2200); }
+    else if(hot){ setMood('sweat', 2800); }
+    else if(dt.total>21){ setMood('sad', 2200); }
+    else if(cold){ setMood('sm1', 2600); }
+    else if(anyLose){ setMood('smirk', 1700); }
+    else if(anyWin){ setMood('grin', 1700); }
+    if(bjIdx>=0) sayIt('Blackjack pays '+(G.payout===1.5 ? '3 to 2' : '6 to 5')+'.', 2600);
+    else if(dealerBJ) sayIt('Dealer has blackjack.', 2000);
+    else if(push22) sayIt('Dealer 22. It’s a push.', 2600);
+    else if(hot){ S.stats.streaks++; sayIt(HOT_LINES[(S.stats.streaks - 1) % HOT_LINES.length], 2600, true); }
+    else if(cold){ S.stats.streaks++; sayIt(COLD_LINES[(S.stats.streaks - 1) % COLD_LINES.length], 2800, true); }
+    if(push22) later(guard('push22', pushMarker), 30);
+    if(dealerBJ) later(guard('dealer blackjack', function(){ throwMarker('dbj'); }), 30);
+    if(!fx()) return;
+    later(guard('payoff', function(){
+      var shown = 0;
+      G.hands.forEach(function(h, i){
+        if(h.status !== 'bj') return;
+        var rp = ringPoint(i); if(!rp) return;
+        if(!shown++){ sfxChime(); buzz(14); }
+        blackjackTag(rp.box, Math.round(h.bet*G.payout));
+        ringPulse(handBoxEl(i));
+      });
+    }), 30);
+  }
+
+  /* ---------- hand signals ---------- */
+  function insuranceOpen(){ return !!document.querySelector('.insurance-offer'); }
+  function canSignal(){ return sigOn() && G.phase==='player' && !G.locked && !insuranceOpen() && !!currentHand(); }
+  function layerPt(cx, cy){ var lr = S.layer.getBoundingClientRect(); return {x:cx-lr.left, y:cy-lr.top}; }
+  function signalFx(kind, cx, cy){
+    if(!S.layer || !fx()) return;
+    var p = layerPt(cx, cy);
+    if(kind==='hit'){
+      var rp = document.createElement('div'); rp.className = 'sg-ripple'; rp.style.left = p.x+'px'; rp.style.top = p.y+'px';
+      S.layer.appendChild(rp);
+      try{ rp.animate([{transform:'scale(1)', opacity:.95},{transform:'scale(7)', opacity:0}], {duration:520, easing:'ease-out'}).onfinish = function(){ if(rp.parentNode) rp.parentNode.removeChild(rp); }; }catch(e){ if(rp.parentNode) rp.parentNode.removeChild(rp); }
+    }
+    var tag = document.createElement('div'); tag.className = 'sg-tag'; tag.textContent = kind==='hit' ? 'Hit' : (kind==='stand' ? 'Stand' : 'Double');
+    tag.style.left = p.x+'px'; tag.style.top = (p.y-34)+'px';
+    S.layer.appendChild(tag);
+    try{ tag.animate([{transform:'translate(-50%,6px) scale(.8)', opacity:0, offset:0},{transform:'translate(-50%,0) scale(1)', opacity:1, offset:0.2},{transform:'translate(-50%,-16px) scale(1)', opacity:0, offset:1}], {duration:820, easing:'ease-out'}).onfinish = function(){ if(tag.parentNode) tag.parentNode.removeChild(tag); }; }catch(e){ if(tag.parentNode) tag.parentNode.removeChild(tag); }
+  }
+  function dropWave(){ if(S.sig && S.sig.wave){ var w = S.sig.wave; S.sig.wave = null; try{ w.animate([{opacity:1},{opacity:0}], {duration:260}).onfinish = function(){ if(w.parentNode) w.parentNode.removeChild(w); }; }catch(e){ if(w.parentNode) w.parentNode.removeChild(w); } } }
+  function onSigDown(e){
+    if(!canSignal()) return;
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    var box = e.target.closest ? e.target.closest('.hand-box.active') : null;
+    if(!box || box.parentNode !== $('hands-row')) return;
+    if(e.target.closest('button,input,select,a,.term,.hb-act,.dbl-handle')) return;
+    S.sig = {id:e.pointerId, x:e.clientX, y:e.clientY, t:now(), box:box, wave:null};
+  }
+  function onSigMove(e){
+    var s = S.sig; if(!s || s.id!==e.pointerId) return;
+    var dx = e.clientX-s.x, dy = e.clientY-s.y;
+    if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)*1.3 && fx() && S.layer){
+      if(!s.wave){ s.wave = document.createElement('div'); s.wave.className = 'sg-wave'; S.layer.appendChild(s.wave); }
+      var a = layerPt(s.x, s.y), len = Math.abs(dx);
+      s.wave.style.left = a.x+'px'; s.wave.style.top = (a.y-3)+'px'; s.wave.style.width = len+'px';
+      s.wave.style.transform = 'rotate('+(dx<0 ? 180 : 0)+'deg)';
+    }
+  }
+  function onSigUp(e, cancelled){
+    var s = S.sig; if(!s || s.id!==e.pointerId) return;
+    var dx = e.clientX-s.x, dy = e.clientY-s.y, dist = Math.sqrt(dx*dx+dy*dy), dt = now()-s.t;
+    var wave = s.wave; dropWave();
+    S.sig = null;
+    if(cancelled || !canSignal() || !s.box.classList.contains('active')) return;
+    if(dist < 12 && dt < 500){
+      signalFx('hit', e.clientX, e.clientY); sfxKnock(); buzz(10);
+      doAction('H');
+    } else if(Math.abs(dx) >= 56 && Math.abs(dx) > Math.abs(dy)*1.6 && dt < 900){
+      signalFx('stand', e.clientX, e.clientY - 4); sfxSwish(); buzz(14);
+      if(S.dealer){ S.dealer.removeAttribute('data-nod'); void S.dealer.offsetWidth; S.dealer.setAttribute('data-nod','1'); }
+      doAction('S');
+    } else if(wave && wave.parentNode){ wave.parentNode.removeChild(wave); }
+  }
+  /* double: drag the chip onto the bet ring */
+  function stripSignalUi(){
+    Array.prototype.forEach.call(document.querySelectorAll('.hb-bet, .dbl-handle'), function(n){ n.parentNode && n.parentNode.removeChild(n); });
+    var gh = document.querySelector('.dbl-ghost'); if(gh && gh.parentNode) gh.parentNode.removeChild(gh);
+    S.drag = null;
+  }
+  function chipLabel(n){ return n>=1000 ? (n/1000)+'K' : String(n); }
+  function updateSignalUi(){
+    var hr = $('hands-row'); if(!hr) return;
+    G.hands.forEach(function(h, i){
+      var box = hr.children[i]; if(!box) return;
+      var hb = box.querySelector('.hb-bet');
+      if(!hb){
+        hb = document.createElement('div'); hb.className = 'hb-bet';
+        hb.innerHTML = '<div class="hb-ring"><div class="hb-pile"></div></div><div class="hb-label"><b></b>on the felt</div>';
+        box.appendChild(hb);
+      }
+      var sig = h.bet+'|'+(G.phase==='player' && i===G.activeIdx ? 'a' : '');
+      if(hb.getAttribute('data-sig') !== sig){
+        hb.setAttribute('data-sig', sig);
+        // up to three flat chips, the biggest on top with its value on the face
+        var chips = computeChipBreakdown(h.bet).slice(0,3).reverse(), pile = hb.querySelector('.hb-pile');
+        pile.innerHTML = chips.map(function(d, n){ var top = n === chips.length-1; return '<i class="hb-d '+chipColorClass(d)+(top ? ' top' : '')+'" style="--n:'+n+'">'+(top ? chipLabel(d) : '')+'</i>'; }).join('');
+        pile.style.height = (38 + Math.max(0, chips.length-1)*4)+'px';
+        hb.querySelector('.hb-label b').textContent = h.bet;
+      }
+    });
+    // the chip to drag
+    var ar = $('actions-row'), old = document.querySelector('.dbl-handle');
+    if(old && old.parentNode) old.parentNode.removeChild(old);
+    if(!ar || G.phase!=='player') return;
+    var h0 = currentHand();
+    if(!h0 || G.locked || !canDouble(h0) || !canAffordDouble(h0)) return;
+    var d0 = computeChipBreakdown(h0.bet)[0] || 5;
+    var hd = document.createElement('div'); hd.className = 'dbl-handle'; hd.setAttribute('role','button'); hd.tabIndex = 0;
+    hd.setAttribute('aria-label', 'Double down: drag this chip onto your bet, or press Enter');
+    hd.innerHTML = '<span class="dh-chip '+chipColorClass(d0)+'">'+chipLabel(d0)+'</span><span>Drag onto your bet<br>to double</span>';
+    hd.addEventListener('pointerdown', guard('dbl down', function(e){ startDrag(e, hd, d0); }));
+    hd.addEventListener('keydown', guard('dbl key', function(e){ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(canSignal()) doAction('D'); } }));
+    (S.actPanel && S.actPanel.parentNode ? S.actPanel : ar).appendChild(hd);
+  }
+  function activeRing(){ var hb = handBoxEl(G.activeIdx); return hb ? hb.querySelector('.hb-ring') : null; }
+  function overRing(x, y){
+    var ring = activeRing(); if(!ring) return false;
+    var r = ring.getBoundingClientRect(), pad = 24;
+    return x >= r.left-pad && x <= r.right+pad && y >= r.top-pad && y <= r.bottom+pad;
+  }
+  function startDrag(e, handle, denom){
+    if(!canSignal()) return;
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    e.preventDefault();
+    var g = document.createElement('div'); g.className = 'dbl-ghost '+chipColorClass(denom); g.textContent = chipLabel(denom);
+    document.body.appendChild(g);
+    var drag = {id:e.pointerId, g:g, handle:handle, x:e.clientX, y:e.clientY, moved:false};
+    S.drag = drag;
+    place(e.clientX, e.clientY);
+    function place(x, y){ g.style.transform = 'translate('+x+'px,'+y+'px)'; }
+    function mv(ev){
+      if(ev.pointerId!==drag.id) return;
+      if(Math.abs(ev.clientX-drag.x) + Math.abs(ev.clientY-drag.y) > 6) drag.moved = true;
+      place(ev.clientX, ev.clientY);
+      var ring = activeRing(); if(ring) ring.classList.toggle('hot', overRing(ev.clientX, ev.clientY));
+    }
+    function fin(ev, cancelled){
+      if(ev.pointerId!==drag.id) return;
+      W.removeEventListener('pointermove', mv); W.removeEventListener('pointerup', up); W.removeEventListener('pointercancel', cn); W.removeEventListener('keydown', kd, true);
+      var ring = activeRing(), hit = !cancelled && overRing(ev.clientX, ev.clientY) && canSignal();
+      if(ring) ring.classList.remove('hot');
+      S.drag = null;
+      if(hit){
+        var rr = ring.getBoundingClientRect();
+        try{
+          g.animate([{transform:g.style.transform},{transform:'translate('+(rr.left+rr.width/2)+'px,'+(rr.top+rr.height/2)+'px) scale(.62)', opacity:.9}], {duration:150, easing:'ease-out', fill:'forwards'}).onfinish = function(){ if(g.parentNode) g.parentNode.removeChild(g); };
+        }catch(_){ if(g.parentNode) g.parentNode.removeChild(g); }
+        signalFx('double', rr.left+rr.width/2, rr.top+rr.height/2 - 6); sfxCoin(1); buzz(12);
+        later(function(){ if(canSignal()) doAction('D'); }, fx() ? 120 : 0);
+      } else if(!cancelled && !drag.moved){
+        // a plain click on the chip: point at where it goes
+        if(ring){ ring.classList.add('hot'); setTimeout(function(){ ring.classList.remove('hot'); }, 900); }
+        if(g.parentNode) g.parentNode.removeChild(g);
+      } else {
+        var hb = handle.getBoundingClientRect();
+        try{
+          g.animate([{transform:g.style.transform},{transform:'translate('+(hb.left+24)+'px,'+(hb.top+hb.height/2)+'px)', opacity:.2}], {duration:200, easing:'ease-in', fill:'forwards'}).onfinish = function(){ if(g.parentNode) g.parentNode.removeChild(g); };
+        }catch(_){ if(g.parentNode) g.parentNode.removeChild(g); }
+      }
+    }
+    function up(ev){ fin(ev, false); } function cn(ev){ fin(ev, true); }
+    function kd(ev){ if(ev.key==='Escape'){ fin({pointerId:drag.id, clientX:-999, clientY:-999}, true); } }
+    W.addEventListener('pointermove', mv); W.addEventListener('pointerup', up); W.addEventListener('pointercancel', cn); W.addEventListener('keydown', kd, true);
+  }
+  function wireSignals(){
+    var hr = $('hands-row');
+    hr.addEventListener('pointerdown', guard('sig down', onSigDown));
+    W.addEventListener('pointermove', guard('sig move', onSigMove), {passive:true});
+    W.addEventListener('pointerup', guard('sig up', function(e){ onSigUp(e, false); }));
+    W.addEventListener('pointercancel', guard('sig cancel', function(e){ onSigUp(e, true); }));
+  }
+
+
+
+  /* ---------- the chip rack and the betting circle ---------- */
+  var DENOMS = [5, 10, 25, 50, 100, 500, 1000];
+  function tblOn(){ return !!(W.G && G.tableShow); }
+  function fxUi(){ return tblOn() && !reduced() && canAnim(); }
+  function spotN(){ return (typeof W.spotCount === 'function') ? W.spotCount() : 1; }
+  function selSpot(){ return (spotN() === 2 && W.G && G.betSpot === 1) ? 1 : 0; }
+  var SIDE_KEYS = ['pp', 'tp', 'tl', 'bb'];
+  var SIDE_TAG = {pp:'PAIRS', tp:'21+3', tl:'TRILUX', bb:'BUSTER'};
+  var SIDE_NAME = {pp:'Perfect Pairs', tp:'21+3', tl:'TriLux', bb:'Buster Bet'};
+  function sideOn(k){ return !!(W.G && G.sidebets && G.sidebets[k]); }
+  function sideVal(k){ var e = $('sb-'+k+'-amt'); return e ? (parseInt(e.value,10) || 0) : 0; }
+  function betN(i){
+    if(i >= 2) return sideVal(SIDE_KEYS[i - 2]);
+    var e = $(i ? 'bet-amount-2' : 'bet-amount'); return e ? (parseInt(e.value,10) || 0) : 0;
+  }
+  /* your hands' bets, then the side bets that are switched on */
+  function shownSpots(){ return S.spots.slice(0, spotN()).concat(S.spots.slice(2).filter(function(sp){ return sideOn(sp.side); })); }
+  /* a bet changes: a hand's goes through the game's own setBet, a side bet is its amount field */
+  function putBet(i, v){
+    if(i < 2){ W.setBet(v, i); return; }
+    var e = $('sb-' + SIDE_KEYS[i - 2] + '-amt'); if(!e) return;
+    e.value = Math.max(0, v); sfxChip(); updateBetUi();
+  }
+  function totalBets(){ return betN(0) + (spotN() === 2 ? betN(1) : 0); }
+  function sideTotal(){
+    var t = 0;
+    ['pp','tp','tl','bb'].forEach(function(k){ if(G.sidebets && G.sidebets[k]){ var e = $('sb-'+k+'-amt'); t += (e ? parseInt(e.value,10) : 0) || 0; } });
+    return t;
+  }
+  function availChips(){ return G.bankroll - totalBets() - sideTotal(); }
+  function sumOf(a){ var t = 0; for(var i=0;i<a.length;i++) t += a[i]; return t; }
+  /* The stack on a circle is made of the chips you actually placed; typing a number, halving, doubling and so on rebuild it. */
+  function reconcile(sp, v){
+    if(v === sp.val) return false;
+    var t = sp.val;
+    if(v > t && sumOf(sp.chips) === t){
+      if(t > 0 && v === t * 2 && sp.chips.length * 2 <= 15) sp.chips = sp.chips.concat(sp.chips);
+      else sp.chips = sp.chips.concat(computeChipBreakdown(v - t));
+    }
+    else sp.chips = computeChipBreakdown(v);
+    if(sp.chips.length > 15) sp.chips = computeChipBreakdown(v);
+    sp.val = v;
+    return true;
+  }
+  function buildBetUi(){
+    var row = $('bet-row'), c5 = $('chip-5'), field = row && row.querySelector('.field');
+    if(!row || !c5 || !field) return false;
+    var rack = c5.parentNode;
+    rack.classList.add('chip-rack'); S.rack = rack;
+    var wrap = document.createElement('div'); wrap.id = 'bet-circles'; wrap.className = 'bcs';
+    S.spots.forEach(function(sp, i){
+      var bc = document.createElement('div');
+      bc.innerHTML = '<div class="bc-ring"></div><div class="bc-label">BET</div><div class="bc-stack"></div><div class="bc-amt"></div><div class="bc-plus"></div>';
+      if(sp.side){
+        bc.id = 'bet-circle-' + sp.side; bc.className = 'bc side'; bc.setAttribute('role', 'button'); bc.tabIndex = 0;
+        bc.title = SIDE_NAME[sp.side] + ': drop chips here, or tap to add your last chip';
+      } else { bc.id = i ? 'bet-circle-2' : 'bet-circle'; bc.className = 'bc'; bc.setAttribute('aria-hidden','true'); }
+      wrap.appendChild(bc);
+      sp.bc = bc; sp.stack = bc.querySelector('.bc-stack'); sp.amt = bc.querySelector('.bc-amt'); sp.plus = bc.querySelector('.bc-plus'); sp.label = bc.querySelector('.bc-label');
+    });
+    field.parentNode.insertBefore(wrap, field.nextSibling);
+    var tip = $('bet-tip');
+    if(tip && tip.parentNode){ var ln = document.createElement('p'); ln.id = 'limit-note'; ln.setAttribute('role', 'status'); ln.setAttribute('aria-live', 'polite'); tip.parentNode.insertBefore(ln, tip); }
+    wireBet();
+    return true;
+  }
+  function updateRack(){
+    if(!S.rack) return;
+    var av = availChips(), shown = 0, anim = fxUi();
+    DENOMS.forEach(function(d){
+      var c = $('chip-'+d); if(!c) return;
+      var want = d <= av && (!limOn() || d <= limMax()), off = c.classList.contains('rk-off');
+      if(want) shown++;
+      if(want && (off || c.classList.contains('rk-out'))){
+        c.classList.remove('rk-off','rk-out');
+        if(off && anim){ c.classList.remove('rk-in'); void c.offsetWidth; c.classList.add('rk-in'); }
+      } else if(!want && !off && !c.classList.contains('rk-out')){
+        if(anim){
+          c.classList.add('rk-out');
+          setTimeout(function(){ if(c.classList.contains('rk-out')){ c.classList.remove('rk-out'); c.classList.add('rk-off'); } }, 230);
+        } else c.classList.add('rk-off');
+      }
+    });
+    S.rack.classList.toggle('empty', shown === 0);
+    S.rack.setAttribute('data-msg', totalBets() > 0 ? 'All your chips are in' : 'Press All in to bet what’s left');
+  }
+  function stackPoint(sp, idx){
+    var r = sp.stack.getBoundingClientRect();
+    return {x:r.left + r.width/2, y:r.bottom - (idx*3 + 23)};
+  }
+  function makeGhost(d){
+    var g = document.createElement('div'); g.className = 'cg ' + chipColorClass(d); g.textContent = chipLabel(d);
+    g.style.transform = 'translate(-300px,-300px)';
+    document.body.appendChild(g);
+    return g;
+  }
+  function dropGhost(g){ if(g && g.parentNode) g.parentNode.removeChild(g); }
+  function ghostXf(x, y, sx, sy, r){ return 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+sx+','+sy+') rotate('+r.toFixed(1)+'deg)'; }
+  function ghostFly(g, kf, dur, ease, done){
+    try{
+      var a = g.animate(kf, {duration:dur, easing:ease, fill:'forwards'});
+      a.onfinish = function(){ dropGhost(g); if(done) done(); };
+      return a;
+    }catch(e){ err('ghost', e); dropGhost(g); if(done) done(); }
+  }
+  function ripple(sp){
+    if(!fxUi() || !sp.bc) return;
+    var r = document.createElement('div'); r.className = 'bc-rip'; sp.bc.appendChild(r);
+    setTimeout(function(){ if(r.parentNode) r.parentNode.removeChild(r); }, 560);
+  }
+  function landGhost(sp, nd, idx){
+    var to = stackPoint(sp, idx), g = nd.ghost, x0, y0, tilt0 = 0, sc0 = 1;
+    if(g){ x0 = nd.x; y0 = nd.y; tilt0 = nd.tilt || 0; sc0 = 1.14; }
+    else if(nd.el){
+      var r = nd.el.getBoundingClientRect(); x0 = r.left + r.width/2; y0 = r.top + r.height/2;
+      g = makeGhost(nd.d);
+    } else return;
+    var dur = nd.delay, arc = nd.ghost ? 8 : 46 + Math.min(40, Math.abs(to.x - x0) * 0.12);
+    var kf = nd.ghost ?
+      [{transform:ghostXf(x0, y0, sc0, sc0, tilt0)}, {transform:ghostXf(to.x, to.y, 1, 1, 0)}] :
+      [{transform:ghostXf(x0, y0, 1, 1, 0), offset:0},
+       {transform:ghostXf((x0 + to.x)/2, Math.min(y0, to.y) - arc, 1.16, 1.0, 150), offset:0.5},
+       {transform:ghostXf(to.x, to.y, 1, 1, 0), offset:1}];
+    ghostFly(g, kf, dur, nd.ghost ? 'cubic-bezier(.4,0,.8,.6)' : 'cubic-bezier(.3,.55,.4,1)');
+    setTimeout(function(){ ripple(sp); sfxLand(); }, dur);
+  }
+  function renderStack(sp, nd){
+    var st = sp.stack, chips = sp.chips, kids = st.children, k = 0;
+    while(k < kids.length && k < chips.length && +kids[k].getAttribute('data-d') === chips[k]) k++;
+    while(kids.length > k) st.removeChild(st.lastChild);
+    var animate = fxUi() && sp.init;
+    for(var i = k; i < chips.length; i++){
+      var el = document.createElement('i');
+      el.className = 'bk ' + chipColorClass(chips[i]);
+      el.setAttribute('data-d', chips[i]);
+      el.style.setProperty('--n', i);
+      el.textContent = chipLabel(chips[i]);
+      if(animate){ el.classList.add('drop'); el.style.animationDelay = (nd ? nd.delay : (i - k) * 42) + 'ms'; }
+      st.appendChild(el);
+    }
+    sp.init = true;
+    if(nd){
+      if(animate && chips.length > k) landGhost(sp, nd, chips.length - 1);
+      else dropGhost(nd.ghost);
+    }
+  }
+  function updateCircle(sp, nd){
+    if(!sp.bc) return;
+    var v = betN(sp.i), two = spotN() === 2;
+    reconcile(sp, v);
+    renderStack(sp, nd);
+    sp.bc.classList.toggle('has-chips', sp.chips.length > 0);
+    sp.bc.classList.toggle('sel', two && !sp.side && selSpot() === sp.i);
+    sp.amt.textContent = v > 0 ? String(v) : '';
+    var want = sp.side ? SIDE_TAG[sp.side] : (two ? 'HAND ' + (sp.i + 1) : 'BET');
+    if(sp.label.textContent !== want) sp.label.textContent = want;
+    if(sp.side) sp.bc.setAttribute('aria-label', SIDE_NAME[sp.side] + ' side bet: ' + (v > 0 ? v : 'none') + '. Press Enter to add your last chip, Backspace to take one back.');
+  }
+  function updateBetUi(){
+    updateRack();
+    var nd = S.nextDrop; S.nextDrop = null;
+    if(nd && now() - nd.t > 500){ dropGhost(nd.ghost); nd = null; }
+    var used = false, firstSide = true;
+    S.spots.forEach(function(sp){
+      if(!sp.side || !sp.bc) return;
+      var on = sideOn(sp.side);
+      sp.bc.classList.toggle('sb-on', on);
+      sp.bc.classList.toggle('sb-first', on && firstSide);
+      if(on) firstSide = false;
+    });
+    shownSpots().forEach(function(sp){
+      var mine = (nd && (nd.spot|0) === sp.i) ? nd : null;
+      if(mine) used = true;
+      updateCircle(sp, mine);
+    });
+    if(nd && !used) dropGhost(nd.ghost);
+  }
+  function addChip(i, d){
+    var sp = S.spots[i];
+    reconcile(sp, betN(i));
+    sp.chips.push(d); sp.val += d;
+    putBet(i, betN(i) + d);
+  }
+  function removeTop(i, d){
+    var sp = S.spots[i];
+    reconcile(sp, betN(i));
+    sp.chips.pop(); sp.val -= d;
+    putBet(i, Math.max(0, betN(i) - d));
+  }
+  /* dragging chips: rack -> a circle to bet, circle -> rack to take one back */
+  function rackChipPoint(d){
+    var c = $('chip-'+d), r = (c && !c.classList.contains('rk-off') ? c : S.rack).getBoundingClientRect();
+    return {x:r.left + r.width/2, y:r.top + r.height/2};
+  }
+  function renderGhostPos(cd){
+    if(cd.g) cd.g.style.transform = ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt);
+  }
+  /* the circle under a point (the nearer one when two are close), or -1 */
+  function circleAt(x, y, pad){
+    var best = -1, bd = 1e9;
+    shownSpots().forEach(function(sp){
+      var r = sp.bc.getBoundingClientRect();
+      if(x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad){
+        var d = Math.abs(x - (r.left + r.width/2));
+        if(d < bd){ bd = d; best = sp.i; }
+      }
+    });
+    return best;
+  }
+  function clearCircles(){
+    S.spots.forEach(function(sp){ if(sp.bc){ sp.bc.classList.remove('armed','hot','peek'); sp.plus.textContent = ''; } });
+  }
+  function hotCheck(cd){
+    if(cd.src === 'rack'){
+      var hs = circleAt(cd.x, cd.y, 14);
+      if(hs === cd.hotSpot) return;
+      if(cd.hotSpot >= 0){ var o = S.spots[cd.hotSpot]; o.bc.classList.remove('hot','peek'); o.plus.textContent = ''; }
+      cd.hotSpot = hs; cd.hot = hs >= 0;
+      if(hs >= 0){ var sp = S.spots[hs]; sp.bc.classList.add('hot','peek'); sp.plus.textContent = '+' + chipLabel(cd.d); sfxTick(); }
+      return;
+    }
+    var r = S.rack.getBoundingClientRect(), pad = 8;
+    var h = cd.x >= r.left - pad && cd.x <= r.right + pad && cd.y >= r.top - pad && cd.y <= r.bottom + pad;
+    if(h === cd.hot) return;
+    cd.hot = h; S.rack.classList.toggle('hot', h);
+    if(h) sfxTick();
+  }
+  function lift(cd){
+    cd.moved = true;
+    cd.g = makeGhost(cd.d); cd.g.classList.add('lifted');
+    if(cd.src === 'rack') cd.el.classList.add('ghosted'); else if(cd.el) cd.el.style.visibility = 'hidden';
+    if(cd.src === 'rack') shownSpots().forEach(function(sp){ sp.bc.classList.add('armed'); }); else S.rack.classList.add('armed');
+    cd.gx = cd.x; cd.gy = cd.y; renderGhostPos(cd);
+    sfxPick();
+    if(fxUi()){
+      (function tick(){
+        if(S.cd !== cd) return;
+        var dx = cd.x - cd.gx, dy = cd.y - cd.gy;
+        cd.gx += dx * 0.42; cd.gy += dy * 0.42;
+        cd.tilt += (clamp(dx * 1.2, -26, 26) - cd.tilt) * 0.28;
+        renderGhostPos(cd);
+        cd.raf = requestAnimationFrame(tick);
+      })();
+    }
+  }
+  function endDrag(cd, cancelled){
+    S.cd = null;
+    if(cd.raf) cancelAnimationFrame(cd.raf);
+    clearCircles(); S.rack.classList.remove('armed','hot');
+    if(!cd.moved) return;
+    S.suppressClick = now() + 450;
+    var hit = !cancelled && cd.hot && G.phase === 'betting' && tblOn();
+    var g = cd.g, animate = fxUi();
+    if(cd.src === 'rack'){
+      if(cd.el) cd.el.classList.remove('ghosted');
+      if(hit && cd.d <= availChips() && !fitsLimit(cd.hotSpot, cd.d)){ try{ limitNote('max', 'Table max is ' + money(limMax()) + '.'); }catch(e){ err('limit drop', e); } }
+      if(hit && cd.d <= availChips() && fitsLimit(cd.hotSpot, cd.d)){
+        var to = cd.hotSpot;
+        if(to < 2 && spotN() === 2 && selSpot() !== to) W.selectSpot(to);   // the bet you just dropped on becomes the one the chips and buttons act on
+        S.lastChip = cd.d;
+        S.nextDrop = {t:now(), d:cd.d, ghost:g, x:cd.gx, y:cd.gy, tilt:cd.tilt, delay:animate ? 170 : 0, spot:to};
+        addChip(to, cd.d);
+        if(S.nextDrop){ dropGhost(S.nextDrop.ghost); S.nextDrop = null; }
+      } else if(animate && g){
+        var b = rackChipPoint(cd.d);
+        ghostFly(g, [{transform:ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt), opacity:1}, {transform:ghostXf(b.x, b.y, 1, 1, 0), opacity:.95}], 240, 'cubic-bezier(.3,.7,.3,1)');
+      } else dropGhost(g);
+    } else {
+      var sp = S.spots[cd.spot];
+      if(hit){
+        removeTop(cd.spot, cd.d);
+        if(animate && g){
+          var b2 = rackChipPoint(cd.d);
+          ghostFly(g, [{transform:ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt), opacity:1}, {transform:ghostXf(b2.x, b2.y, .9, .9, -20), opacity:0}], 260, 'cubic-bezier(.4,0,.8,.6)');
+        } else dropGhost(g);
+        sfxPick();
+      } else {
+        var top = sp.stack.lastChild;
+        if(animate && g){
+          var p = stackPoint(sp, Math.max(0, sp.chips.length - 1));
+          ghostFly(g, [{transform:ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt)}, {transform:ghostXf(p.x, p.y, 1, 1, 0)}], 230, 'cubic-bezier(.3,.7,.3,1)', function(){ if(top) top.style.visibility = ''; });
+        } else { dropGhost(g); if(top) top.style.visibility = ''; }
+        if(cd.el) cd.el.style.visibility = '';
+      }
+    }
+  }
+  function abortDrag(){
+    var cd = S.cd; if(!cd) return;
+    S.cd = null; if(cd.raf) cancelAnimationFrame(cd.raf);
+    dropGhost(cd.g);
+    if(cd.el){ cd.el.classList.remove('ghosted'); cd.el.style.visibility = ''; }
+    clearCircles(); if(S.rack) S.rack.classList.remove('armed','hot');
+  }
+  function spotOf(node){
+    var s = shownSpots();
+    for(var i = 0; i < s.length; i++) if(s[i].bc.contains(node)) return s[i];
+    return null;
+  }
+  function onBetDown(e){
+    if(!tblOn() || G.phase !== 'betting' || S.cd) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    var t = e.target, chip = t && t.closest ? t.closest('.chip') : null, src = '', d = 0, el = null, spot = -1, sp = null;
+    if(chip && S.rack.contains(chip) && !chip.classList.contains('rk-off')){ src = 'rack'; d = parseInt(chip.id.slice(5), 10); el = chip; }
+    else if((sp = spotOf(t)) && sp.chips.length && sp.stack.lastChild){ src = 'stack'; spot = sp.i; d = sp.chips[sp.chips.length-1]; el = sp.stack.lastChild; }
+    if(!src || !d) return;
+    var cd = S.cd = {id:e.pointerId, src:src, d:d, el:el, spot:spot, hotSpot:-1, x0:e.clientX, y0:e.clientY, x:e.clientX, y:e.clientY, gx:e.clientX, gy:e.clientY, tilt:0, moved:false, g:null, hot:false, raf:0};
+    function mv(ev){
+      if(ev.pointerId !== cd.id || S.cd !== cd) return;
+      cd.x = ev.clientX; cd.y = ev.clientY;
+      if(!cd.moved && Math.abs(cd.x - cd.x0) + Math.abs(cd.y - cd.y0) > 8) lift(cd);
+      if(cd.moved){ if(!fxUi()){ cd.gx = cd.x; cd.gy = cd.y; renderGhostPos(cd); } hotCheck(cd); }
+    }
+    function fin(ev, cancelled){
+      if(ev.pointerId !== cd.id) return;
+      W.removeEventListener('pointermove', mv); W.removeEventListener('pointerup', up); W.removeEventListener('pointercancel', cn); W.removeEventListener('keydown', kd, true);
+      if(S.cd === cd) endDrag(cd, cancelled);
+    }
+    function up(ev){ fin(ev, false); } function cn(ev){ fin(ev, true); }
+    function kd(ev){ if(ev.key === 'Escape') fin({pointerId:cd.id}, true); }
+    W.addEventListener('pointermove', mv); W.addEventListener('pointerup', up); W.addEventListener('pointercancel', cn); W.addEventListener('keydown', kd, true);
+  }
+  /* tapping a side-bet circle puts the chip you used last on it (or the biggest one you can still afford, if that one is too big) */
+  function tapSide(sp){
+    if(!sp.side || G.phase !== 'betting' || !tblOn()) return;
+    var av = availChips(), d = 0;
+    DENOMS.forEach(function(x){ if(x <= S.lastChip && x <= av) d = x; });
+    if(!d) return;
+    var el = $('chip-' + d);
+    S.nextDrop = {t:now(), d:d, el:(el && !el.classList.contains('rk-off')) ? el : null, delay:300, spot:sp.i};
+    addChip(sp.i, d);
+    if(S.nextDrop){ S.nextDrop = null; }
+  }
+  function wireBet(){
+    S.rack.addEventListener('pointerdown', guard('rack down', onBetDown));
+    S.spots.forEach(function(sp){
+      sp.bc.addEventListener('pointerdown', guard('circle down', onBetDown));
+      // tapping a circle makes it the bet that the chips and buttons act on
+      sp.bc.addEventListener('click', guard('circle click', function(){
+        if(S.suppressClick > now() || G.phase !== 'betting') return;
+        if(sp.side){ tapSide(sp); return; }
+        if(spotN() !== 2) return;
+        if(selSpot() !== sp.i) W.selectSpot(sp.i);
+      }));
+      if(sp.side) sp.bc.addEventListener('keydown', guard('side key', function(e){
+        if(G.phase !== 'betting') return;
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); tapSide(sp); }
+        else if((e.key === 'Backspace' || e.key === 'Delete') && sp.chips.length){ e.preventDefault(); reconcile(sp, betN(sp.i)); var top = sp.chips[sp.chips.length - 1]; if(top){ removeTop(sp.i, top); sfxPick(); } }
+      }));
+    });
+    S.rack.addEventListener('click', guard('rack click', function(e){
+      if(S.suppressClick > now()){ e.stopPropagation(); e.preventDefault(); return; }
+      var chip = e.target && e.target.closest ? e.target.closest('.chip') : null;
+      if(chip && tblOn()){ S.lastChip = parseInt(chip.id.slice(5), 10); S.nextDrop = {t:now(), d:S.lastChip, el:chip, delay:300, spot:selSpot()}; }
+    }), true);
+    ['bet-amount','bet-amount-2','sb-pp-amt','sb-tp-amt','sb-tl-amt','sb-bb-amt'].forEach(function(id){
+      var e = $(id); if(e) e.addEventListener('input', guard('bet input', function(){ if(tblOn()) updateBetUi(); }));
+    });
+    ['sb-pp','sb-tp','sb-tl','sb-bb'].forEach(function(id){
+      var e = $(id); if(e) e.addEventListener('change', guard('side change', function(){ if(tblOn()) setTimeout(function(){ if(tblOn()) updateBetUi(); }, 0); }));
+    });
+  }
+  /* on deal: the chips on each circle slide over to that hand */
+  /* ---------- the table itself: printed pay lines on the felt ---------- */
+  var FP_W = '<svg class="fp-w" viewBox="0 0 720 68" preserveAspectRatio="xMidYMid meet" focusable="false">'+
+    '<defs><path id="fpw1" d="M30 16 Q360 56 690 16"/><path id="fpw2" d="M110 44 Q360 82 610 44"/></defs>'+
+    '<text class="fp-big"><textPath href="#fpw1" startOffset="50%" text-anchor="middle"><tspan id="fp-w1"></tspan></textPath></text>'+
+    '<text class="fp-small"><textPath href="#fpw2" startOffset="50%" text-anchor="middle"><tspan id="fp-w2"></tspan></textPath></text></svg>';
+  var FP_N = '<svg class="fp-n" viewBox="0 0 340 84" preserveAspectRatio="xMidYMid meet" focusable="false">'+
+    '<defs><path id="fpn1" d="M14 15 Q170 52 326 15"/><path id="fpn2" d="M44 40 Q170 68 296 40"/><path id="fpn3" d="M76 59 Q170 82 264 59"/></defs>'+
+    '<text class="fp-big"><textPath href="#fpn1" startOffset="50%" text-anchor="middle"><tspan id="fp-n1"></tspan></textPath></text>'+
+    '<text class="fp-small"><textPath href="#fpn2" startOffset="50%" text-anchor="middle"><tspan id="fp-n2"></tspan></textPath></text>'+
+    '<text class="fp-small"><textPath href="#fpn3" startOffset="50%" text-anchor="middle"><tspan id="fp-n3"></tspan></textPath></text></svg>';
+  function feltLines(){
+    var l1 = 'BLACKJACK PAYS ' + (G.payout === 1.5 ? '3 TO 2' : '6 TO 5');
+    var l2 = G.hitSoft17 ? 'DEALER HITS SOFT 17' : 'DEALER STANDS ON ALL 17s';
+    var l3 = G.insuranceEnabled ? 'INSURANCE PAYS 2 TO 1' : '';
+    if(G.surrenderEnabled) l3 = l3 ? l3 + ' · LATE SURRENDER' : 'LATE SURRENDER ALLOWED';
+    return [l1, l2, l3];
+  }
+  function updateFelt(){
+    var f = $('felt-print'); if(!f) return;
+    var L = feltLines(), key = L.join('|');
+    if(f.getAttribute('data-k') === key) return;
+    f.setAttribute('data-k', key);
+    function set(id, t){ var e = $(id); if(e) e.textContent = t; }
+    set('fp-w1', L[0]); set('fp-w2', L[2] ? L[1] + ' · ' + L[2] : L[1]);
+    set('fp-n1', L[0]); set('fp-n2', L[1]); set('fp-n3', L[2]);
+    var n3 = $('fp-n3'); if(n3 && n3.parentNode && n3.parentNode.parentNode) n3.parentNode.parentNode.style.display = L[2] ? '' : 'none';
+  }
+  function buildTable(){
+    if(S.tbuilt) return true;
+    var anchor = $('bots-wrap');
+    if(!anchor || !anchor.parentNode) return false;
+    var f = document.createElement('div'); f.id = 'felt-print'; f.setAttribute('aria-hidden','true'); f.innerHTML = FP_W + FP_N;
+    anchor.parentNode.insertBefore(f, anchor);
+    S.tbuilt = true;
+    try{ buildBetUi(); }catch(e){ err('bet ui', e); }
+    return true;
+  }
+  function tableUi(){
+    if(!(W.G && G.tableShow)) return;
+    if(!S.tbuilt && !buildTable()) return;
+    updateFelt();
+    updateBetUi();
+  }
+
+
+  /* ---------- the action buttons beside your cards (wide tables) ---------- */
+  var ACT_KEY = {hit:'H', stand:'S', double:'D', split:'P', surrender:'R'};
+  function realActionButtons(){
+    var ar = $('actions-row');
+    return ar ? Array.prototype.filter.call(ar.children, function(n){ return n.tagName === 'BUTTON'; }) : [];
+  }
+  function updateActs(){
+    var b = document.body, want = false, hb = null;
+    Array.prototype.forEach.call(document.querySelectorAll('.hb-act'), function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
+    Array.prototype.forEach.call(document.querySelectorAll('.hand-box.has-act'), function(n){ n.classList.remove('has-act'); });
+    S.actPanel = null;
+    if(tblOn() && G.phase === 'player' && G.hands.length){
+      hb = handBoxEl(G.activeIdx);
+      want = !!(hb && hb.clientWidth >= 620 && realActionButtons().length);
+    }
+    b.classList.toggle('act-in-box', want);
+    if(!want) return;
+    var panel = document.createElement('div'); panel.className = 'hb-act'; panel.setAttribute('role','group'); panel.setAttribute('aria-label','Your options');
+    var grid = document.createElement('div'); grid.className = 'hb-act-grid';
+    realActionButtons().forEach(function(rb, i){
+      var m = document.createElement('button'); m.type = 'button';
+      var word = (rb.textContent || '').trim().split(/\s+/)[0].toLowerCase();
+      m.className = 'hb-act-btn act-' + word;
+      m.disabled = rb.disabled;
+      m.appendChild(document.createTextNode(rb.textContent));
+      var k = ACT_KEY[word];
+      if(k){ var kb = document.createElement('span'); kb.className = 'kb'; kb.setAttribute('aria-hidden','true'); kb.textContent = k; m.appendChild(kb); }
+      m.addEventListener('click', guard('act click', function(){
+        var real = realActionButtons()[i];
+        if(real && !real.disabled && G.phase === 'player' && !G.locked) real.click();
+      }));
+      grid.appendChild(m);
+    });
+    panel.appendChild(grid);
+    hb.classList.add('has-act');
+    hb.appendChild(panel);
+    S.actPanel = panel;
+  }
+
+  /* ---------- on / off ---------- */
+  function cancelAll(){
+    // Anything the game is waiting for (the first deal step, the peek) still happens -- immediately.
+    S.timers.forEach(function(r){ clearTimeout(r.id); });
+    S.timers = [];
+    S.queue = []; S.busy = false; S.gen++;
+    S.flights.forEach(function(f){ if(f.anim){ try{ f.anim.onfinish = null; f.anim.cancel(); }catch(e){} } if(f.animS){ try{ f.animS.cancel(); }catch(e){} } if(f.fl && f.fl.parentNode) f.fl.parentNode.removeChild(f.fl); });
+    S.flights = [];
+    if(S.layer) S.layer.innerHTML = '';
+    releaseAll();
+    Array.prototype.forEach.call(document.querySelectorAll('.card.peeking,.card.flipin,.card.landed'), function(c){ c.classList.remove('peeking','flipin','landed'); });
+    if(S.sig){ S.sig = null; }
+    S.egg = null; S.dmKey = ''; S.nudgeRec = null; S.visit = null; S.dwellRec = null; S.dwellEv = null; S.shuf = null; S.shufRec = null;
+    shuffleReset();
+    Array.prototype.forEach.call(document.querySelectorAll('.ds-placard .hit, #limit-note.on'), function(n){ n.classList.remove('hit', 'on'); });
+    document.body.classList.remove('pm-on');
+    abortDrag();
+    if(S.drag){ var gh = document.querySelector('.dbl-ghost'); if(gh && gh.parentNode) gh.parentNode.removeChild(gh); S.drag = null; }
+    var enterRecs = S.enterCbs.splice(0);
+    enterRecs.forEach(function(r){ try{ r.fn(); }catch(e){ err('flush enter', e); } });
+    if(S.peekCb){ var p = S.peekCb; S.peekCb = null; try{ p(); }catch(e){ err('flush peek', e); } }
+    var w = S.idleWaiters.splice(0);
+    w.forEach(function(cb){ try{ cb(); }catch(e){ err('flush waiter', e); } });
+  }
+  function applyTimings(){
+    var o = S.orig; if(!o) return;
+    if(on() && fx()){ W.DEAL_DELAY = S.T.deal; W.HIT_RESOLVE_DELAY = S.T.hit; W.RESULT_PAUSE = S.T.result; }
+    else { W.DEAL_DELAY = o.DEAL_DELAY; W.HIT_RESOLVE_DELAY = o.HIT_RESOLVE_DELAY; W.RESULT_PAUSE = o.RESULT_PAUSE; }
+  }
+  function sync(){
+    if(!S.ready) return;
+    var sub = $('set-tablesignals'); if(sub) sub.disabled = !G.tableShow;
+    var isOn = on();
+    if(isOn && !S.built) build();
+    try{ limitsSync(); }catch(e){ err('limits', e); }
+    if(isOn && !S.wasOn){ S.needSnap = true; if(S.built){ S.st.setAttribute('data-still','1'); S.state = G.phase==='betting' ? 'away' : 'up'; S.st.setAttribute('data-state', S.state); restPose(); later(function(){ S.st && S.st.removeAttribute('data-still'); }, 80); } }
+    if(!isOn && S.wasOn){ cancelAll(); if(S.st){ S.state = 'away'; S.st.setAttribute('data-state','away'); } }
+    S.wasOn = isOn;
+    if(!tblOn()) abortDrag();
+    applyTimings();
+    syncBody();
+    try{ tableUi(); }catch(e){ err('tableUi', e); }
+    try{ updateActs(); }catch(e){ err('acts', e); }
+    if(!sigOn()) stripSignalUi();
+    if(isOn) afterRender();
+  }
+
+  /* ---------- hooking into the game ---------- */
+  function hook(){
+    var _renderAll = W.renderAll;
+    W.renderAll = function(){ var r = _renderAll.apply(this, arguments); try{ afterRender(); }catch(e){ err('afterRender', e); } return r; };
+
+    var _run = W.runDealSequence;
+    W.runDealSequence = function(totalSeats, cardsPerSeat, onComplete){
+      var self = this, args = arguments;
+      if(!(S.ready && on() && S.built && fx())) return _run.apply(self, args);
+      if(S.egg) eggStop(true);
+      if(S.shuf) shuffleStop(true);
+      unlater(S.shufRec); S.shufRec = null;
+      enter(function(){
+        _run.call(self, totalSeats, cardsPerSeat, function(){ whenIdle(onComplete); });
+      });
+    };
+
+    var _pcc = W.placeCutCard;
+    if(typeof _pcc === 'function') W.placeCutCard = function(){
+      var r = _pcc.apply(this, arguments);
+      try{ if(S.ready && on() && S.built){ unlater(S.shufRec); S.shufRec = later(guard('shuffle', shuffleMoment), 720); } }catch(e){ err('cut card', e); }
+      return r;
+    };
+
+    var _check = W.checkForNaturalsAndResolve;
+    W.checkForNaturalsAndResolve = function(){
+      var self = this, args = arguments;
+      if(!(S.ready && on() && S.built && fx())) return _check.apply(self, args);
+      try{ peekThen(function(){ _check.apply(self, args); }); }
+      catch(e){ err('peek', e); return _check.apply(self, args); }
+    };
+
+    var _rr = W.renderResults;
+    W.renderResults = function(results, headline){
+      var r = _rr.apply(this, arguments);
+      try{ payoff(results, headline); }catch(e){ err('payoff', e); }
+      return r;
+    };
+
+    var _fin = W.finishRound;
+    W.finishRound = function(){
+      var self = this, args = arguments;
+      if(!(S.ready && on() && S.built && fx())) return _fin.apply(self, args);
+      whenIdle(function(){ _fin.apply(self, args); });
+    };
+
+    var _setBet = W.setBet;
+    if(typeof _setBet === 'function') W.setBet = function(amount, spot){
+      var args = arguments, hitMax = false;
+      try{ if(S.ready && limOn() && G.phase === 'betting' && typeof amount === 'number' && amount > limMax()){ args = [limMax(), spot]; hitMax = true; } }catch(e){ err('limit clamp', e); }
+      var r = _setBet.apply(this, args);
+      try{ if(hitMax) limitNote('max', 'Table max is ' + money(limMax()) + '.'); }catch(e){ err('limit note', e); }
+      try{ if(S.ready && tblOn() && S.tbuilt) updateBetUi(); }catch(e){ err('setBet', e); }
+      return r;
+    };
+
+    var _sel = W.selectSpot;
+    if(typeof _sel === 'function') W.selectSpot = function(){ var r = _sel.apply(this, arguments); try{ if(S.ready && tblOn() && S.tbuilt) updateBetUi(); }catch(e){ err('selectSpot', e); } return r; };
+
+    var _sf = W.showFeedback;
+    if(typeof _sf === 'function') W.showFeedback = function(action, cls, eff, correct){
+      var r = _sf.apply(this, arguments);
+      try{ if(S.ready && correct===false) misplay(action); }catch(e){ err('misplay', e); }
+      return r;
+    };
+
+    var _sfx = W.sfxCard;
+    W.sfxCard = function(){ if(S.ready && on() && S.built) return; return _sfx.apply(this, arguments); };
+  }
+
+  function init(){
+    if(S.ready) return;
+    S.orig = {DEAL_DELAY:W.DEAL_DELAY, HIT_RESOLVE_DELAY:W.HIT_RESOLVE_DELAY, RESULT_PAUSE:W.RESULT_PAUSE};
+    S.ready = true;
+    hook();
+    sync();
+    if(on() && S.built){
+      S.snap = snapshot(); S.needSnap = false;
+      if(G.phase !== 'betting'){ S.st.setAttribute('data-still','1'); S.state = 'up'; S.st.setAttribute('data-state','up'); restPose(); later(function(){ S.st && S.st.removeAttribute('data-still'); }, 80); }
+      else { S.st.removeAttribute('data-still'); }
+      afterRender();
+    }
+  }
+
+  return {init:init, sync:sync, afterRender:afterRender, cancelAll:cancelAll, whenIdle:whenIdle, enter:enter, _S:S, _on:on, _fx:fx, _sigOn:sigOn, _targetEl:targetEl, _dealIssue:dealIssue, _shoeDeal:shoeDeal, _throwMarker:throwMarker, _shuffleMoment:shuffleMoment, _shuffleStop:shuffleStop, _pump:pump, _nudgeSync:nudgeSync, _nudgeLines:NUDGE_LINES};
+})();
+try{ Show.init(); }catch(e){ if(window.console && console.warn) console.warn('[table show] init failed', e); }
 </script>
 </body>
 </html>
