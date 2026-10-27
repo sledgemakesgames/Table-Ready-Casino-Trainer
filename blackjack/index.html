@@ -76,6 +76,9 @@ body.tooltips-off .term .tip{display:none !important;}
 .count-bar .k{color:var(--text-muted);}
 .count-bar .v{font-weight:600;font-size:15px;margin-left:5px;font-family:'Space Grotesk',sans-serif;}
 .shoe-bar{height:5px;border-radius:3px;background:rgba(237,238,240,0.08);margin-top:8px;max-width:260px;}
+#btn-shuffle-now.blocked{opacity:0.45;cursor:not-allowed;}
+#btn-shuffle-now.blocked:hover{background:var(--panel-2);border-color:var(--line);}
+.shuffle-note{margin-left:10px;font-size:12.5px;font-style:italic;color:var(--brass-bright);}
 .shoe-fill{height:100%;background:var(--brass);border-radius:3px;transition:width 300ms ease;}
 .zone-label{font-size:11.5px;color:var(--text-muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;}
 .cards-row{display:flex;gap:9px;margin-bottom:6px;flex-wrap:wrap;min-height:120px;}
@@ -1789,7 +1792,43 @@ function applyLoadedSession(){
   }
 }
 
+/* "Shuffle now" belongs between hands. In the middle of one it would pull the cards out from under the round, so it says no:
+   the dealer does, in a few different ways (or a plain note by the button when there is no dealer to say it). */
+var SHUFFLE_NOPE=[
+  'Nice try. There’s a hand going.',
+  'Shuffle mid-hand? Bold. No.',
+  'Finish this hand first, champ.',
+  'Cards are live. Shuffle’s not.',
+  'Patience. Hand first, shoe later.',
+  'You want me to shuffle your cards?',
+  'Hands first. Then we shuffle.',
+  'I’ll pretend you didn’t ask.'
+];
+var shuffleBag=[], shuffleLast=-1;
+function nextShuffleNope(){           // each line once before any repeats, and never the same one twice in a row
+  if(!shuffleBag.length){
+    var i, j, k, t;
+    for(i=0;i<SHUFFLE_NOPE.length;i++) shuffleBag.push(i);
+    for(j=shuffleBag.length-1;j>0;j--){ k=Math.floor(Math.random()*(j+1)); t=shuffleBag[j]; shuffleBag[j]=shuffleBag[k]; shuffleBag[k]=t; }
+    if(shuffleBag.length>1 && shuffleBag[shuffleBag.length-1]===shuffleLast){ t=shuffleBag[0]; shuffleBag[0]=shuffleBag[shuffleBag.length-1]; shuffleBag[shuffleBag.length-1]=t; }
+  }
+  shuffleLast=shuffleBag.pop();
+  return SHUFFLE_NOPE[shuffleLast];
+}
+function handIsOn(){ return G.phase!=='betting' || !!G.locked; }
+function showShuffleNote(text){
+  var n=document.getElementById('shuffle-note'); if(!n) return;
+  n.textContent=text;
+  clearTimeout(showShuffleNote.t);
+  showShuffleNote.t=setTimeout(function(){ var m=document.getElementById('shuffle-note'); if(m) m.textContent=''; }, 3200);
+}
+function refuseShuffle(){
+  var line=nextShuffleNope(), said=false;
+  try{ if(window.Show && Show.refuseShuffle) said=Show.refuseShuffle(line); }catch(e){}
+  if(!said) showShuffleNote(G.chatter==='off' ? 'Can’t shuffle while a hand is in play.' : 'Dealer: “'+line+'”');
+}
 function fullReshuffle(){
+  if(handIsOn()){ refuseShuffle(); return false; }
   buildShoe();
   G.dealer={cards:[]};
   G.hands=[];
@@ -2046,7 +2085,7 @@ function renderCountBar(){
     '<div><span class="k"><span class="term">True count<span class="tip">The running count adjusted for how many decks are left — a more reliable signal than the running count alone.</span></span></span><span class="v">'+trueCount()+'</span></div>'+
     '<div><span class="k">Cards left</span><span class="v">'+G.shoe.length+' / '+(G.decks*52)+'</span></div>'+
     '<div style="flex:1;min-width:180px;"><span class="k"><span class="term">Shoe penetration<span class="tip">How far into the shoe the dealer deals before reshuffling — set by where you placed the cut card.</span></span></span><span class="v">'+pen+'%</span><div class="shoe-bar" style="position:relative;"><div class="shoe-fill" style="width:'+pen+'%;"></div><div style="position:absolute;top:-2px;left:'+cutPct+'%;width:2px;height:10px;background:var(--brass-bright);border-radius:1px;" title="Cut card"></div></div></div>'+
-    '<div><button id="btn-shuffle-now">Shuffle now</button></div>';
+    '<div><button id="btn-shuffle-now"'+(handIsOn()?' class="blocked" aria-disabled="true" title="Between hands only"':'')+'>Shuffle now</button><span id="shuffle-note" class="shuffle-note" role="status" aria-live="polite"></span></div>';
   var sb=document.getElementById('btn-shuffle-now');
   if(sb) sb.addEventListener('click', fullReshuffle);
 }
@@ -3048,7 +3087,7 @@ var Show = (function(){
     queue:[], busy:false, idleWaiters:[], essential:[], timers:[], watch:0,
     flights:[], flightSeq:0, hidden:[], snap:null, needSnap:true,
     orig:null, errors:[], peekCb:null, sig:null, drag:null, tapAt:0,
-    k:1, T:{deal:470, hit:780, result:2600}, stats:{flights:0, quick:0, peeks:0, retargets:0, eggs:0, surprises:0, smiles:0, frowns:0}, dmKey:'', tbuilt:false, spots:[{i:0, chips:[], val:0, init:false, cache:null}, {i:1, chips:[], val:0, init:false, cache:null}, {i:2, side:'pp', chips:[], val:0, init:false, cache:null}, {i:3, side:'tp', chips:[], val:0, init:false, cache:null}, {i:4, side:'tl', chips:[], val:0, init:false, cache:null}, {i:5, side:'bb', chips:[], val:0, init:false, cache:null}], nextDrop:null, cd:null, suppressClick:0, egg:null, eggEnd:0, eggLast:'', eggLine:{sus:0, sad:0}, armPt:null, shoeDrag:null, seed:7919, enterCbs:[], gen:0, idleRec:null, lowerRec:null, peekedFor:null
+    k:1, T:{deal:470, hit:780, result:2600}, stats:{flights:0, quick:0, peeks:0, retargets:0, eggs:0, surprises:0, smiles:0, frowns:0, nope:0}, dmKey:'', tbuilt:false, spots:[{i:0, chips:[], val:0, init:false, cache:null}, {i:1, chips:[], val:0, init:false, cache:null}, {i:2, side:'pp', chips:[], val:0, init:false, cache:null}, {i:3, side:'tp', chips:[], val:0, init:false, cache:null}, {i:4, side:'tl', chips:[], val:0, init:false, cache:null}, {i:5, side:'bb', chips:[], val:0, init:false, cache:null}], nextDrop:null, cd:null, suppressClick:0, egg:null, eggEnd:0, eggLast:'', eggLine:{sus:0, sad:0}, armPt:null, shoeDrag:null, seed:7919, enterCbs:[], gen:0, idleRec:null, lowerRec:null, peekedFor:null
   };
 
   S.nudge = {first:30000, again:60000, hold:4200, retry:5000, max:3, off:false};   // the idle dealer visit (ms; scaled by S.k)
@@ -3937,6 +3976,16 @@ var Show = (function(){
       at(function(){ restPose(); }, t0 + 3730);
       at(function(){ shuffleStop(); }, t0 + 4080);
     }});
+  }
+
+  /* "Shuffle now" pressed in the middle of a hand: the game says no (it never shuffles under a live hand), and he says it with a look.
+     He answers in quiet mode too (it is an answer, not small talk); with him off, or no show, the page puts the note by the button. */
+  function refuseShuffle(line){
+    if(!(S.ready && on() && S.built) || chatLvl() === 'off') return false;
+    S.stats.nope++;
+    if(!S.egg && !S.shuf) setMood('sus', 1900);
+    sayIt(line, 2700);
+    return true;
   }
 
   /* ---------- the shoe: tap it, or flick a card out of it ---------- */
@@ -4941,7 +4990,7 @@ var Show = (function(){
     }
   }
 
-  return {init:init, sync:sync, afterRender:afterRender, cancelAll:cancelAll, whenIdle:whenIdle, enter:enter, _S:S, _on:on, _fx:fx, _sigOn:sigOn, _targetEl:targetEl, _dealIssue:dealIssue, _shoeDeal:shoeDeal, _throwMarker:throwMarker, _shuffleMoment:shuffleMoment, _shuffleStop:shuffleStop, _pump:pump, _nudgeSync:nudgeSync, _nudgeLines:NUDGE_LINES};
+  return {init:init, sync:sync, afterRender:afterRender, cancelAll:cancelAll, whenIdle:whenIdle, enter:enter, _S:S, _on:on, _fx:fx, _sigOn:sigOn, _targetEl:targetEl, _dealIssue:dealIssue, _shoeDeal:shoeDeal, _throwMarker:throwMarker, _shuffleMoment:shuffleMoment, _shuffleStop:shuffleStop, refuseShuffle:refuseShuffle, _pump:pump, _nudgeSync:nudgeSync, _nudgeLines:NUDGE_LINES};
 })();
 try{ Show.init(); }catch(e){ if(window.console && console.warn) console.warn('[table show] init failed', e); }
 </script>
