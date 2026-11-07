@@ -6,7 +6,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#08090B" />
 <title>Table Ready — Blackjack Trainer</title>
 <meta name="description" content="Play real blackjack hands and get graded against correct basic strategy in real time — free, no real money, ever.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -90,7 +91,10 @@ body.tooltips-off .term .tip{display:none !important;}
 .card-mini-pip{font-size:12px;line-height:1;}
 .card.show{opacity:1;transform:translateY(0) scale(1);}
 .card.red{color:var(--coral);}
-.card.back{background:var(--panel-2);border:1.5px solid rgba(237,238,240,0.16);color:var(--text-muted);font-size:30px;box-shadow:none;}
+.card.back{background:var(--back-img) center/100% 100% no-repeat;border:0;font-size:0;box-shadow:0 4px 10px -4px rgba(0,0,0,0.5);}
+.card svg.cf{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.card{box-shadow:0 4px 10px -4px rgba(0,0,0,0.5),inset 0 0 0 1px rgba(20,22,26,0.12);}
+.card.back{box-shadow:0 4px 10px -4px rgba(0,0,0,0.5);}
 .hand-total{font-size:13px;color:var(--text-muted);margin:0 0 12px;}
 .big-total{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:30px;color:var(--text);min-width:44px;text-align:right;flex-shrink:0;transition:color 150ms ease;}
 .big-total.blackjack{color:var(--brass-bright);}
@@ -187,7 +191,7 @@ body.two-hands .spot-grp.on .spot-lbl{color:var(--brass-bright);}
 .hands-row.dense .card-idx.br{top:auto;left:auto;bottom:4px;right:5px;}
 .hands-row.dense .card-idx .pip{font-size:11px;}
 .hands-row.dense .card-pip{font-size:24px;}
-.hands-row.dense .card svg{width:28px;height:39px;}
+.hands-row.dense .card svg:not(.cf){width:28px;height:39px;}
 .hands-row.dense .hand-total{font-size:12px;margin-bottom:8px;}
 .hands-row.dense .hand-box > div:nth-child(2){flex-direction:column;align-items:flex-start !important;gap:2px !important;}
 .hands-row.dense .big-total{font-size:22px;text-align:left;min-width:0;}
@@ -281,8 +285,8 @@ body.phase-betting .ds[data-state="away"] .ds-idle{opacity:.85;}
 .shoe-box::after{content:'';position:absolute;left:10px;right:7px;top:6px;height:8px;border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.03));}
 .shoe-stack{position:absolute;right:5px;bottom:5px;width:30px;height:11px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--card-face) 0 2px,#C9C5B8 2px 3px);opacity:.9;transform-origin:100% 100%;transition:transform 400ms ease;}
 .shoe-cut{position:absolute;right:5px;bottom:5px;width:1px;height:0;}
-.shoe-card{position:absolute;left:0;bottom:11px;width:25px;height:35px;border-radius:3px;background:var(--panel-2);border:1.5px solid rgba(237,238,240,0.28);transform:rotate(-14deg);transform-origin:80% 100%;box-shadow:0 2px 5px rgba(0,0,0,0.5);transition:transform 220ms cubic-bezier(.3,1.5,.5,1);}
-.shoe-card::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font:700 13px 'Space Grotesk',sans-serif;}
+.shoe-card{position:absolute;left:0;bottom:11px;width:25px;height:35px;border-radius:3px;background:var(--back-img) center/100% 100% no-repeat;border:0;transform:rotate(-14deg);transform-origin:80% 100%;box-shadow:0 2px 5px rgba(0,0,0,0.5);transition:transform 220ms cubic-bezier(.3,1.5,.5,1);}
+.shoe-card::after{content:none;display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font:700 13px 'Space Grotesk',sans-serif;}
 .ds-shoe.dragging .shoe-card,.ds-shoe.dragging .shoe-box{transition:none;}
 .shoe-tip{position:absolute;right:0;bottom:41px;white-space:nowrap;font:600 10px 'Inter',sans-serif;letter-spacing:.2px;color:var(--text-muted);background:rgba(0,0,0,0.5);border:1px solid var(--line);padding:2px 8px;border-radius:999px;opacity:0;transform:translateY(3px);transition:opacity 200ms ease,transform 200ms ease;pointer-events:none;}
 body.phase-betting .ds-shoe:hover .shoe-tip,body.phase-betting .ds-shoe:focus-visible .shoe-tip,body.phase-betting .ds-shoe.nudge .shoe-tip{opacity:1;transform:none;}
@@ -322,9 +326,8 @@ body.phase-betting .ds-shoe:not(:hover) .shoe-card{animation:dsShoeHint 3.2s eas
 .fc-face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;}
 .fc-front{transform:rotateY(180deg);}
 .fc .card{position:absolute;inset:0;width:100%;height:100%;opacity:1 !important;transform:none !important;transition:none !important;margin:0;}
-.fc .card.back{border-color:rgba(237,238,240,0.3);background:var(--panel-2);box-shadow:0 6px 14px -6px rgba(0,0,0,0.6);}
-.card.landed{animation:cardLand 200ms ease-out;}
-@keyframes cardLand{0%{transform:translateY(-2px) scale(1.035);}100%{transform:none;}}
+.fc .card.back{border:0;background:var(--back-img) center/100% 100% no-repeat;box-shadow:0 6px 14px -6px rgba(0,0,0,0.6);}
+
 .card.back.peeking{transform-origin:50% 100%;transform:perspective(320px) rotateX(-38deg);box-shadow:0 10px 18px -8px rgba(0,0,0,0.65);transition:transform 220ms cubic-bezier(.3,1.2,.5,1);}
 .card.flipin{animation:holeFlip 340ms cubic-bezier(.3,1.1,.5,1);}
 @keyframes holeFlip{0%{transform:perspective(500px) rotateY(88deg) scale(1.04);}100%{transform:none;}}
@@ -597,13 +600,437 @@ body.tbl-on .bc.side.sb-first::before{content:'';position:absolute;left:-11px;to
 /* the idle line sits beside the placard, not under it */
 body.lim-on .ds-idle{left:110px;right:6px;top:40px;transform:none;width:auto;max-width:none;text-align:center;}
 @media (max-width:420px){ body.lim-on .ds-idle{left:102px;right:4px;top:12px;} }
+/* a card still in the air has not happened yet: its hand shows no Bust badge and no win/lose colour until the card has landed */
+.hand-box.hold .badge{visibility:hidden;}
+.hand-box.hold.outcome-win,.hand-box.hold.outcome-lose,.hand-box.hold.outcome-push{border-color:var(--line);box-shadow:none;}
+
+
+/* ============ MOTION ============ */
+/* a card lands with weight: it comes down from a hair above the felt, squashes, and settles (--r keeps a turned card turned) */
+.card.landed{animation:cardLand 320ms cubic-bezier(.3,1.35,.5,1);}
+@keyframes cardLand{
+  0%{transform:translateY(-7px) rotate(var(--r,0deg)) scale(1.06);box-shadow:0 15px 20px -9px rgba(0,0,0,.55),inset 0 0 0 1px rgba(20,22,26,.12);}
+  40%{transform:translateY(1.5px) rotate(var(--r,0deg)) scale(.985);box-shadow:0 1px 3px -1px rgba(0,0,0,.72),inset 0 0 0 1px rgba(20,22,26,.12);}
+  72%{transform:translateY(-.8px) rotate(var(--r,0deg)) scale(1.006);}
+  100%{transform:translateY(0) rotate(var(--r,0deg)) scale(1);}
+}
+/* a double: the card goes down on its side, tucked in under the others */
+.card.dbl{--r:90deg;margin:0 18px;}
+.card.show.dbl{transform:rotate(90deg);}
+.hands-row.dense .card.dbl{margin:0 12px;}
+/* the total counts up, then pops */
+.big-total{transform-origin:50% 60%;}
+.big-total.rolling{color:var(--text) !important;text-shadow:none !important;}
+.big-total.pop{animation:totalPop 280ms cubic-bezier(.3,1.5,.5,1);}
+@keyframes totalPop{0%{transform:scale(1.24);}100%{transform:none;}}
+/* a bust: the number shakes, the hand sags and dims, the badge drops in, the felt flushes */
+.big-total.shake{animation:totalShake 400ms ease-out;}
+@keyframes totalShake{0%,100%{transform:translateX(0);}14%{transform:translateX(-5px);}32%{transform:translateX(5px);}50%{transform:translateX(-4px);}68%{transform:translateX(3px);}84%{transform:translateX(-1.5px);}}
+.big-total.bust{text-shadow:0 0 16px rgba(225,93,69,.5);}
+.cards-row{transition:transform 440ms cubic-bezier(.3,1.5,.5,1),filter 340ms ease;transform-origin:50% 100%;}
+.hand-box[data-bust] .cards-row,#dealer-box[data-bust] .cards-row{transform:rotate(var(--tilt,-2.2deg)) translateY(3px);filter:brightness(.78) saturate(.75);}
+.hand-box[data-bust] .badge.bust,#dealer-box[data-bust] #dealer-badge{animation:badgeDrop 560ms cubic-bezier(.3,1.4,.5,1) both;}
+@keyframes badgeDrop{0%{opacity:0;transform:translateY(-18px) scale(1.4);}52%{opacity:1;transform:translateY(2px) scale(.95);}78%{transform:translateY(-1px) scale(1.03);}100%{opacity:1;transform:none;}}
+.bust-vig{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;z-index:2;}
+/* chips in flight, and the ring that spreads where one lands */
+.pchip{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;box-sizing:border-box;border-radius:50%;background:var(--c);border:2px dashed rgba(255,255,255,.6);box-shadow:inset 0 0 0 3px rgba(0,0,0,.16),0 3px 7px -2px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font:800 11px 'Space Grotesk',sans-serif;color:var(--tx,#fff);pointer-events:none;will-change:transform;}
+.pchip.chip-500{border-color:rgba(0,0,0,.3);}
+.ring-rip{position:absolute;left:0;top:0;width:56px;height:56px;margin:-28px 0 0 -28px;box-sizing:border-box;border-radius:50%;border:2px solid rgba(240,196,107,.8);pointer-events:none;}
+.bankroll-pill.bump{animation:pillBump 520ms cubic-bezier(.3,1.5,.5,1);}
+@keyframes pillBump{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,196,107,.0);}30%{transform:scale(1.07);box-shadow:0 0 0 6px rgba(240,196,107,.22),0 0 22px rgba(240,196,107,.35);}100%{transform:none;box-shadow:0 0 0 0 rgba(240,196,107,0);}}
+/* the dealer pays: floating amounts, and the pile that has gone */
+.pay-float{position:absolute;z-index:3;padding:3px 10px;border-radius:999px;font:800 14px 'Space Grotesk',sans-serif;pointer-events:none;white-space:nowrap;box-shadow:0 6px 14px -6px rgba(0,0,0,.6);}
+.pay-float.win{background:var(--sage-bright);color:#0B1F17;}
+.pay-float.lose{background:var(--coral);color:#fff;}
+.pay-float.push{background:var(--brass-bright);color:#241A05;}
+.hb-bet.pay-hide .hb-pile{visibility:hidden;}
+.hb-bet.pay-hide .hb-label{opacity:.35;}
+@media (prefers-reduced-motion: reduce){
+  .card.landed,.big-total.pop,.big-total.shake,.bankroll-pill.bump,.hand-box[data-bust] .badge.bust,#dealer-box[data-bust] #dealer-badge{animation:none !important;}
+  .cards-row{transition:none !important;}
+}
+
+/* ---------- smoother play: Rebet, the skip hint ---------- */
+.rebet-grp{margin-left:auto;display:none;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+body.rebet-on #btn-deal{margin-left:0 !important}
+.rebet-btn{font:600 13px/1 var(--font-ui, inherit);padding:9px 12px;border-radius:999px;border:1px solid var(--line, rgba(255,255,255,.18));background:rgba(255,255,255,.06);color:var(--text, #eee);cursor:pointer;white-space:nowrap;transition:transform .12s cubic-bezier(.3,1.4,.5,1), background .15s, border-color .15s}
+.rebet-btn:hover{background:rgba(255,255,255,.12);border-color:var(--brass, #d6a94b)}
+.rebet-btn:active{transform:scale(.94)}
+#btn-rebet-deal{background:rgba(214,169,75,.16);border-color:rgba(214,169,75,.55);color:var(--brass-bright, #f0c46b)}
+@media (max-width:520px){ .rebet-grp{width:100%;justify-content:flex-start;margin-left:0} body.rebet-on #btn-deal{margin-left:auto !important} }
+@media (prefers-reduced-motion: reduce){ .rebet-btn{transition:none} .rebet-btn:active{transform:none} }
+#skip-hint{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center;font:600 12px/1.3 var(--font-ui, inherit);letter-spacing:.02em;color:var(--text, #eee);background:rgba(8,12,12,.78);border:1px solid var(--line, rgba(255,255,255,.14));padding:7px 14px;border-radius:999px;opacity:0;animation:hintIn .45s ease .9s forwards}
+@keyframes hintIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion: reduce){ #skip-hint{animation:none;opacity:1} }
+
+/* ===== THE PIT BOSS =====
+   A man in a grey suit who leans in behind the dealer after five wins or five losses in a row. All of it sits inside the dealer's stage (#dealer-stage):
+   the body behind the dealer, the arm in front of him, his speech bubble above. Nothing here touches a bet, a card or a result. */
+.pb{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;}
+.pb-clip{position:absolute;left:0;top:0;width:100%;height:100%;z-index:1;clip-path:inset(-240px -140px 0 -140px);}   /* he stands behind the counter: nothing of him shows below it */
+.pb-man{position:absolute;z-index:1;left:var(--pbx,0px);bottom:calc(var(--pby,0px) * -1);width:calc(160px * var(--pbk,1));height:calc(170px * var(--pbk,1));transform-origin:50% 100%;opacity:0;visibility:hidden;
+  transform:translateX(calc(-64px * var(--pbk,1))) rotate(-6deg);transition:transform 640ms cubic-bezier(.3,1.25,.45,1),opacity 260ms ease,visibility 0s linear 700ms;}
+.pb[data-state="in"] .pb-man{opacity:1;visibility:visible;transform:rotate(var(--lean,14deg));transition:transform 640ms cubic-bezier(.3,1.25,.45,1),opacity 260ms ease,visibility 0s;}
+.pb[data-state="out"] .pb-man{transition:transform 420ms cubic-bezier(.5,0,.8,.4),opacity 260ms ease 80ms,visibility 0s linear 400ms;}
+.pb[data-quick="1"] .pb-man{transition-duration:120ms !important;}
+.pb-svg{display:block;width:100%;height:100%;overflow:visible;}
+.pb-head{transform-box:view-box;transform-origin:80px 100px;transform:rotate(var(--hr,0deg)) translate(var(--hx,0px),var(--hy,0px));transition:transform 320ms cubic-bezier(.3,.8,.3,1);}
+.pb[data-state="in"] .pb-sway{animation:pbSway 4.4s ease-in-out infinite;}
+@keyframes pbSway{0%,100%{transform:translateY(0);}50%{transform:translateY(-1.2px);}}
+.pb-pupils{transform:translate(var(--plx,0px),var(--ply,0px));transition:transform 200ms ease-out;}
+.pb-lid{transform-box:fill-box;transform-origin:50% 0%;transform:scaleY(0);animation:pbBlink 5.6s infinite;}
+.pb-lid.l2{animation-delay:.03s;}
+@keyframes pbBlink{0%,92%,100%{transform:scaleY(0);}95%{transform:scaleY(1);}}
+.pb-face > g{opacity:0;transition:opacity 120ms ease;}
+.pb[data-mood="stern"] .m-stern,.pb[data-mood="sus"] .m-sus,.pb[data-mood="smile"] .m-smile,.pb[data-mood="wow"] .m-wow,.pb[data-mood="concern"] .m-concern,.pb[data-mood="amused"] .m-amused{opacity:1;}
+.pb[data-mood="smile"] .pb-lid,.pb[data-mood="amused"] .pb-lid{animation:none;transform:scaleY(.22);}
+.pb[data-mood="sus"] .pb-lid{animation:none;transform:scaleY(.4);}
+.pb[data-mood="concern"] .pb-lid{animation:none;transform:scaleY(.28);}
+.pb[data-mood="wow"] .pb-lid{animation:none;transform:scaleY(0);}
+.pb[data-mood="stern"] .pb-lid{animation:none;transform:scaleY(.3);}
+/* the arm: two segments, solved toward a point (the same way the dealer's is), grey sleeve, white cuff, a cufflink */
+.pb-armwrap{position:absolute;left:0;top:0;width:100%;height:100%;z-index:6;}
+.pb-upper,.pb-fore{position:absolute;width:0;height:0;transition:transform var(--pb-arm-ms,360ms) var(--pb-arm-ease,cubic-bezier(.3,.9,.3,1)),opacity 220ms ease;will-change:transform;}
+.pb[data-arm="rest"] .pb-upper,.pb[data-state="away"] .pb-upper,.pb[data-state="out"] .pb-upper{opacity:0;}
+.pb-upper-vis{position:absolute;left:-10px;top:-9px;width:20px;height:76px;border-radius:10px;background:linear-gradient(90deg,#A8ADB6,#8B919B 48%,#6B717C);box-shadow:0 1px 2px rgba(0,0,0,.4);}
+.pb-fore-vis{position:absolute;left:-9px;top:-9px;width:18px;height:72px;border-radius:9px;background:linear-gradient(90deg,#A8ADB6,#8B919B 48%,#6B717C);box-shadow:0 1px 2px rgba(0,0,0,.4);}
+.pb-fore-vis::after{content:'';position:absolute;left:-1.5px;right:-1.5px;bottom:5px;height:7px;border-radius:2px;background:linear-gradient(90deg,#F4F5F7,#DADDE3);box-shadow:inset 0 -1px 0 rgba(0,0,0,.14);}
+.pb-fore-vis::before{content:'';position:absolute;right:1px;bottom:7px;width:4px;height:4px;border-radius:50%;background:#E4C16C;z-index:1;}
+.pb-fore{left:0;top:66px;}
+.pb-cap{position:absolute;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.4);}
+.pb-cap.sh{left:-14px;top:-14px;width:28px;height:28px;background:linear-gradient(145deg,#A3A9B2,#737984);}
+.pb-cap.el{left:-9.5px;top:-9.5px;width:19px;height:19px;background:linear-gradient(145deg,#9AA0AA,#737984);}
+.pb-hand{position:absolute;left:-14px;top:58px;width:28px;height:36px;}
+.pb-hand svg{display:block;width:100%;height:100%;overflow:visible;}
+.pb-hand [class^="h-"]{opacity:0;}
+.pb-hand[data-hand="open"] .h-open,.pb-hand[data-hand="point"] .h-point,.pb-hand[data-hand="two"] .h-two,.pb-hand[data-hand="flat"] .h-flat,.pb-hand[data-hand="fist"] .h-fist{opacity:1;}
+.pb-held{position:absolute;left:-14px;top:64px;width:28px;height:40px;opacity:0;transition:opacity 100ms ease;}
+.pb-held.on{opacity:1;}
+.pb-held svg{display:block;width:100%;height:100%;overflow:visible;}
+.pb-held [class^="p-"]{display:none;}
+.pb-held[data-prop="martini"] .p-martini,.pb-held[data-prop="flute"] .p-flute,.pb-held[data-prop="deck"] .p-deck,.pb-held[data-prop="card"] .p-card{display:block;}
+/* a prop he has set down on the counter, left there until the next hand */
+.pb-prop{position:absolute;z-index:5;width:28px;height:40px;opacity:0;transform:translateY(-8px);transition:opacity 220ms ease,transform 260ms cubic-bezier(.3,1.4,.5,1);}
+.pb-prop.on{opacity:1;transform:none;}
+.pb-prop svg{display:block;width:100%;height:100%;overflow:visible;}
+.pb-prop [class^="p-"]{display:none;}
+.pb-prop[data-prop="martini"] .p-martini,.pb-prop[data-prop="flute"] .p-flute,.pb-prop[data-prop="deck"] .p-deck,.pb-prop[data-prop="card"] .p-card{display:block;}
+/* what he says: a pale grey bubble over his head (the dealer's is gold, on the other side) */
+.pb-say{position:absolute;z-index:8;left:0;top:0;max-width:158px;width:max-content;padding:7px 11px;border-radius:12px 12px 12px 12px;font:700 12px/1.3 'Inter',sans-serif;color:#14171C;background:#E9ECF0;box-shadow:0 8px 16px -6px rgba(0,0,0,.55);opacity:0;transform:translateY(5px) scale(.96);transform-origin:var(--tail,40%) 100%;transition:opacity 180ms ease,transform 200ms cubic-bezier(.3,1.4,.5,1);}
+.pb-say.on{opacity:1;transform:none;}
+.pb-say.side{transform-origin:100% 40%;}
+.pb-say.side::after{left:auto;right:-5px;bottom:auto;top:14px;margin-left:0;border-radius:0 3px 0 0;}
+.pb-say::after{content:'';position:absolute;left:var(--tail,40%);bottom:-6px;width:12px;height:12px;margin-left:-6px;background:#E9ECF0;transform:rotate(45deg);border-radius:0 0 3px 0;}
+/* the dealer, while he is being leaned over: a shrug, and a glance at the man behind him */
+.ds-dealer.pb-shrug .ds-svg{animation:pbShrug 760ms ease-in-out;}
+@keyframes pbShrug{0%,100%{transform:translateY(0);}25%{transform:translateY(-4px);}60%{transform:translateY(-3px);}}
+.pb[data-reduce="1"] .pb-man,.pb[data-reduce="1"] .pb-head,.pb[data-reduce="1"] .pb-upper,.pb[data-reduce="1"] .pb-fore,.pb[data-reduce="1"] .pb-say,.pb[data-reduce="1"] .pb-prop{transition:none !important;}
+.pb[data-reduce="1"] .pb-sway,.pb[data-reduce="1"] .pb-lid{animation:none !important;}
+.pb-toggle-row{margin-top:6px;}
+
+/* ============ PHONE LAYOUT ============
+   Same table, same look - arranged for a thumb. Everything below the media query only applies on a narrow screen,
+   so a desktop window is exactly as it was. */
+.m-menu-btn{display:none;}
+.m-menu{display:none;}
+.m-sheet-close{display:none;}
+.m-backdrop{display:none;}
+.deal-dock{display:contents;}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  :root{ --m-pad:10px; --m-padl:max(10px, env(safe-area-inset-left,0px)); --m-padr:max(10px, env(safe-area-inset-right,0px)); --m-bar:52px; --m-tap:44px; }
+  html{ -webkit-text-size-adjust:100%; scroll-padding-top:calc(var(--m-bar) + 10px); }
+  body{ padding:0 var(--m-padr) calc(28px + env(safe-area-inset-bottom,0px)) var(--m-padl); }
+  .wrap{ max-width:none; }
+
+  /* ---- the top bar: home, the game's name, the bankroll, a menu ---- */
+  .topbar{ position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:8px;
+    margin:0 calc(var(--m-padr) * -1) 10px calc(var(--m-padl) * -1); padding:calc(4px + env(safe-area-inset-top,0px)) var(--m-padr) 4px var(--m-padl);
+    min-height:var(--m-bar); background:rgba(8,9,11,.92); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line); }
+  .topbar .back-link{ margin:0; width:var(--m-tap); height:var(--m-tap); justify-content:center; gap:0; flex:0 0 auto; }
+  .topbar .back-link .back-dot{ width:11px; height:11px; }
+  .topbar .bl-txt{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .topbar header{ display:contents; }
+  .topbar header > div:first-child{ flex:1 1 auto; min-width:0; }
+  .topbar header h1{ font-size:20px; letter-spacing:-.3px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .tagline{ display:none; }
+  .topbar header > div:last-child{ display:contents !important; }
+  .topbar .bankroll-pill{ padding:6px 12px 6px 10px; gap:7px; flex:0 0 auto; min-height:36px; }
+  .topbar .bankroll-pill .label{ display:none; }
+  .topbar .bankroll-pill .amount{ font-size:16px; }
+  .m-menu-btn{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:var(--m-tap); height:var(--m-tap); padding:0; border-radius:12px; flex:0 0 auto; }
+  .m-menu-btn i{ display:block; width:18px; height:2px; border-radius:2px; background:var(--text); transition:transform 180ms ease,opacity 140ms ease; }
+  .m-menu-btn[aria-expanded="true"] i:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+  .m-menu-btn[aria-expanded="true"] i:nth-child(2){ opacity:0; }
+  .m-menu-btn[aria-expanded="true"] i:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
+
+  /* the menu holds what is not needed while playing */
+  .m-menu{ display:none; position:absolute; top:calc(100% + 6px); right:var(--m-pad); width:min(280px,calc(100vw - var(--m-pad) * 2));
+    padding:8px; border-radius:16px; background:var(--panel); border:1px solid rgba(237,238,240,.14); box-shadow:0 18px 40px -8px rgba(0,0,0,.7); z-index:41; flex-direction:column; gap:2px; }
+  .topbar.m-open .m-menu{ display:flex; }
+  .m-menu > *{ display:flex !important; align-items:center; width:100%; min-height:var(--m-tap); margin:0 !important; padding:0 14px !important; border:0 !important; border-radius:10px !important;
+    background:transparent !important; color:var(--text) !important; font-family:'Inter',sans-serif !important; font-size:15px !important; font-weight:500 !important; text-decoration:none !important; text-align:left; justify-content:flex-start; }
+  .m-menu > *:active{ background:rgba(237,238,240,.07) !important; transform:none; }
+  .m-menu .m-rules{ display:block !important; min-height:0; padding:8px 14px 10px !important; color:var(--text-muted) !important; font-size:12.5px !important; line-height:1.45 !important; border-top:1px solid var(--line) !important; border-radius:0 !important; margin-top:4px !important; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- the felt uses the width it is given ---- */
+  .table-felt{ padding:12px 12px 14px; border-radius:18px; margin-bottom:12px; }
+  .zone-label{ display:none; }
+  .hint-line{ font-size:12px; }
+
+  /* ---- the count: one slim strip, the shoe as a line under it ---- */
+  .count-bar{ display:grid; grid-template-columns:repeat(3,auto); justify-content:space-between; gap:0 8px; margin-bottom:10px; font-size:12.5px; }
+  .count-bar:empty{ display:none; }
+  .count-bar .v{ font-size:15px; margin-left:4px; }
+  .count-bar > div:nth-child(4){ grid-column:1 / -1; min-width:0 !important; margin-top:7px; }
+  .count-bar > div:nth-child(4) > .k, .count-bar > div:nth-child(4) > .v{ display:none; }
+  .count-bar .shoe-bar{ max-width:none; height:4px; margin-top:0; }
+  .count-bar > div:nth-child(5){ display:none; }
+
+  /* ---- the dealer ---- */
+  #dealer-box-row{ gap:0; margin-top:0; }
+  .ds{ height:122px; }
+  .hands-row{ gap:10px; margin-top:0; }
+  .hand-box{ padding:10px 12px; min-width:0; }
+
+  /* ---- cards: a little smaller, and a long hand fans out sideways instead of wrapping onto a new line ---- */
+  .cards-row{ --cw:80px; --ch:112px; --n:2; gap:0; min-height:var(--ch); margin-bottom:4px; flex:1 1 0; min-width:0; container-type:inline-size; flex-wrap:nowrap; }
+  .card{ width:var(--cw); height:var(--ch); flex:0 0 auto; }
+  .cards-row > .card + .card{ margin-left:min(9px, calc((100cqw - var(--cw)) / (var(--n) - 1) - var(--cw))); }
+  .cards-row:has(> .card:nth-child(3)){ --n:3; }
+  .cards-row:has(> .card:nth-child(4)){ --n:4; }
+  .cards-row:has(> .card:nth-child(5)){ --n:5; }
+  .cards-row:has(> .card:nth-child(6)){ --n:6; }
+  .cards-row:has(> .card:nth-child(7)){ --n:7; }
+  .cards-row:has(> .card:nth-child(8)){ --n:8; }
+  .cards-row:has(> .card:nth-child(9)){ --n:9; }
+  .cards-row:has(> .card:nth-child(10)){ --n:10; }
+  .big-total{ font-size:28px; min-width:36px; }
+  .hands-row.dense .cards-row{ --cw:58px; --ch:82px; gap:0; min-height:var(--ch); flex:0 0 auto; width:100%; }
+  .hands-row.dense .card{ width:var(--cw); height:var(--ch); }
+
+  /* ---- the felt's print: smaller, still there ---- */
+  #felt-print{ height:46px; overflow:hidden; margin:2px 0 6px; }
+  #felt-print svg{ display:block; width:100%; height:46px; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- your hand: the bet sits on the same line as its caption ---- */
+  .hand-box{ display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; align-content:start; }
+  .hand-box > div:first-of-type{ grid-column:1 / -1; }
+  .hand-box > .hand-total{ grid-column:1; align-self:center; margin:0; font-size:13px; }
+  .hand-box > .hb-bet{ grid-column:2; margin:0; justify-self:end; }
+  .hand-box > .badge{ grid-column:1 / -1; justify-self:start; }
+  .hb-bet .hb-ring{ width:48px; height:48px; }
+
+  /* ---- the thumb zone: the action buttons stay at the bottom of the screen while the table scrolls under them ---- */
+  .actions-row{ position:sticky; bottom:0; z-index:25; display:grid; grid-template-columns:repeat(auto-fit,minmax(74px,1fr)); gap:8px;
+    margin:10px -12px -14px; padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(180deg,rgba(12,13,16,0) 0,rgba(12,13,16,.96) 16px,#0C0D10 100%); border-radius:0 0 18px 18px; }
+  .actions-row:empty{ display:none; }
+  .actions-row > button{ min-height:52px; padding:0 6px; font-size:16px; font-weight:600; border-radius:12px; }
+  .actions-row > .dbl-handle{ grid-column:1 / -1; justify-self:stretch; margin:0; min-height:48px; }
+  #hint-signals{ margin:14px 0 6px; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- tighter, so a hand fits on one screen ---- */
+  .table-felt{ padding:8px 12px 12px; }
+  .count-bar{ margin-bottom:8px; }
+  .ds{ height:118px; }
+  #dealer-box.hand-box{ padding:8px 12px; }
+  #felt-print{ height:38px; margin:2px 0 4px; }
+  #felt-print svg{ height:38px; }
+  .actions-row{ gap:6px; padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px)); margin-bottom:-12px; }
+  .actions-row > .dbl-handle{ min-height:44px; padding-right:14px; }
+  .dbl-handle br{ display:none; }
+  .dbl-handle{ font-size:12.5px; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- tighter still ---- */
+  .table-felt{ padding-top:6px; }
+  .ds{ height:110px; }
+  #felt-print{ height:34px; }
+  #felt-print svg{ height:34px; }
+  .cards-row{ --cw:76px; --ch:106px; }
+  .actions-row{ margin-top:8px; }
+
+  /* ---- betting: chips you can hit, the controls in reach, Deal pinned to the bottom ---- */
+  #bet-row{ margin:4px 0 0; }
+  #bet-row > .field{ min-width:0 !important; width:100%; }
+  .bet-head{ margin-bottom:8px; min-height:var(--m-tap); }
+  .bet-head #bet-title{ font-size:14px; }
+  .seg button{ min-height:36px; padding:0 14px; font-size:13px; }
+  .seg{ padding:3px; }
+  body.tbl-on .chip-rack{ min-width:0; min-height:0; padding:10px 8px; gap:5px !important; margin-bottom:8px !important; }
+  body.tbl-on .chip-rack::before{ display:none; }
+  body.tbl-on .chip-rack .chip{ flex:1 1 0; min-width:38px; max-width:48px; font-size:13px; }
+  .chip-rack + div{ gap:8px !important; }
+  .chip-rack + div > span{ display:none; }
+  .chip-rack + div button:not(.chip), .chip-rack + div .stepper{ min-height:var(--m-tap); font-size:14px !important; }
+  .chip-rack + div .stepper{ width:var(--m-tap); height:var(--m-tap); font-size:20px !important; }
+  .chip-rack + div input[type=number]{ min-height:var(--m-tap); width:70px; font-size:16px; text-align:center; }
+  .chip-rack + div > button{ padding:0 14px; }
+  #bet-tip, #limit-note{ font-size:12px; }
+  #bet-circles{ display:flex; justify-content:center; width:100%; margin:6px 0 4px; }
+
+  .deal-dock{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; position:sticky; bottom:0; z-index:25; margin:8px -12px -12px; padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(180deg,rgba(12,13,16,0) 0,rgba(12,13,16,.96) 14px,#0C0D10 100%); border-radius:0 0 18px 18px; }
+  .deal-dock .rebet-grp{ width:100%; margin:0; justify-content:flex-start; order:-1; }
+  .deal-dock .rebet-btn{ min-height:40px; padding:0 14px; font-size:13.5px; }
+  .deal-dock #btn-deal{ flex:1 1 auto; margin:0 !important; min-height:54px; font-size:18px; font-weight:700; border-radius:14px; letter-spacing:.2px; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* the bet circle sits right under the dealer, where your hand will be; the chips and controls are under it; Deal is pinned last */
+  #bet-row{ flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:0; }      /* (the game switches it between flex and none itself) */
+  #bet-circles{ order:1; flex:0 0 auto; margin:2px 0 6px; }
+  #bet-row > .field{ order:2; }
+  #bet-row > label.field{ order:3; }
+  .deal-dock{ order:9; flex:0 0 auto; width:calc(100% + 24px); }
+  .bet-head{ min-height:40px; margin-bottom:6px; }
+  .seg button{ min-height:34px; }
+  body.tbl-on .chip-rack{ padding:8px 8px; margin-bottom:6px !important; }
+  .chip-rack + div{ margin-bottom:4px; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* the felt's print moves to the bottom of the felt: the table you play on stays in view */
+  .table-felt{ display:flex; flex-direction:column; }
+  #felt-print{ order:30; margin:12px 0 0; opacity:.9; }
+  #feedback-zone{ order:10; } #result-zone{ order:11; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- fields: 16px text (a phone does not zoom the page when you tap one), and room for a finger ---- */
+  select, input[type=number], input[type=text]{ font-size:16px; min-height:var(--m-tap); }
+  select{ padding:0 10px; }
+  input[type=checkbox]{ width:22px; height:22px; flex:0 0 auto; }
+  .check-row{ min-height:var(--m-tap); gap:12px; font-size:15px; line-height:1.3; }
+  .check-row label{ flex:1 1 auto; padding:8px 0; }
+  .field{ font-size:13px; }
+
+  /* ---- the settings open as a sheet over the table, with a way out ---- */
+  .m-backdrop{ display:none; position:fixed; inset:0; z-index:65; background:rgba(0,0,0,.6); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
+  body.m-sheet{ overflow:hidden; }
+  body.m-sheet .m-backdrop{ display:block; }
+  body.m-sheet #settings-panel{ position:fixed; z-index:70; left:0; right:0; bottom:0; top:calc(env(safe-area-inset-top,0px) + 48px); margin:0; border-radius:20px 20px 0 0;
+    padding:0 18px calc(28px + env(safe-area-inset-bottom,0px)); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; box-shadow:0 -24px 60px rgba(0,0,0,.6); }
+  .m-sheet-head{ display:none; }
+  body.m-sheet .m-sheet-head{ display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:2; margin:0 -18px 6px; padding:14px 18px 10px;
+    background:var(--panel); border-bottom:1px solid var(--line); }
+  .m-sheet-head b{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:600; letter-spacing:-.2px; }
+  .m-sheet-head button{ min-height:var(--m-tap); min-width:72px; padding:0 18px; font-size:15px; font-weight:600; border-radius:12px; }
+  #settings-panel .settings-grid{ grid-template-columns:1fr; gap:6px; }
+  #settings-panel .settings-grid + .settings-grid > div{ padding:12px 0 8px; border-top:1px solid var(--line); }
+  #settings-panel .settings-grid + .settings-grid > div:first-child{ border-top:0; }
+  #settings-panel .settings-grid > .field{ padding:8px 0; }
+  #settings-panel button{ min-height:var(--m-tap); font-size:15px; }
+  #settings-panel .side-note{ font-size:12.5px; line-height:1.5; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- the table's pop-ups take the whole screen, so what they ask is never behind the pinned buttons ---- */
+  #tablesetup-overlay, #manners-overlay, #cutcard-overlay{ position:fixed !important; inset:0 !important; z-index:80 !important; border-radius:0 !important;
+    justify-content:flex-start !important; overflow-y:auto; overscroll-behavior:contain; padding:calc(28px + env(safe-area-inset-top,0px)) 20px calc(28px + env(safe-area-inset-bottom,0px)) !important; }
+  #tablesetup-overlay > :first-child, #manners-overlay > :first-child, #cutcard-overlay > :first-child{ margin-top:auto !important; }
+  #tablesetup-overlay > :last-child, #manners-overlay > :last-child, #cutcard-overlay > :last-child{ margin-bottom:auto !important; }
+  #tablesetup-overlay button, #manners-overlay button, #cutcard-overlay button{ min-height:var(--m-tap); }
+  #tablesetup-overlay #bot-count-picker button, #tablesetup-overlay #seat-picker button{ min-width:var(--m-tap); }
+  #cutcard-overlay > div[style*="display:flex"]{ flex-wrap:wrap; justify-content:center; }
+  #cutcard-overlay [id^="cutcard-preset"]{ font-size:13.5px !important; padding:0 14px; }
+  #manners-overlay ul{ font-size:15px !important; line-height:1.6 !important; }
+  #tablesetup-overlay p, #manners-overlay p, #cutcard-overlay p{ max-width:340px; }
+  #cutcard-deck{ width:min(300px,100%) !important; height:76px !important; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- two or more hands side by side: smaller cards, the total under them, the bet as a single chip ---- */
+  .hands-row.dense .cards-row{ --cw:64px; --ch:90px; }
+  .hands-row.dense .hand-box{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-content:start; padding:10px; }
+  .hands-row.dense .hand-box > *{ grid-column:1 / -1; }
+  .hands-row.dense .hand-box > .hand-total{ grid-column:1; align-self:center; margin:0; }
+  .hands-row.dense .hand-box > .hb-bet{ grid-column:2; justify-self:end; margin:0; }
+  .hands-row.dense .hb-bet .hb-label{ display:none; }
+  .hands-row.dense .hand-tag{ font-size:11px; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  .hands-row.dense .card svg.cf{ width:100%; height:100%; }
+}
+
+@media (max-width:700px) and (max-height:640px), (max-height:520px) and (pointer:coarse){
+  /* a short phone: everything a little tighter, and the drag-to-double chip steps aside (the Double button is right there) */
+  .table-felt{ padding-top:4px; padding-bottom:10px; }
+  .count-bar{ margin-bottom:6px; }
+  .ds{ height:108px; }
+  .cards-row{ --cw:66px; --ch:92px; }
+  #dealer-box.hand-box{ padding:6px 12px; }
+  .hand-box{ padding:8px 12px; }
+  .actions-row{ padding-top:6px; gap:6px; }
+  .actions-row > button{ min-height:48px; }
+  .actions-row > .dbl-handle{ display:none; }
+  .deal-dock{ padding-top:6px; }
+  .deal-dock #btn-deal{ min-height:50px; }
+  .bet-head{ min-height:34px; margin-bottom:2px; }
+  body.tbl-on .chip-rack{ padding:6px 8px; margin-bottom:4px !important; }
+  #bet-circles{ margin:0; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* ---- small print: nothing under 12px that is meant to be read; every control is a real target ---- */
+  .seg button{ min-height:44px; }
+  .side-note, .hb-label, #hint-signals, #bet-tip, #limit-note, .legend, .legend span, .foot-note, .hint-line, .sl, .history, #chart-context{ font-size:12.5px; }
+  .stat-card .sl, .hb-bet .hb-label, table.chart td, table.chart th{ font-size:12px; }
+  #bet-tip{ font-size:12px !important; }
+  #skip-hint{ background:rgba(8,12,12,.95); box-shadow:0 4px 16px rgba(0,0,0,.45); }
+  .stat-card .sl{ letter-spacing:.4px; }
+  .hb-d{ font-size:12px; }
+  .ds-placard .pl-t{ font-size:10px; letter-spacing:1.3px; } .ds-placard .pl-r i{ font-size:10px; }
+  #btn-reset-stats, .tabs button, #btn-reset-bankroll{ min-height:var(--m-tap); }
+  .tabs{ gap:8px; }
+  .tabs button{ flex:1 1 0; padding:0 8px; font-size:14px; }
+
+  /* ---- the panels under the table: a little less padding, same look ---- */
+  .panel{ padding:16px; margin-bottom:12px; border-radius:16px; }
+  h2.section{ font-size:18px; }
+  .foot-note{ line-height:1.55; }
+  .side-panels{ margin-top:4px; }
+}
+
+@media (max-height:520px) and (pointer:coarse){
+  /* on its side there is no room for pinned bars: they scroll with the table instead */
+  .actions-row, .deal-dock{ position:static; margin-left:0; margin-right:0; width:auto; background:none; padding-left:0; padding-right:0; }
+  .deal-dock{ margin-bottom:0; }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* the card turned on its side is wider than it was tall: leave it room beside its neighbour */
+  .cards-row > .card.dbl{ margin-left:calc(min(9px, calc((100cqw - var(--cw)) / (var(--n) - 1) - var(--cw))) + 14px); }
+}
+
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  /* a tap is a tap: no double-tap zoom, no delay */
+  :where(button, a, select, input, label, summary, [role="button"]){ touch-action:manipulation; }      /* (zero weight: the shoe, chips and hand keep the touch rules the table gave them) */
+  .hand-box, .cards-row{ -webkit-tap-highlight-color:transparent; }
+}
+
+/* short phones keep the compact 40px segmented control so the whole betting screen stays in view */
+@media ((max-width:700px), (max-height:520px) and (pointer:coarse)) and (max-height:640px){
+  .seg button{ min-height:40px; }
+}
 
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<a class="back-link" href="/"><span class="back-dot"></span>Table Ready</a>
+<div class="topbar" id="topbar">
+<a class="back-link" href="/"><span class="back-dot"></span><span class="bl-txt">Table Ready</span></a>
 <header>
   <div>
     <h1>Blackjack</h1>
@@ -620,6 +1047,8 @@ body.lim-on .ds-idle{left:110px;right:6px;top:40px;transform:none;width:auto;max
     <a href="/learn/glossary/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
   </div>
 </header>
+<button type="button" id="m-menu-btn" class="m-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" aria-controls="m-menu"><i></i><i></i><i></i></button>
+</div>
 
 <div class="panel" id="settings-panel" style="display:none;">
   <div class="settings-grid">
@@ -692,8 +1121,8 @@ body.lim-on .ds-idle{left:110px;right:6px;top:40px;transform:none;width:auto;max
     </div>
     <label class="field">Theme
       <select id="set-theme">
-        <option value="graphite">Graphite</option>
-        <option value="emerald" selected>Emerald Felt</option>
+        <option value="graphite" selected>Graphite</option>
+        <option value="emerald">Emerald Felt</option>
         <option value="midnight">Midnight</option>
         <option value="crimson">Crimson</option>
       </select>
@@ -718,6 +1147,8 @@ body.lim-on .ds-idle{left:110px;right:6px;top:40px;transform:none;width:auto;max
       <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablesignals" checked><label for="set-tablesignals">Hand signals — tap your hand to hit, swipe across it to stand, drag a chip onto your bet to double</label></div>
       <div class="check-row" style="margin-top:6px;"><input type="checkbox" id="set-tablelimits" checked><label for="set-tablelimits">Table limits — a placard by the dealer, and he holds you to it</label></div>
       <div class="lim-row" id="lim-row"><label for="set-minbet">Min bet</label><input type="number" id="set-minbet" value="5" min="1" step="1" inputmode="numeric"><label for="set-maxbet">Max bet</label><input type="number" id="set-maxbet" value="500" min="1" step="1" inputmode="numeric"><span class="lim-sub">per hand</span></div>
+      <div class="check-row" style="margin-top:8px;"><input type="checkbox" id="set-quickdeal"><label for="set-quickdeal">Quick deal — the cards go out faster and the pauses are shorter</label></div>
+      <p class="side-note" style="margin:6px 0 0;font-size:12px;">Keys: Space or Enter deals (and moves on after a result), Backspace takes your last chip back. Tap the table after a result to skip the pause.</p>
       <div class="lim-row" style="margin-top:8px;"><label for="set-chatter">Dealer chatter</label><select id="set-chatter"><option value="chatty">Chatty</option><option value="quiet">Quiet — only what matters</option><option value="off">Off</option></select></div>
     </div>
   </div>
@@ -835,7 +1266,7 @@ body.lim-on .ds-idle{left:110px;right:6px;top:40px;transform:none;width:auto;max
     <label class="field" id="sb-bb-amt-wrap" style="display:none;">Buster Bet
       <input type="number" id="sb-bb-amt" value="5" min="1" step="1" style="width:80px;">
     </label>
-    <button class="primary" id="btn-deal" style="margin-left:auto;">Deal</button>
+    <div class="deal-dock" id="deal-dock"><button class="primary" id="btn-deal" style="margin-left:auto;">Deal</button></div>
   </div>
 
   <p class="hint-line" id="resume-notice" style="display:none;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the hand you had in progress.</p>
@@ -1050,7 +1481,7 @@ var G={
   bankroll:1000, phase:'betting',
   dealer:{cards:[]}, hands:[], activeIdx:0,
   history:[], sbAmounts:{}, holeRevealed:false, locked:false, feedbackLog:[], lastClass:null, activeTab:'hard',
-  tableShow:true, tableSignals:true, tableLimits:true, minBet:5, maxBet:500, chatter:'chatty',
+  tableShow:true, tableSignals:true, tableLimits:true, minBet:5, maxBet:500, chatter:'chatty', quickDeal:false,
   openBet:null, openTC:null   // this round's opening bet and the true count when it was dealt (feeds the bet advice)
 };
 
@@ -1605,6 +2036,7 @@ function readSettings(){
   G.minBet=parseInt(document.getElementById('set-minbet').value,10)||0;
   G.maxBet=parseInt(document.getElementById('set-maxbet').value,10)||0;
   G.chatter=document.getElementById('set-chatter').value;
+  G.quickDeal=document.getElementById('set-quickdeal').checked;
   try{ if(typeof Show!=='undefined' && Show.sync) Show.sync(); }catch(e){}
   document.body.classList.toggle('tooltips-off', !G.tooltipsEnabled);
   document.getElementById('sb-pp-amt-wrap').style.display=G.sidebets.pp?'flex':'none';
@@ -1616,7 +2048,7 @@ function readSettings(){
   renderCountBar();
 }
 
-['set-decks','set-payout','set-variant','set-hitsoft17','sb-pp','sb-tp','sb-tl','sb-bb','set-showcount','set-showseen','set-turbo','set-insurance','set-surrender','set-splitanytens','set-showodds','set-drills','set-sound','set-showdeviations','set-multiplayer','set-tablereactions','set-tooltips','set-tableshow','set-tablesignals','set-tablelimits','set-minbet','set-maxbet','set-chatter'].forEach(function(id){
+['set-decks','set-payout','set-variant','set-hitsoft17','sb-pp','sb-tp','sb-tl','sb-bb','set-showcount','set-showseen','set-turbo','set-insurance','set-surrender','set-splitanytens','set-showodds','set-drills','set-sound','set-showdeviations','set-multiplayer','set-tablereactions','set-tooltips','set-tableshow','set-tablesignals','set-tablelimits','set-minbet','set-maxbet','set-chatter','set-quickdeal'].forEach(function(id){
   document.getElementById(id).addEventListener('change', function(){
     readSettings();
     if(id==='set-decks'){ buildShoe(); }
@@ -1715,7 +2147,7 @@ function saveSession(){
     var data={
       bankroll:G.bankroll,
       history:G.history,
-      theme:G_theme,
+      theme:G_theme, themePicked:G_themePicked,
       seenFirstHandHints:G.seenFirstHandHints,
       seenChipsHint:G.seenChipsHint,
       settings:{
@@ -1724,7 +2156,7 @@ function saveSession(){
         insuranceEnabled:G.insuranceEnabled, showOdds:G.showOdds, surrenderEnabled:G.surrenderEnabled, splitAnyTens:G.splitAnyTens,
         drillsMode:G.drillsMode, soundOn:G.soundOn, showDeviations:G.showDeviations, multiplayerEnabled:G.multiplayerEnabled, tableReactionsEnabled:G.tableReactionsEnabled, tooltipsEnabled:G.tooltipsEnabled, numHands:G.numHands,
         tableShow:G.tableShow, tableSignals:G.tableSignals,
-        tableLimits:G.tableLimits, minBet:G.minBet, maxBet:G.maxBet, chatter:G.chatter
+        tableLimits:G.tableLimits, minBet:G.minBet, maxBet:G.maxBet, chatter:G.chatter, quickDeal:G.quickDeal
       }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1783,10 +2215,13 @@ function applyLoadedSession(){
     document.getElementById('set-minbet').value = (parseInt(s.minBet,10)>=1) ? parseInt(s.minBet,10) : 5;
     document.getElementById('set-maxbet').value = (parseInt(s.maxBet,10)>=1) ? parseInt(s.maxBet,10) : 500;
     document.getElementById('set-chatter').value = (s.chatter==='quiet' || s.chatter==='off') ? s.chatter : 'chatty';
+    document.getElementById('set-quickdeal').checked = s.quickDeal===true;
     G.numHands = (s.numHands===2) ? 2 : 1;
   }
   readSettings();
-  if(data.theme && THEMES[data.theme]){
+  /* Emerald used to be the default, so older saves say 'emerald' even when nobody chose it: only a theme that was picked (or any non-Emerald one) is kept */
+  if(data.theme && THEMES[data.theme] && (data.theme!=='emerald' || data.themePicked===true)){
+    G_themePicked=true;
     document.getElementById('set-theme').value=data.theme;
     applyTheme(data.theme);
   }
@@ -1951,60 +2386,188 @@ document.getElementById('btn-reset-bankroll').addEventListener('click', resetBan
 document.getElementById('btn-reset-bankroll-settings').addEventListener('click', resetBankroll);
 setBet(0);
 
-function faceCardSVG(rank){
-  if(rank==='J'){
-    return '<svg viewBox="0 0 40 56" width="42" height="59" style="overflow:visible;">'+
-      '<circle cx="20" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
-      '<line x1="14" y1="3.5" x2="26" y2="3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="15.5" x2="20" y2="34" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="20" x2="10" y2="27" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="20" x2="30" y2="27" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="34" x2="11" y2="51" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="34" x2="29" y2="51" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '</svg>';
+var CardArt = (function(){
+'use strict';
+/* ============ CARD ART (shared by every card game: proper pip layouts, court cards, a joker, a printed back) ============
+   One 100 x 140 drawing is used everywhere: the little cards on the felt, the dealer's flying cards and the big card you peel.
+   Everything is vector, coloured with currentColor, so the same code is crisp at 44px and at 330px. */
+var CARD_W = 100, CARD_H = 140;
+var SUIT_PATHS = {
+  '♥': '<path d="M0,9.5 C-3,6.5 -10.5,2 -10.5,-3.6 C-10.5,-7.4 -7.8,-9.6 -5.2,-9.6 C-2.8,-9.6 -0.9,-8.3 0,-6.2 C0.9,-8.3 2.8,-9.6 5.2,-9.6 C7.8,-9.6 10.5,-7.4 10.5,-3.6 C10.5,2 3,6.5 0,9.5 Z"/>',
+  '♦': '<path d="M0,-10.8 C2.4,-6.2 6.4,-2.3 9.2,0 C6.4,2.3 2.4,6.2 0,10.8 C-2.4,6.2 -6.4,2.3 -9.2,0 C-6.4,-2.3 -2.4,-6.2 0,-10.8 Z"/>',
+  '♠': '<path d="M0,-10.8 C-2,-6.5 -10.2,-3.6 -10.2,2.2 C-10.2,5.6 -7.4,7.6 -4.9,7 C-3.5,6.7 -2.4,5.9 -1.7,4.8 C-1.8,7.4 -2.6,9.4 -4.6,10.8 L4.6,10.8 C2.6,9.4 1.8,7.4 1.7,4.8 C2.4,5.9 3.5,6.7 4.9,7 C7.4,7.6 10.2,5.6 10.2,2.2 C10.2,-3.6 2,-6.5 0,-10.8 Z"/>',
+  '♣': '<circle cx="0" cy="-5.3" r="4.9"/><circle cx="-5.7" cy="2.5" r="4.9"/><circle cx="5.7" cy="2.5" r="4.9"/><path d="M-1.5,2.4 C-1.4,6.6 -2.7,9.2 -4.2,10.8 L4.2,10.8 C2.7,9.2 1.4,6.6 1.5,2.4 Z"/>'
+};
+/* where the pips sit on a 100 x 140 card: a column of three or four down each side, and a few down the middle */
+var IDX = {x: 12, tenX: 12.2, y: 25.4, fs: 24, tenFs: 19, tenLs: -1.4, sy: 38.6, ss: 0.56};        // the corner index: rank, then a small suit under it
+var PIP_X = [33, 67], PIP_R = 8.4, ACE_R = 19, ROW3 = [28, 70, 112], ROW4 = [28, 56, 84, 112];       // the pip grid: two side columns, three or four rows
+var PIP_LAYOUT = (function(){
+  var p = {}, mid = function(a, b){ return (a + b) / 2; };
+  function sides(ys){ var a = []; ys.forEach(function(y){ a.push([PIP_X[0], y]); a.push([PIP_X[1], y]); }); return a; }
+  p['A'] = [[50, 70]];
+  p['2'] = [[50, ROW3[0]], [50, ROW3[2]]];
+  p['3'] = [[50, ROW3[0]], [50, ROW3[1]], [50, ROW3[2]]];
+  p['4'] = sides([ROW3[0], ROW3[2]]);
+  p['5'] = p['4'].concat([[50, 70]]);
+  p['6'] = sides(ROW3);
+  p['7'] = sides(ROW3).concat([[50, mid(ROW3[0], ROW3[1])]]);
+  p['8'] = sides(ROW3).concat([[50, mid(ROW3[0], ROW3[1])], [50, mid(ROW3[1], ROW3[2])]]);
+  p['9'] = sides(ROW4).concat([[50, 70]]);
+  p['10'] = sides(ROW4).concat([[50, mid(ROW4[0], ROW4[1])], [50, mid(ROW4[2], ROW4[3])]]);
+  return p;
+})();
+var BRASS_C = '#D2A646', SKIN_C = '#F1D2AE', HAIR_C = '#5A4330';
+/* court cards: the top half of one figure (the bottom half is the same figure turned round). fill: s = suit colour */
+var COURT_ART = (function(){
+  var body = {t: 'poly', f: 's', p: [[29, 70], [32, 58], [40, 51], [50, 53], [60, 51], [68, 58], [71, 70]]};
+  var collar = {t: 'poly', f: 'b', p: [[42, 52], [50, 58], [58, 52], [54, 50], [46, 50]]};
+  var hem = {t: 'line', c: BRASS_C, x1: 31.5, y1: 66.6, x2: 68.5, y2: 66.6, w: 1.5};
+  var head = {t: 'circ', f: 'k', x: 50, y: 44, r: 7.4};
+  var eyes = [{t: 'circ', f: 'h', x: 47.4, y: 43.2, r: 0.85}, {t: 'circ', f: 'h', x: 52.6, y: 43.2, r: 0.85}];
+  var mouth = {t: 'line', x1: 48.2, y1: 47.6, x2: 51.8, y2: 47.6, w: 0.8};
+  var K = [
+    {t: 'poly', f: 'h', p: [[43.6, 45.5], [50, 56.5], [56.4, 45.5], [54.5, 50.2], [50, 52], [45.5, 50.2]]},
+    body, collar, hem, head
+  ].concat(eyes, [mouth,
+    {t: 'poly', f: 'b', s: 1, p: [[42.6, 38.4], [41.8, 29.8], [46.4, 33.6], [50, 27.6], [53.6, 33.6], [58.2, 29.8], [57.4, 38.4]]},
+    {t: 'line', x1: 66.5, y1: 40, x2: 66.5, y2: 68, w: 1.5},
+    {t: 'circ', f: 'b', x: 66.5, y: 38.2, r: 2.5}
+  ]);
+  var Q = [
+    {t: 'poly', f: 'h', p: [[42.4, 41], [39.4, 52], [44, 58], [46.2, 46]]},
+    {t: 'poly', f: 'h', p: [[57.6, 41], [60.6, 52], [56, 58], [53.8, 46]]},
+    body, collar, hem, head
+  ].concat(eyes, [mouth,
+    {t: 'poly', f: 'b', s: 1, p: [[42.8, 38], [42.8, 31.4], [46, 34.2], [47.8, 29.4], [50, 33], [52.2, 29.4], [54, 34.2], [57.2, 31.4], [57.2, 38]]},
+    {t: 'line', x1: 66.5, y1: 52, x2: 66.5, y2: 68, w: 1.3},
+    {t: 'circ', f: 'b', x: 66.5, y: 49.6, r: 3}
+  ]);
+  var J = [
+    {t: 'poly', f: 'h', p: [[42.6, 41.5], [41.2, 49], [44.4, 46.5]]},
+    {t: 'poly', f: 'h', p: [[57.4, 41.5], [58.8, 49], [55.6, 46.5]]},
+    body, collar, hem, head
+  ].concat(eyes, [mouth,
+    {t: 'poly', f: 'b', s: 1, p: [[42.4, 41], [43.6, 33.6], [50, 29.8], [56.8, 33.2], [58.2, 38.6], [50, 36], [42.4, 41]]},
+    {t: 'poly', f: 's', s: 1, p: [[57, 35.6], [65.4, 28.4], [70.6, 29.6], [64.4, 36.6], [58.6, 40]]},
+    {t: 'line', x1: 66.5, y1: 40, x2: 66.5, y2: 68, w: 1.3},
+    {t: 'poly', f: 'b', s: 1, p: [[66.5, 32], [69.4, 40], [63.6, 40]]}
+  ]);
+  var frame = [
+    {t: 'line', x1: 24, y1: 26, x2: 76, y2: 26, w: 1.3}, {t: 'line', x1: 76, y1: 26, x2: 76, y2: 114, w: 1.3},
+    {t: 'line', x1: 76, y1: 114, x2: 24, y2: 114, w: 1.3}, {t: 'line', x1: 24, y1: 114, x2: 24, y2: 26, w: 1.3},
+    {t: 'line', x1: 24, y1: 70, x2: 76, y2: 70, w: 0.9}
+  ];
+  return {K: frame.concat(K), Q: frame.concat(Q), J: frame.concat(J)};
+})();
+var COURT_FILL = {s: 'currentColor', b: BRASS_C, k: SKIN_C, h: HAIR_C};
+function courtShapes(rank){
+  var top = COURT_ART[rank] || [], out = top.slice();
+  top.forEach(function(sh){
+    if(sh.t === 'poly') out.push({t: 'poly', f: sh.f, s: sh.s, p: sh.p.map(function(q){ return [100 - q[0], 140 - q[1]]; })});
+    else if(sh.t === 'circ') out.push({t: 'circ', f: sh.f, x: 100 - sh.x, y: 140 - sh.y, r: sh.r});
+    else out.push({t: 'line', c: sh.c, x1: 100 - sh.x1, y1: 140 - sh.y1, x2: 100 - sh.x2, y2: 140 - sh.y2, w: sh.w});
+  });
+  return out.filter(function(sh, i){ return !(i >= top.length && sh.t === 'line' && sh.y1 === 70 && sh.y2 === 70); });   // the divider is drawn once
+}
+function courtSVG(rank){
+  return courtShapes(rank).map(function(sh){
+    if(sh.t === 'poly') return '<polygon points="' + sh.p.map(function(q){ return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + '" fill="' + COURT_FILL[sh.f] + '"' + (sh.s ? ' stroke="currentColor" stroke-width=".8" stroke-linejoin="round"' : '') + '/>';
+    if(sh.t === 'circ') return '<circle cx="' + sh.x + '" cy="' + sh.y + '" r="' + sh.r + '" fill="' + COURT_FILL[sh.f] + '"' + (sh.f === 'k' ? ' stroke="currentColor" stroke-width=".9"' : (sh.f === 'b' ? ' stroke="currentColor" stroke-width=".7"' : '')) + '/>';
+    return '<line x1="' + sh.x1 + '" y1="' + sh.y1 + '" x2="' + sh.x2 + '" y2="' + sh.y2 + '" stroke="' + (sh.c || 'currentColor') + '" stroke-width="' + sh.w + '" stroke-linecap="round"/>';
+  }).join('');
+}
+function suitAt(suit, x, y, s, rot){
+  return '<g transform="translate(' + x + ' ' + y + ')' + (rot ? ' rotate(180)' : '') + ' scale(' + s + ')">' + (SUIT_PATHS[suit] || '') + '</g>';
+}
+function indexGroup(card){
+  var ten = card.r === '10';
+  return '<text x="' + (ten ? IDX.tenX : IDX.x) + '" y="' + IDX.y + '" text-anchor="middle" font-family="\'Space Grotesk\',\'Inter\',Arial,sans-serif" font-weight="700" font-size="' + (ten ? IDX.tenFs : IDX.fs) + '"' + (ten ? ' letter-spacing="' + IDX.tenLs + '"' : '') + ' fill="currentColor">' + card.r + '</text>' + suitAt(card.suit, IDX.x, IDX.sy, IDX.ss, false);
+}
+/* the whole face as svg children (no <svg> wrapper), so the peel can place it anywhere */
+function faceMarkup(card, noIndex){
+  var out = '', r = card.r, i;
+  if(!noIndex){
+    out += indexGroup(card);
+    out += '<g transform="rotate(180 50 70)">' + indexGroup(card) + '</g>';
   }
-  if(rank==='Q'){
-    return '<svg viewBox="0 0 40 56" width="42" height="59" style="overflow:visible;">'+
-      '<circle cx="20" cy="11" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
-      '<polyline points="13,4 16,8 20,3 24,8 27,4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
-      '<line x1="20" y1="16.5" x2="20" y2="32" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="21" x2="11" y2="28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="21" x2="29" y2="28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<polygon points="20,32 9,52 31,52" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>'+
-    '</svg>';
+  if(r === 'J' || r === 'Q' || r === 'K'){
+    out += courtSVG(r);
+    out += '<g fill="' + BRASS_C + '">' + suitAt(card.suit, 50, 62.4, 0.34, false) + suitAt(card.suit, 50, 77.6, 0.34, true) + '</g>';
+    return out;
   }
-  return '<svg viewBox="0 0 40 56" width="42" height="59" style="overflow:visible;">'+
-    '<circle cx="20" cy="13" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
-    '<polyline points="12,5 15,10 20,4 25,10 28,5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
-    '<line x1="20" y1="1.5" x2="20" y2="4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'+
-    '<line x1="17.5" y1="2.5" x2="22.5" y2="2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'+
-    '<line x1="20" y1="18.5" x2="20" y2="36" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="23" x2="10" y2="30" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="23" x2="32" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="36" x2="11" y2="52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="36" x2="29" y2="52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
+  var lay = PIP_LAYOUT[r] || [];
+  for(i = 0; i < lay.length; i++){
+    var p = lay[i];
+    out += suitAt(card.suit, p[0], p[1], r === 'A' ? ACE_R / 10.2 : PIP_R / 10.2, p[1] > 70);
+  }
+  return out;
+}
+function faceSvgHTML(card){
+  return '<svg class="cf" viewBox="0 0 100 140" preserveAspectRatio="none" fill="currentColor" aria-hidden="true" focusable="false">' + faceMarkup(card) + '</svg>';
+}
+/* the printed back: ivory margin, navy field, a brass lattice and a medallion (a data-uri background, so it can sit under any card) */
+var BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140" preserveAspectRatio="none">' +
+  '<defs><pattern id="l" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0H7M0 0V7" stroke="#C9A24B" stroke-width=".55" fill="none" opacity=".5"/></pattern></defs>' +
+  '<rect width="100" height="140" rx="6" fill="#F4F1E8"/>' +
+  '<rect x="5.5" y="5.5" width="89" height="129" rx="3" fill="#1F3252"/>' +
+  '<rect x="5.5" y="5.5" width="89" height="129" rx="3" fill="url(#l)"/>' +
+  '<rect x="9" y="9" width="82" height="122" rx="2" fill="none" stroke="#C9A24B" stroke-width=".8" opacity=".85"/>' +
+  '<ellipse cx="50" cy="70" rx="21" ry="29" fill="#1F3252" stroke="#C9A24B" stroke-width=".9"/>' +
+  '<ellipse cx="50" cy="70" rx="17" ry="25" fill="none" stroke="#C9A24B" stroke-width=".5" opacity=".7"/>' +
+  '<path d="M50,50 L60,70 L50,90 L40,70 Z" fill="#C9A24B" opacity=".92"/>' +
+  '<path d="M50,58 L55,70 L50,82 L45,70 Z" fill="#1F3252"/>' +
+  '<circle cx="50" cy="70" r="2.2" fill="#C9A24B"/>' +
+  '<circle cx="17" cy="17" r="2" fill="#C9A24B" opacity=".85"/><circle cx="83" cy="17" r="2" fill="#C9A24B" opacity=".85"/><circle cx="17" cy="123" r="2" fill="#C9A24B" opacity=".85"/><circle cx="83" cy="123" r="2" fill="#C9A24B" opacity=".85"/>' +
   '</svg>';
-}
+var BACK_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(BACK_SVG);
 
-function pipsHTML(card){
-  if(card.r==='J'||card.r==='Q'||card.r==='K'){
-    return '<span style="position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);">'+faceCardSVG(card.r)+'</span>';
+/* the joker: the same frame, brass and ink as the court cards. JOKER stacked down the corner, a star in a ring in the middle */
+function starPts(cx, cy, R, r, n, rot){
+  var pts = [], i;
+  for(i = 0; i < n * 2; i++){
+    var a = (rot + i * Math.PI / n), rad = i % 2 ? r : R;
+    pts.push((cx + rad * Math.cos(a)).toFixed(2) + ',' + (cy + rad * Math.sin(a)).toFixed(2));
   }
-  return '<span class="card-pip" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">'+card.suit+'</span>';
+  return pts.join(' ');
+}
+function jokerCorner(){
+  var s = '', i, word = 'JOKER';
+  for(i = 0; i < word.length; i++)
+    s += '<text x="12" y="' + (22 + i * 9.6).toFixed(1) + '" text-anchor="middle" font-family="\'Space Grotesk\',\'Inter\',Arial,sans-serif" font-weight="700" font-size="9.6" fill="currentColor">' + word.charAt(i) + '</text>';
+  return s + '<polygon points="' + starPts(12, 70, 6.2, 2.7, 5, -Math.PI / 2) + '" fill="currentColor"/>';
+}
+function jokerMarkup(){
+  var out = jokerCorner() + '<g transform="rotate(180 50 70)">' + jokerCorner() + '</g>';
+  out += '<circle cx="50" cy="70" r="31" fill="none" stroke="currentColor" stroke-width="1.1"/>';
+  out += '<circle cx="50" cy="70" r="27.6" fill="none" stroke="' + BRASS_C + '" stroke-width=".8"/>';
+  out += '<polygon points="' + starPts(50, 70, 25, 10.4, 5, -Math.PI / 2) + '" fill="' + BRASS_C + '" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>';
+  out += '<polygon points="' + starPts(50, 70, 11.5, 5, 5, -Math.PI / 2) + '" fill="currentColor"/>';
+  out += '<circle cx="50" cy="70" r="2.4" fill="' + BRASS_C + '"/>';
+  [[50, 33.5], [50, 106.5], [13.5, 70], [86.5, 70]].forEach(function(p){ out += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.5" fill="' + BRASS_C + '"/>'; });
+  return out;
+}
+function jokerSvgHTML(){
+  return '<svg class="cf" viewBox="0 0 100 140" preserveAspectRatio="none" fill="currentColor" aria-hidden="true" focusable="false">' + jokerMarkup() + '</svg>';
 }
 
-function cardIdxHTML(card){
-  var one='<span class="card-idx"><span class="rank">'+card.r+'</span><span class="pip">'+card.suit+'</span></span>';
-  var two='<span class="card-idx br"><span class="rank">'+card.r+'</span><span class="pip">'+card.suit+'</span></span>';
-  return one+two;
-}
+return {
+  /* card: {r: 'A'|'2'..'10'|'J'|'Q'|'K', suit: '♠'|'♥'|'♦'|'♣'}, or {joker: true}. Returns an <svg> that fills its card (colour = the card's text colour) */
+  face: function(card){ return (card && card.joker) ? jokerSvgHTML() : faceSvgHTML(card); },
+  markup: faceMarkup,
+  backURI: BACK_URI
+};
+})();
+try{ document.documentElement.style.setProperty('--back-img', 'url("' + CardArt.backURI + '")'); }catch(e){}
+
+function pipsHTML(card){ return CardArt.face(card); }
+function cardIdxHTML(card){ return ''; }
 
 function cardEl(card, faceDown){
   var d=document.createElement('div');
   d.className='card'+(faceDown?' back':'')+(card&&card.color==='red'&&!faceDown?' red':'');
   d.dataset.cardKey = faceDown ? 'back' : (card ? (card.r+card.suit) : '');
   if(faceDown){
-    d.textContent='?';
+    d.setAttribute('aria-hidden','true');
   } else {
     d.innerHTML=cardIdxHTML(card)+pipsHTML(card);
   }
@@ -2516,6 +3079,19 @@ function canSurrender(h){
   return G.surrenderEnabled && h.cards.length===2 && !h.fromSplit && h.status==='active';
 }
 
+/* Wait as before, but a card that is still in the air has not happened yet: a bust is not announced until the card has landed and turned over. */
+var LAND_BEAT=160;
+function afterLand(fn, ms){
+  var t0=Date.now();
+  try{
+    if(ms>0 && window.Show && Show.whenLanded){
+      Show.whenLanded(function(){ setTimeout(fn, Math.max(0, ms-(Date.now()-t0))); }, LAND_BEAT);
+      return;
+    }
+  }catch(e){}
+  setTimeout(fn, ms);
+}
+
 function doAction(action){
   if(G.locked) return;
   sfxDecision(action);
@@ -2543,7 +3119,7 @@ function doAction(action){
     G.locked=true;
     h.cards.push(draw());
     renderAll(); sfxCard();
-    setTimeout(function(){
+    afterLand(function(){
       var t=handTotal(h.cards);
       if(t.total>21){ h.status='bust'; }
       else if(G.variant==='ddm' && h.cards.length===2 && t.total===21){ h.status='blackjack'; }
@@ -2566,8 +3142,10 @@ function doAction(action){
     }
     G.locked=true;
     h.cards.push(draw());
+    h.dblIdx=h.cards.length-1;
+    try{ if(window.Show && Show.onDouble) Show.onDouble(h); }catch(e){}
     renderAll(); sfxCard();
-    setTimeout(function(){
+    afterLand(function(){
       var t2=handTotal(h.cards);
       if(t2.total>21){ h.status='bust'; }
       else if(G.variant==='ddm' && h.cards.length===2 && t2.total===21){ h.status='blackjack'; }
@@ -2782,11 +3360,23 @@ function finishRound(){
   saveSession();
   checkBankruptcy();
 
-  setTimeout(function(){
+  resultLeave=function(){
+    resultLeave=null; clearTimeout(resultTimer);
+    try{ if(window.PitBoss) PitBoss.abort(); }catch(e){}
     document.getElementById('feedback-zone').innerHTML='';
     G.phase='betting'; G.hands=[]; G.dealer={cards:[]}; G.holeRevealed=false; G.feedbackLog=[]; G.bots=[];
     renderAll();
-  }, T(RESULT_PAUSE));
+  };
+  clearTimeout(resultTimer); resultTimer=setTimeout(resultLeave, T(RESULT_PAUSE));
+}
+var resultLeave=null, resultTimer=0;
+/* cut the pause after a result short: the chips are where they are going, then the table is ready for the next bet */
+function skipResult(){
+  if(G.phase==='result' && resultLeave){
+    try{ if(window.Show && Show.payFinish) Show.payFinish(); }catch(e){}
+    resultLeave(); return true;
+  }
+  return false;
 }
 
 function renderResults(results, headline){
@@ -2937,7 +3527,7 @@ function renderAll(){
       tag.textContent=handNameFrom(G.hands, idx, G.roundSpots);
     } else if(tag){ tag.parentNode.removeChild(tag); }
   });
-  hr.classList.toggle('dense', G.hands.length>=3);   // three or four hands (splits): smaller cards so they sit side by side
+  hr.classList.toggle('dense', G.hands.length>=3 || (G.hands.length===2 && !!(window.__phoneMQ && window.__phoneMQ.matches)));   // three or four hands (splits), or two on a phone: smaller cards so they sit side by side
 
   var ar=document.getElementById('actions-row');
   if(G.phase==='player'){
@@ -2982,14 +3572,14 @@ var THEMES={
   midnight:{label:'Midnight', felt:'#0B0F1A','felt-dark':'#060810',panel:'#131826','panel-2':'#1B2233','card-face':'#F2F4F8',ink:'#12141C',brass:'#4FB8E0','brass-bright':'#7ED0F0',coral:'#E1596B',sage:'#3FA484','sage-bright':'#65C7A3','dusty-blue':'#6C7CE0',violet:'#9C82E0',text:'#EAEEF5','text-muted':'#8790A3',line:'rgba(234,238,245,0.09)'},
   crimson:{label:'Crimson', felt:'#1A0E10','felt-dark':'#120A0B',panel:'#241318','panel-2':'#2E1920','card-face':'#F6F0F0',ink:'#1A0E10',brass:'#D6935A','brass-bright':'#EBAF7C',coral:'#FF6B52',sage:'#4FA484','sage-bright':'#72C4A5','dusty-blue':'#5B8DE0',violet:'#C08CDD',text:'#F3ECEA','text-muted':'#A6949B',line:'rgba(243,236,234,0.09)'}
 };
-var G_theme='emerald';
+var G_theme='graphite', G_themePicked=false;   // Graphite is the default; a saved Emerald that nobody picked (it used to be the default) is not kept
 
 function applyTheme(name){
   var t=THEMES[name]; if(!t) return;
   G_theme=name;
   Object.keys(t).forEach(function(k){ if(k!=='label') document.documentElement.style.setProperty('--'+k, t[k]); });
 }
-document.getElementById('set-theme').addEventListener('change', function(){ applyTheme(this.value); saveSession(); });
+document.getElementById('set-theme').addEventListener('change', function(){ G_themePicked=true; applyTheme(this.value); saveSession(); });
 
 function fracFromEvent(el, e){
   var rect = el.getBoundingClientRect();
@@ -3059,7 +3649,7 @@ function resumeHand(saved){
 readSettings();
 buildShoe();
 buildChart('hard');
-applyTheme('emerald');
+applyTheme('graphite');
 applyLoadedSession();
 var savedHand = loadHandState();
 if(savedHand){
@@ -3073,6 +3663,422 @@ buildChart(G.activeTab);
 maybeShowChipsHint();
 </script>
 <script>
+/* ===== THE PIT BOSS =====
+   After five hands won in a row, or five lost, a man in a grey suit walks over to the dealer, says his piece (pleased after five wins, not after five losses), the
+   dealer answers, and he walks out. He never reaches over the table. Each game brings its own lines, and the dealer stays the dealer: everything here is looks. The streak is counted from the
+   hands the game itself settles; a push neither adds to a streak nor breaks it. It is one preference for the whole site ("tableready_pitboss"). */
+var PitBoss = (function(){
+  'use strict';
+  var W = window, D = document;
+  var PREF = 'tableready_pitboss', STREAK = 5;
+  var S = {
+    win: 0, loss: 0, cfg: null, built: false, gen: 0, timers: [], playing: false, speaking: false, pending: null,
+    st: null, el: null, man: null, say: null, up: null, fore: null, hand: null, held: null, props: [], armTo: null,
+    lastLine: {}, plays: 0, scene: '', errors: [], mem: null, shouldered: null, seed: 4231, lastEnd: ''
+  };
+
+  /* ---------- small things ---------- */
+  function $(sel, root){ return (root || D).querySelector(sel); }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function err(where, e){ try{ S.errors.push(where + ': ' + (e && e.message || e)); if(W.console && console.warn) console.warn('[pit boss] ' + where, e); }catch(_){} }
+  function api(){ return (S.cfg && S.cfg.api) ? S.cfg.api : null; }
+  function k(){ var a = api(), v = a && a.k ? a.k() : 1; return v > 0 ? v : 1; }       // the dealer's clock (Quick and Relaxed pace)
+  function reduced(){ try{ return !!(W.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; } }
+  function at(ms, fn){
+    var rec = {gen: S.gen};
+    rec.id = setTimeout(function(){
+      var i = S.timers.indexOf(rec); if(i >= 0) S.timers.splice(i, 1);
+      if(rec.gen !== S.gen) return;
+      try{ fn(); }catch(e){ err('beat', e); }
+    }, Math.max(0, ms));
+    S.timers.push(rec); return rec;
+  }
+  /* a private stream of numbers: the boss never touches Math.random, which the games use for the shoe */
+  function rnd(){ S.seed = (S.seed * 16807) % 2147483647; return (S.seed - 1) / 2147483646; }
+  function pick(list, key){        // one line out of several, never the one used last time
+    if(typeof list === 'string') return list;
+    if(!list || !list.length) return '';
+    var i = Math.floor(rnd() * list.length);
+    if(list.length > 1 && S.lastLine[key] === i) i = (i + 1) % list.length;
+    S.lastLine[key] = i; return list[i];
+  }
+
+  /* ---------- the preference ---------- */
+  function enabled(){
+    try{ var v = W.localStorage.getItem(PREF); if(v === '0') return false; if(v === '1') return true; }catch(e){ if(S.mem !== null) return S.mem; }
+    return true;
+  }
+  function setEnabled(v){
+    S.mem = !!v;
+    try{ W.localStorage.setItem(PREF, v ? '1' : '0'); }catch(e){}
+    if(!v) abort(true);
+    try{ Array.prototype.forEach.call(D.querySelectorAll('input[data-pitboss-toggle]'), function(i){ if(i.checked !== !!v) i.checked = !!v; }); }catch(e){}
+  }
+  /* the settings checkbox: put after the given element, in the same style as the rows around it */
+  function mountToggle(after, rowClass){
+    if(!after || !after.parentNode || $('input[data-pitboss-toggle]', after.parentNode)) return null;
+    var row = D.createElement('div'); row.className = (rowClass || 'check-row') + ' pb-toggle-row';
+    var id = 'set-pitboss';
+    row.innerHTML = '<input type="checkbox" id="' + id + '" data-pitboss-toggle="1"><label for="' + id + '">Pit boss — stops by after five wins or five losses in a row</label>';
+    var box = row.firstChild; box.checked = enabled();
+    box.addEventListener('change', function(){ setEnabled(box.checked); });
+    after.parentNode.insertBefore(row, after.nextSibling);
+    return row;
+  }
+
+  /* ---------- the streak ---------- */
+  /* the game says what happened to a hand: 'win', 'loss' or 'push'. Returns the scene that has just been earned ('hot' for five wins, 'cold' for five losses) or ''. */
+  function tally(kind){
+    if(kind === 'win'){ S.loss = 0; S.win++; return S.win === STREAK ? 'hot' : ''; }
+    if(kind === 'loss'){ S.win = 0; S.loss++; return S.loss === STREAK ? 'cold' : ''; }
+    return '';
+  }
+  function hand(kind){
+    try{
+      var scene = tally(kind);
+      if(!scene || !S.cfg) return false;
+      var a = api();
+      if(!enabled() || !a || !a.ready()) return false;
+      S.pending = scene;
+      var wait = (S.cfg.delay != null ? S.cfg.delay : 2600) * k();
+      at(wait, function(){ if(S.pending === scene){ S.pending = null; play(scene); } });
+      return true;
+    }catch(e){ err('hand', e); return false; }
+  }
+  function reset(){ S.win = 0; S.loss = 0; }
+  /* for a game that moves on by itself after a result (baccarat): how long the table should stay as it is so the whole scene can play (0 when no scene is coming) */
+  function holdMs(){
+    var sc = S.pending, script = sc && S.cfg && S.cfg.scenes && S.cfg.scenes[sc];
+    if(!script) return 0;
+    var t = 0; script.forEach(function(b){ t += (b[0] || 0); });
+    return Math.round(((S.cfg.delay != null ? S.cfg.delay : 2600) + t) * k() + 1100);      // the last 1100 ms are his walk out, which does not speed up with the pace
+  }
+
+  /* ---------- the figure ---------- */
+  var SVG =
+  '<svg class="pb-svg" viewBox="0 0 160 170" aria-hidden="true" focusable="false">' +
+  '<defs>' +
+    '<linearGradient id="pbSuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA0AA"/><stop offset="1" stop-color="#5E646F"/></linearGradient>' +
+    '<linearGradient id="pbSkin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EFBE97"/><stop offset="1" stop-color="#D6996F"/></linearGradient>' +
+    '<linearGradient id="pbHair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C5CAD2"/><stop offset="1" stop-color="#8A909B"/></linearGradient>' +
+  '</defs>' +
+  '<path d="M0 170 C0 132 14 110 48 102 L68 97 L92 97 L112 102 C146 110 160 132 160 170 Z" fill="url(#pbSuit)"/>' +
+  '<path d="M48 102 L68 97 L80 134 L62 170 L28 170 C26 140 32 118 48 102 Z" fill="#4A505A" opacity=".5"/>' +
+  '<path d="M112 102 L92 97 L80 134 L98 170 L132 170 C134 140 128 118 112 102 Z" fill="#4A505A" opacity=".5"/>' +
+  '<path d="M68 97 L80 134 L92 97 L86 93 L80 101 L74 93 Z" fill="#F3F4F6"/>' +
+  '<path d="M68 97 L74 93 L80 101 L72 107 Z" fill="#E1E4E9"/><path d="M92 97 L86 93 L80 101 L88 107 Z" fill="#E8EAEE"/>' +
+  '<path d="M80 101 L74.5 107 L80 113 L85.5 107 Z" fill="#2B4A7A"/>' +
+  '<path d="M75.5 112 L84.5 112 L88 158 L80 166 L72 158 Z" fill="#2B4A7A"/>' +
+  '<path d="M75.6 124 H84.4 M75 134 H85 M74.4 144 H85.6" stroke="#5C86C2" stroke-width="1.6" opacity=".75"/>' +
+  '<rect x="74.5" y="128" width="11" height="2.2" rx="1" fill="#CBD0D8"/>' +
+  '<path d="M104 128 L117 125 L118 132 L105 134 Z" fill="#fff"/>' +
+  '<rect x="45" y="128" width="14" height="18" rx="2" fill="#F4F5F7" stroke="#8E95A0"/><rect x="48" y="131" width="8" height="7" fill="#7C8794"/><path d="M48 141 h8 M48 144 h5" stroke="#9AA1AB"/>' +
+  '<circle class="pb-chest" cx="80" cy="132" r="1" fill="none"/><circle class="pb-sh" cx="119" cy="108" r="1" fill="none"/>' +
+  '<g class="pb-sway"><rect x="70" y="76" width="20" height="26" rx="6" fill="#C98F66"/>' +
+  '<g class="pb-head">' +
+    '<circle cx="53" cy="62" r="5" fill="#DFA57B"/><circle cx="107" cy="62" r="5" fill="#DFA57B"/>' +
+    '<path d="M108.5 64 C116 78 108 92 92 102" stroke="#1B1E24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="2.2 1.4"/><circle cx="108" cy="64" r="2.2" fill="#1B1E24"/>' +
+    '<path d="M55 52 C55 32 67 24 80 24 C93 24 105 32 105 52 C105 72 101 88 91 92 C87 94 73 94 69 92 C59 88 55 72 55 52 Z" fill="url(#pbSkin)"/>' +
+    '<path d="M58 66 C62 86 74 92 80 92 C86 92 98 86 102 66 C96 80 88 84 80 84 C72 84 64 80 58 66 Z" fill="#5A606B" opacity=".1"/>' +
+    '<path d="M54 52 C51 26 66 15 82 15 C98 15 110 28 106 52 C103 41 97 34 86 32 C76 36 61 38 54 52 Z" fill="url(#pbHair)"/>' +
+    '<path d="M64 24 C72 19 84 19 92 23" stroke="#E4E7EC" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".7"/>' +
+    '<g><ellipse cx="68" cy="56" rx="5" ry="5.3" fill="#fff"/><ellipse cx="92" cy="56" rx="5" ry="5.3" fill="#fff"/></g>' +
+    '<g class="pb-pupils"><circle cx="68" cy="56.6" r="2.7" fill="#1E2630"/><circle cx="92" cy="56.6" r="2.7" fill="#1E2630"/><circle cx="68.8" cy="55.5" r=".8" fill="#fff" opacity=".85"/><circle cx="92.8" cy="55.5" r=".8" fill="#fff" opacity=".85"/></g>' +
+    '<rect class="pb-lid" x="62.4" y="49.6" width="11.2" height="12" fill="#EDBA93"/><rect class="pb-lid l2" x="86.4" y="49.6" width="11.2" height="12" fill="#EDBA93"/>' +
+    '<path d="M80 58 q-3.6 7 0.6 9.4" stroke="#BE855D" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+    '<g class="pb-face">' +
+      '<g class="m-stern"><path d="M60 47.5 l15 2.8 M85 50.3 l15 -2.8" stroke="#3E424A" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M72 80 h16" stroke="#8A4B3A" stroke-width="2.3" fill="none" stroke-linecap="round"/></g>' +
+      '<g class="m-sus"><path d="M60 50 l15 3 M85 44.6 q7.5 -5 15 -2" stroke="#3E424A" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M71.5 81 q9 -3.4 17 1" stroke="#8A4B3A" stroke-width="2.3" fill="none" stroke-linecap="round"/></g>' +
+      '<g class="m-smile"><path d="M60 48.6 q7.5 -3.6 15 -1 M85 47.6 q7.5 -2.6 15 1" stroke="#3E424A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M69.5 77 q10.5 10 21 0" stroke="#8A4B3A" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M70.5 77.4 q9.5 8 19 0 Z" fill="#fff" opacity=".9"/></g>' +
+      '<g class="m-wow"><path d="M60 42 q7.5 -4.4 15 -1 M85 41 q7.5 -3.4 15 1" stroke="#3E424A" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="80" cy="81" rx="4.2" ry="5.2" fill="#6A2C2A"/></g>' +
+      '<g class="m-concern"><path d="M60 53 l14 -5.6 M86 47.4 l14 5.6" stroke="#3E424A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M71.5 83.5 q8.5 -5.4 17 0" stroke="#8A4B3A" stroke-width="2.3" fill="none" stroke-linecap="round"/></g>' +
+      '<g class="m-amused"><path d="M60 50 q7.5 -2.6 15 -0.4 M85 46 q7.5 -4 15 -2.4" stroke="#3E424A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M70.5 80 q9.5 6 19 -3.4" stroke="#8A4B3A" stroke-width="2.3" fill="none" stroke-linecap="round"/></g>' +
+    '</g>' +
+    '<circle class="pb-eyes" cx="80" cy="56" r="1" fill="none"/>' +
+  '</g></g>' +
+  '</svg>';
+
+  var HAND =
+  '<svg viewBox="0 0 28 36" aria-hidden="true" focusable="false"><g fill="#E3AE86" stroke="#B9835E" stroke-width=".7" stroke-linejoin="round">' +
+    '<g class="h-open"><path d="M6 3 h16 v15 q0 11 -8 13 q-8 -2 -8 -13 Z"/><path d="M6 11 q-5.6 2 -4.4 9 q4.6 0 6.4 -4.4 Z"/></g>' +
+    '<g class="h-flat"><path d="M2.6 3 h22.8 v10 q0 9 -11.4 9 q-11.4 0 -11.4 -9 Z"/><path d="M8.5 12 v9 M14 13 v10 M19.5 12 v9" stroke="#B9835E" fill="none"/></g>' +
+    '<g class="h-fist"><path d="M7 3 h14 v14 q0 7.4 -7 8.4 q-7 -1 -7 -8.4 Z"/><path d="M7 9 q-4.4 1.6 -3.2 6.6 q3.4 0 5 -3.4 Z"/></g>' +
+    '<g class="h-point"><path d="M7 3 h14 v13 q0 6.6 -7 7.6 q-7 -1 -7 -7.6 Z"/><path d="M12 20 h4.2 v14 q-2.1 2.4 -4.2 0 Z"/><path d="M7 9 q-4.4 1.6 -3.2 6.2 q3.4 0 5 -3.2 Z"/></g>' +
+    '<g class="h-two"><path d="M7 3 h14 v13 q0 6.6 -7 7.6 q-7 -1 -7 -7.6 Z"/><path d="M8.6 19 h3.8 v14 q-1.9 2.4 -3.8 0 Z"/><path d="M15.6 19 h3.8 v13 q-1.9 2.4 -3.8 0 Z"/></g>' +
+  '</g></svg>';
+
+  var PROPS =
+  '<svg viewBox="0 0 28 40" aria-hidden="true" focusable="false">' +
+    '<g class="p-martini"><path d="M3 5 H25 L14 21 Z" fill="rgba(198,226,236,.62)" stroke="#EEF2F5" stroke-width="1.4" stroke-linejoin="round"/><path d="M14 21 V34" stroke="#EEF2F5" stroke-width="1.7"/><path d="M7 35 H21" stroke="#EEF2F5" stroke-width="2.2" stroke-linecap="round"/><circle cx="17" cy="9" r="2.2" fill="#6B8F3A"/><path d="M17 8 L22 1" stroke="#C9A25A" stroke-width="1"/></g>' +
+    '<g class="p-flute"><path d="M9 3 H19 L18 24 C18 28 10 28 10 24 Z" fill="rgba(241,222,150,.7)" stroke="#EEF2F5" stroke-width="1.3" stroke-linejoin="round"/><path d="M14 27 V35" stroke="#EEF2F5" stroke-width="1.6"/><path d="M8.5 36 H19.5" stroke="#EEF2F5" stroke-width="2.2" stroke-linecap="round"/><circle cx="13" cy="19" r="1" fill="#fff"/><circle cx="15.4" cy="13" r=".9" fill="#fff"/><circle cx="13.4" cy="8" r=".8" fill="#fff"/></g>' +
+    '<g class="p-deck"><rect x="5" y="6" width="18" height="28" rx="2.4" fill="#B3273A" stroke="#7E1626"/><rect x="8" y="10" width="12" height="14" rx="1.6" fill="#F4EFE2"/><path d="M14 13 l3 4.4 -3 4.4 -3 -4.4 Z" fill="#B3273A"/><rect x="5" y="28" width="18" height="2.6" fill="#E4C16C"/></g>' +
+    '<g class="p-card"><rect x="6" y="8" width="16" height="24" rx="2.2" fill="#E4C16C" stroke="#A58234"/><path d="M10 15 h8 M10 19 h8 M10 23 h5" stroke="#7A6222" stroke-width="1.4"/></g>' +
+  '</svg>';
+
+  function build(){
+    if(S.built && S.el && S.el.parentNode) return true;
+    var a = api(), st = a && a.stage && a.stage(); if(!st) return false;
+    var el = D.createElement('div'); el.className = 'pb'; el.setAttribute('data-state', 'away'); el.setAttribute('data-mood', 'stern'); el.setAttribute('aria-hidden', 'true');
+    el.innerHTML =
+      '<div class="pb-clip"><div class="pb-man">' + SVG + '</div></div>' +
+      '<div class="pb-armwrap"><div class="pb-upper"><div class="pb-upper-vis"></div><div class="pb-cap sh"></div>' +
+        '<div class="pb-fore"><div class="pb-fore-vis"></div><div class="pb-held">' + PROPS + '</div><div class="pb-hand" data-hand="open">' + HAND + '</div><div class="pb-cap el"></div></div></div></div>' +
+      '<div class="pb-say"></div>';
+    st.appendChild(el);
+    S.st = st; S.el = el; S.man = $('.pb-man', el); S.say = $('.pb-say', el);
+    S.up = $('.pb-upper', el); S.fore = $('.pb-fore', el); S.hand = $('.pb-hand', el); S.held = $('.pb-held', el);
+    S.built = true;
+    return true;
+  }
+
+  /* ---------- where things are ---------- */
+  function stageBox(){ return S.st.getBoundingClientRect(); }
+  function rel(r){ var s = stageBox(); return {x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top, l: r.left - s.left, t: r.top - s.top, w: r.width, h: r.height}; }
+  function dealerBox(){ var a = api(), d = a && a.dealer && a.dealer(); return d ? rel(d.getBoundingClientRect()) : null; }
+  var LEAN = 5;
+  function place(){
+    var d = dealerBox(), sw = S.st.clientWidth || 440, sh = S.st.clientHeight || 140;
+    var kk = (d && d.w) ? clamp(d.w / 168, .6, 1.2) : 1, bs = kk * 1.12;          // he is bigger than the dealer: he is standing, leaning over him
+    var cx = d && d.w ? d.x : sw / 2;
+    S.k = kk;
+    var left = cx - 64 * kk - 80 * bs - 108 * bs * Math.sin(LEAN * Math.PI / 180);   // so that his head lands beside the dealer's, tilted toward it
+    var phone = (W.innerWidth || 1000) <= 560, down = Math.max(0, Math.round(145 * bs + 4 - sh - (phone ? 0 : 22)));      // on a short stage he sinks behind the counter so his head stays inside it
+    S.el.style.setProperty('--pby', down + 'px');
+    S.el.style.setProperty('--pbk', bs.toFixed(3));
+    S.el.style.setProperty('--pbx', Math.round(left) + 'px');
+    S.el.style.setProperty('--lean', LEAN + 'deg');
+    return kk;
+  }
+  function marker(cls){ var e = $('.' + cls, S.el); return e ? rel(e.getBoundingClientRect()) : null; }
+  function shoulder(){
+    var m = marker('pb-sh'); if(m && (m.x || m.y)) return m;
+    var sw = S.st.clientWidth || 440, sh = S.st.clientHeight || 140; return {x: sw / 2 - 40, y: sh - 60};
+  }
+  var L1 = 64, L2 = 66;
+  function armTo(tx, ty, hand, ms){
+    if(!S.up) return;
+    var sh = shoulder(), dx = tx - sh.x, dy = ty - sh.y, r = Math.sqrt(dx * dx + dy * dy) || 1;
+    var rr = clamp(r, 40, L1 + L2 - 3), ux = dx / r, uy = dy / r;
+    var px = sh.x + ux * rr, py = sh.y + uy * rr;
+    var a = (L1 * L1 - L2 * L2 + rr * rr) / (2 * rr), h = Math.sqrt(Math.max(0, L1 * L1 - a * a));
+    var e1 = {x: sh.x + ux * a - uy * h, y: sh.y + uy * a + ux * h}, e2 = {x: sh.x + ux * a + uy * h, y: sh.y + uy * a - ux * h};
+    var E = (e1.y - 0.25 * (e1.x - sh.x)) >= (e2.y - 0.25 * (e2.x - sh.x)) ? e1 : e2;           // the elbow hangs down and back
+    var t1 = Math.atan2(-(E.x - sh.x), E.y - sh.y) * 180 / Math.PI, t2 = Math.atan2(-(px - E.x), py - E.y) * 180 / Math.PI;
+    var relA = t2 - t1; while(relA > 180) relA -= 360; while(relA < -180) relA += 360;
+    S.el.style.setProperty('--pb-arm-ms', Math.round((ms || 420) * k()) + 'ms');
+    S.el.setAttribute('data-arm', 'out');
+    S.up.style.transform = 'translate(' + sh.x.toFixed(1) + 'px,' + sh.y.toFixed(1) + 'px) rotate(' + t1.toFixed(2) + 'deg)';
+    S.fore.style.transform = 'rotate(' + relA.toFixed(2) + 'deg)';
+    S.fore.style.setProperty('--fa', t2.toFixed(2) + 'deg');
+    if(hand) S.hand.setAttribute('data-hand', hand);
+    S.armPt = {x: px, y: py};
+  }
+  function armRest(){ if(!S.up) return; S.el.setAttribute('data-arm', 'rest'); var sh = shoulder(); S.el.style.setProperty('--pb-arm-ms', Math.round(300 * k()) + 'ms'); S.up.style.transform = 'translate(' + sh.x.toFixed(1) + 'px,' + sh.y.toFixed(1) + 'px) rotate(8deg)'; S.fore.style.transform = 'rotate(10deg)'; S.fore.style.setProperty('--fa', '18deg'); S.hand.setAttribute('data-hand', 'open'); }
+  function pt(name){
+    var d = dealerBox(), sw = S.st.clientWidth || 440, sh = S.st.clientHeight || 140, a = api(), el;
+    if(name === 'dealer'){ return d ? {x: d.l + d.w * 0.2, y: d.t + d.h * 0.66} : null; }                 // the dealer's near shoulder
+    if(name === 'collar'){ return d ? {x: d.x - d.w * 0.04, y: d.t + d.h * 0.7} : null; }               // his bow tie
+    if(name === 'chest'){ return marker('pb-chest'); }
+    if(name === 'eyes'){ var m = marker('pb-eyes'); return m ? {x: m.x + 18, y: m.y + 18} : null; }
+    if(name === 'player'){ return {x: sw / 2 - 20, y: sh + 62}; }                                        // down, toward the player's side of the felt
+    if(name === 'rail'){ return {x: sw / 2 - 40, y: sh - 16}; }
+    if(name === 'trayside'){ return {x: Math.max(30, sw / 2 - 150), y: sh - 24}; }
+    if(name === 'shoe' && a && a.shoe){ var s = a.shoe(); return s ? rel(s.getBoundingClientRect()) : null; }
+    if(typeof name === 'string' && name.charAt(0) === '@'){                                                 // @selector: the middle of some element on the table
+      var e = D.querySelector(name.slice(1)); if(!e) return null;
+      var r = e.getBoundingClientRect(); return (r.width > 0 && r.height > 0) ? rel(r) : null;                        // not on the screen right now: he does not point at it
+    }
+    return null;
+  }
+
+  /* ---------- the boss's face, eyes and bubble ---------- */
+  function mood(m){ if(S.el) S.el.setAttribute('data-mood', m); }
+  function look(where){
+    if(!S.el) return;
+    var x = 0, y = 0, hr = 0, hx = 0, hy = 0;
+    if(where === 'dealer'){ x = 2.4; y = 0.4; hr = 5; hx = 3; }
+    else if(where === 'player'){ x = -1.2; y = 2; hr = -3; hy = 1.5; }
+    else if(where === 'board'){ x = 0.6; y = 2.4; hr = 1; hy = 2.4; }
+    else if(where === 'up'){ x = 0; y = -2; hr = -2; hy = -1.5; }
+    else if(where === 'away'){ x = -2.4; y = 0; hr = -6; hx = -2; }
+    S.el.style.setProperty('--plx', x + 'px'); S.el.style.setProperty('--ply', y + 'px');
+    S.el.style.setProperty('--hr', hr + 'deg'); S.el.style.setProperty('--hx', hx + 'px'); S.el.style.setProperty('--hy', hy + 'px');
+  }
+  function barClear(){                                  // how far down the stage the page's sticky/fixed top bar reaches (0 when it doesn't touch the stage)
+    var tb = document.getElementById('topbar'); if(!tb || !S.st) return 0;
+    var c = W.getComputedStyle(tb); if(c.position !== 'sticky' && c.position !== 'fixed') return 0;
+    return Math.max(0, Math.round(tb.getBoundingClientRect().bottom - S.st.getBoundingClientRect().top));
+  }
+  function bossSay(text, ms){
+    if(!S.say) return;
+    var a = api(); if(a && a.chat && a.chat() === 'off') return;
+    var say = S.say, bs = parseFloat(S.el.style.getPropertyValue('--pbk')) || 1;
+    say.classList.remove('on', 'side'); say.style.maxWidth = ''; say.textContent = text;
+    var head = marker('pb-eyes') || {x: 120, y: 50}, sw = S.st.clientWidth || 440;
+    var phone = (W.innerWidth || 1000) <= 560;                                  // a phone: the stage has no room above it (the page's own bar is there), so he speaks from the side
+    if(phone){
+      say.classList.add('side'); say.style.maxWidth = Math.max(84, Math.round(head.x - 44 * bs - 6)) + 'px';
+      var h2 = say.offsetHeight || 34, lo = Math.max(2, barClear() + 3);       // never under the page's own sticky bar, which sits over the top of the stage when the page is scrolled a little
+      say.style.left = '2px'; say.style.top = Math.round(clamp(head.y - h2 * 0.5 - 4, lo, Math.max(lo, (S.st.clientHeight || 104) - h2 - 24))) + 'px';
+    } else {
+      var bw = say.offsetWidth || Math.min(158, text.length * 7 + 24), bh = say.offsetHeight || 30;
+      var left = clamp(head.x - bw * 0.62, 2, Math.max(2, sw - bw - 2));
+      say.style.left = Math.round(left) + 'px';
+      say.style.top = Math.round(head.y - 42 * bs - 8 - bh) + 'px';
+      say.style.setProperty('--tail', clamp(((head.x - left) / bw) * 100, 14, 86).toFixed(0) + '%');
+    }
+    void say.offsetWidth;
+    say.classList.add('on');
+    clearTimeout(S.sayT); S.sayT = setTimeout(function(){ if(S.say) S.say.classList.remove('on'); }, (ms || 2200) * k());
+    if(a && a.announce) try{ a.announce('Pit boss: ' + text); }catch(e){}
+  }
+  function dealerSay(text, ms){
+    var a = api(); if(!a || !a.say) return;
+    S.speaking = true; try{ a.say(text, ms || 2000); }catch(e){ err('dealerSay', e); } S.speaking = false;
+    if(a.announce) try{ a.announce('Dealer: ' + text); }catch(e){}
+  }
+  function dealerMood(m, hold){ var a = api(); if(a && a.mood) try{ a.mood(m, hold || 2400); }catch(e){ err('mood', e); } }
+  function dealerDo(what){
+    var a = api(), d = a && a.dealer && a.dealer(); if(!d) return;
+    if(what === 'nod'){ d.setAttribute('data-nod', '1'); setTimeout(function(){ d.removeAttribute('data-nod'); }, 560); }
+    else if(what === 'shrug'){ d.classList.remove('pb-shrug'); void d.offsetWidth; d.classList.add('pb-shrug'); setTimeout(function(){ d.classList.remove('pb-shrug'); }, 800); }
+    else if(what === 'glance'){ try{ d.style.setProperty('--lx', '-3px'); d.style.setProperty('--ly', '-0.4px'); }catch(e){} }
+    else if(what === 'front'){ try{ d.style.removeProperty('--lx'); d.style.removeProperty('--ly'); }catch(e){} }
+  }
+
+  /* ---------- sounds (the game's own tone and noise, only if its sound is on) ---------- */
+  function sfx(name){
+    try{
+      var on = W.G && (W.G.soundOn || W.G.sound); if(!on) return;
+      if(name === 'step' && W.playTone){ W.playTone(98, .14, 'sine', .05); }
+      else if(name === 'hm' && W.playTone){ W.playTone(165, .16, 'sine', .045); setTimeout(function(){ W.playTone(147, .22, 'sine', .04); }, 150); }
+      else if(name === 'tap' && W.playTone){ W.playTone(240, .04, 'square', .02); }
+      else if(name === 'pat' && W.playTone){ W.playTone(130, .06, 'sine', .05); }
+      else if(name === 'ding' && W.playTone){ W.playTone(1175, .22, 'sine', .035); setTimeout(function(){ W.playTone(1568, .3, 'sine', .03); }, 90); }
+    }catch(e){}
+  }
+
+  /* ---------- props: carried in the hand, set down on the counter ---------- */
+  function hold(name){ if(!S.held) return; if(name){ S.held.setAttribute('data-prop', name); S.held.classList.add('on'); } else S.held.classList.remove('on'); }
+  function setDown(name, where){
+    var p = pt(where || 'trayside'); if(!p || !S.st) return;
+    var el = D.createElement('div'); el.className = 'pb-prop'; el.setAttribute('data-prop', name);
+    el.innerHTML = PROPS; el.style.left = Math.round(p.x - 14) + 'px'; el.style.top = Math.round(p.y - 34) + 'px';
+    S.st.appendChild(el); S.props.push(el);
+    setTimeout(function(){ el.classList.add('on'); }, 20);
+  }
+  function clearProps(){ S.props.forEach(function(e){ if(e.parentNode) e.parentNode.removeChild(e); }); S.props = []; }
+
+  /* ---------- the scene ---------- */
+  /* a script is a list of beats: [wait, verb, a, b]. The wait is in ms after the beat before. */
+  function perform(b, ctx){
+    var v = b[1], x = b[2], y = b[3], p;
+    switch(v){
+      case 'enter':
+        place(); S.el.setAttribute('data-state', 'in'); look('dealer'); mood(x || 'stern'); sfx('step'); armRest(); break;
+      case 'leave':
+        armRest(); hold(null); S.el.setAttribute('data-state', 'out'); look('away'); dealerDo('front'); sfx('step');
+        at(700, function(){ finish(); }); break;
+      case 'boss': bossSay(pick(x, ctx.scene + ':' + b[0] + ':' + (x && x[0])), y); break;
+      case 'dealer': dealerSay(pick(x, ctx.scene + ':d:' + (x && x[0])), y); break;
+      case 'bmood': mood(x); break;
+      case 'dmood': dealerMood(x, y); break;
+      case 'look': look(x); break;
+      case 'dlook': dealerDo(x === 'boss' ? 'glance' : 'front'); break;
+      case 'dnod': dealerDo('nod'); break;
+      case 'dshrug': dealerDo('shrug'); break;
+      case 'sfx': sfx(x); break;
+      case 'arm': p = pt(x); if(p) armTo(p.x, p.y, y || 'open'); break;
+      case 'rest': armRest(); break;
+      case 'tap':                                                // the arm goes to a place and knocks on it twice
+        p = pt(x); if(!p) break; armTo(p.x, p.y - 4, 'flat', 360);
+        at(380, function(){ armTo(p.x, p.y + 2, 'flat', 90); sfx('tap'); });
+        at(520, function(){ armTo(p.x, p.y - 5, 'flat', 90); });
+        at(640, function(){ armTo(p.x, p.y + 2, 'flat', 90); sfx('tap'); });
+        break;
+      case 'pat':                                                // a hand on the dealer's shoulder, and two pats
+        p = pt('dealer'); if(!p) break; armTo(p.x, p.y - 6, 'open', 380); dealerDo('nod');
+        at(420, function(){ armTo(p.x, p.y + 1, 'open', 100); sfx('pat'); });
+        at(580, function(){ armTo(p.x, p.y - 5, 'open', 100); });
+        at(700, function(){ armTo(p.x, p.y + 1, 'open', 100); sfx('pat'); });
+        break;
+      case 'hold': hold(x); break;
+      case 'give':                                                // carries a prop over and leaves it on the counter
+        p = pt(y || 'trayside'); if(!p) break; hold(x); armTo(p.x, p.y - 14, 'open', 460);
+        at(520, function(){ hold(null); setDown(x, y || 'trayside'); sfx('tap'); });
+        break;
+      case 'fx': if(S.cfg.fx && S.cfg.fx[x]) try{ S.cfg.fx[x](ctx, y); }catch(e){ err('fx ' + x, e); } break;
+      case 'dealerarm': { var a = api(); if(a && a.dealerArm) try{ a.dealerArm(x); }catch(e){ err('dealerArm', e); } break; }
+    }
+  }
+  function play(name){
+    var a = api(), script = S.cfg && S.cfg.scenes && S.cfg.scenes[name];
+    if(!script || !enabled() || !a || !a.ready()) return false;
+    if(a.chat && a.chat() === 'off') return false;
+    if(!build()) return false;
+    abort(true);
+    S.gen++; S.playing = true; S.scene = name; S.plays++;
+    S.el.setAttribute('data-reduce', reduced() ? '1' : '0');
+    S.el.setAttribute('data-quick', k() < 0.7 ? '1' : '0');
+    var ctx = {scene: name, api: a, S: S, say: bossSay}, t = 0;
+    script.forEach(function(b){ t += (b[0] || 0) * k(); at(t, function(){ if(a.ready && !a.ready()){ abort(false); return; } perform(b, ctx); }); });
+    S.safe = at(t + 6000 * k(), function(){ if(S.playing) abort(false); });                               // a script that forgot to leave
+    return true;
+  }
+  function finish(){
+    S.playing = false; S.scene = ''; S.lastEnd = 'done';
+    if(S.el){ S.el.setAttribute('data-state', 'away'); armRest(); }
+  }
+  /* the next hand starts, or the boss is switched off: he goes (quickly) and takes nothing with him but the props he left */
+  function abort(quick){
+    S.gen++; S.pending = null;
+    S.timers.forEach(function(r){ clearTimeout(r.id); }); S.timers = [];
+    clearTimeout(S.sayT);
+    var was = S.playing;
+    if(was) S.lastEnd = 'cut';
+    S.playing = false; S.scene = '';
+    if(!S.el) return;
+    S.say.classList.remove('on'); hold(null); dealerDo('front');
+    clearProps();
+    if(was && !quick){
+      S.el.setAttribute('data-quick', '1'); S.el.setAttribute('data-state', 'out'); armRest();
+      setTimeout(function(){ if(!S.playing && S.el) S.el.setAttribute('data-state', 'away'); }, 480);
+    } else { S.el.setAttribute('data-quick', '1'); S.el.setAttribute('data-state', 'away'); armRest(); }
+  }
+
+  function init(cfg){ S.cfg = cfg; S.win = 0; S.loss = 0; return true; }
+  return {
+    init: init, hand: hand, abort: abort, reset: reset, enabled: enabled, setEnabled: setEnabled, mountToggle: mountToggle, tally: tally, play: play,
+    holdMs: holdMs, active: function(){ return S.playing || !!S.pending; }, speaking: function(){ return S.speaking; }, STREAK: STREAK,
+    _S: S, _perform: perform, _pt: pt, _place: place, _build: build
+  };
+})();
+
+/* the pit boss's two scenes at this table: five wins in a row ("hot", he is pleased) and five losses in a row ("cold", he is not). He walks over, says his piece, the dealer answers, and he walks out.
+   [wait in ms, what, ...] */
+var PB_SCENES = {
+  hot: [
+    [0,    'enter', 'amused'],
+    [0,    'dlook', 'boss'],
+    [500,  'boss', 'Five hands. Five wins.', 2200],
+    [2300, 'dealer', ['Straight deal, boss.', 'Not a thing, boss.'], 2000],
+    [300,  'dnod'],
+    [2300, 'bmood', 'smile'], [0, 'look', 'player'],
+    [0,    'boss', 'I’m watching you. Good luck, sir.', 2200],
+    [2400, 'leave']
+  ],
+  cold: [
+    [0,    'enter', 'sus'],
+    [0,    'dlook', 'boss'], [0, 'dmood', 'sweat', 2400],
+    [500,  'boss', 'Five losses. Did somebody ice this shoe?', 2300],
+    [2400, 'dealer', 'It’s just the cards, boss!', 2000],
+    [300,  'dshrug'],
+    [2300, 'bmood', 'concern'], [0, 'look', 'player'],
+    [0,    'boss', 'Basic strategy doesn’t care about streaks.', 2300],
+    [2500, 'leave']
+  ]
+};
+
 /* ============ TABLE SHOW ============
    A dealer who rises to deal, passes cards to every seat, peeks at the hole card, and pays out blackjacks with a chip cascade;
    a shoe you can tap or flick to deal; and hand signals (tap = hit, swipe = stand, drag a chip onto your bet = double).
@@ -3082,12 +4088,16 @@ var Show = (function(){
   'use strict';
   var W = window;
   var S = {
+    /* motion: the extra table motion added in November (a card lands with weight, the hand makes room, the total counts up, a bust is felt, payouts you can follow). Off: the table is as it was before. The dealer's peek is not part of this. */
+    motion:false,
+    /* dbl: the one piece of that motion that stays - a double goes down on its side, and a second chip goes onto the bet. */
+    dbl:true,
     ready:false, built:false, wasOn:false, st:null, layer:null,
     state:'away', upAt:0, mood:'idle', moodT:0, sayT:0,
     queue:[], busy:false, idleWaiters:[], essential:[], timers:[], watch:0,
-    flights:[], flightSeq:0, hidden:[], snap:null, needSnap:true,
+    flights:[], flightSeq:0, hidden:[], landWaiters:[], heldBoxes:[], readWait:false, rolls:[], chipHold:{}, bankHold:null, pay:null, snap:null, needSnap:true,
     orig:null, errors:[], peekCb:null, sig:null, drag:null, tapAt:0,
-    k:1, T:{deal:470, hit:780, result:2600}, stats:{flights:0, quick:0, peeks:0, retargets:0, eggs:0, surprises:0, smiles:0, frowns:0, nope:0}, dmKey:'', tbuilt:false, spots:[{i:0, chips:[], val:0, init:false, cache:null}, {i:1, chips:[], val:0, init:false, cache:null}, {i:2, side:'pp', chips:[], val:0, init:false, cache:null}, {i:3, side:'tp', chips:[], val:0, init:false, cache:null}, {i:4, side:'tl', chips:[], val:0, init:false, cache:null}, {i:5, side:'bb', chips:[], val:0, init:false, cache:null}], nextDrop:null, cd:null, suppressClick:0, egg:null, eggEnd:0, eggLast:'', eggLine:{sus:0, sad:0}, armPt:null, shoeDrag:null, seed:7919, enterCbs:[], gen:0, idleRec:null, lowerRec:null, peekedFor:null
+    k:1, T:{deal:470, hit:780, result:2600}, stats:{flights:0, quick:0, peeks:0, retargets:0, eggs:0, surprises:0, smiles:0, frowns:0, nope:0, rolls:0, busts:0, doubles:0, flips:0}, dmKey:'', tbuilt:false, spots:[{i:0, chips:[], val:0, init:false, cache:null}, {i:1, chips:[], val:0, init:false, cache:null}, {i:2, side:'pp', chips:[], val:0, init:false, cache:null}, {i:3, side:'tp', chips:[], val:0, init:false, cache:null}, {i:4, side:'tl', chips:[], val:0, init:false, cache:null}, {i:5, side:'bb', chips:[], val:0, init:false, cache:null}], nextDrop:null, cd:null, suppressClick:0, egg:null, eggEnd:0, eggLast:'', eggLine:{sus:0, sad:0}, armPt:null, shoeDrag:null, seed:7919, enterCbs:[], gen:0, idleRec:null, lowerRec:null, peekedFor:null
   };
 
   S.nudge = {first:30000, again:60000, hold:4200, retry:5000, max:3, off:false};   // the idle dealer visit (ms; scaled by S.k)
@@ -3116,6 +4126,8 @@ var Show = (function(){
   function reduced(){ try{ return !!(W.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; } }
   function canAnim(){ return typeof Element!=='undefined' && typeof Element.prototype.animate==='function'; }
   function fx(){ return on() && S.built && !reduced() && canAnim(); }
+  /* Quick deal: no reach for the shoe, shorter flights, shorter pauses -- every pause below is multiplied by this */
+  function qf(){ return (on() && W.G && G.quickDeal) ? 0.6 : 1; }
   function later(fn, ms, essential){
     var rec = {fn:fn, essential:!!essential, id:0};
     rec.id = setTimeout(function(){
@@ -3141,13 +4153,15 @@ var Show = (function(){
     src.connect(f); f.connect(g); g.connect(c.destination); src.start();
   }
   function sfxFlick(){ noise(0.07, 3200, 0.9, 0.05, 1500); }
-  function sfxLand(){ noise(0.035, 1300, 1.2, 0.035); }
+  function sfxLand(){ noise(0.035, 1300, 1.2, 0.035); noise(0.05, 520, 0.9, 0.02); }            // a card on felt: a slap and a soft thump under it
+  function tink(f, dur, vol){ var c = ctxOk(); if(!c) return; try{ var o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, c.currentTime); g.gain.setValueAtTime(vol, c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + dur + 0.02); }catch(e){} }
+  function sfxThud(){ noise(0.16, 230, 0.8, 0.07, 90); tink(78, 0.18, 0.05); }                 // a bust
   function sfxSlide(){ noise(0.09, 2400, 0.7, 0.03, 1800); }
   function sfxKnock(){ if(G.soundOn){ playTone(150, 0.07, 'sine', 0.09); setTimeout(function(){ playTone(120, 0.06, 'sine', 0.06); }, 70); } }
   function sfxSwish(){ noise(0.2, 2600, 0.6, 0.05, 700); }
-  function sfxClack(){ if(G.soundOn){ playTone(1100, 0.03, 'square', 0.025); playTone(2300, 0.02, 'triangle', 0.02); } }
+  function sfxClack(){ if(!G.soundOn) return; noise(0.018, 4200 + rnd()*600, 1.6, 0.05); tink(2400 + rnd()*400, 0.05, 0.011); }   // clay on clay
   function sfxChime(){ if(!G.soundOn) return; [784, 988, 1175, 1568].forEach(function(f,i){ setTimeout(function(){ playTone(f, 0.22, 'sine', 0.045); }, i*85); }); }
-  function sfxCoin(i){ if(!G.soundOn) return; playTone(1500 + (i%5)*140 + rnd()*60, 0.05, 'triangle', 0.028); }
+  function sfxCoin(i){ if(!G.soundOn) return; noise(0.016, 3800 + (i%5)*260 + rnd()*300, 1.8, 0.04); tink(2900 + (i%5)*120, 0.04, 0.009); }
   function sfxHm(){ if(G.soundOn){ playTone(196, 0.16, 'sine', 0.05); setTimeout(function(){ playTone(174, 0.2, 'sine', 0.045); }, 150); } }
   function sfxSigh(){ if(G.soundOn){ playTone(330, 0.14, 'sine', 0.04); setTimeout(function(){ playTone(262, 0.3, 'sine', 0.04); }, 130); } }
   function sfxTick(){ noise(0.03, 2600, 1.4, 0.022); }
@@ -3263,6 +4277,7 @@ var Show = (function(){
   function sayIt(text, ms, flavor){
     if(!S.say) return;
     var c = chatLvl(); if(c === 'off' || (flavor && c === 'quiet')) return;     // flavor = small talk; the rest is information
+    if(W.PitBoss && PitBoss.active() && !PitBoss.speaking()) return;            // while the pit boss is at the table, the dealer says only what the scene gives him
     S.say.textContent = text; S.say.classList.add('on');
     clearTimeout(S.sayT);
     S.sayT = setTimeout(function(){ S.say.classList.remove('on'); }, ms || 1900);
@@ -3285,7 +4300,7 @@ var Show = (function(){
   function enter(cb){
     if(!on() || !S.built || !fx()){ cb(); return; }
     if(S.state !== 'up') setState('up');
-    var wait = Math.max(0, 400 - (now() - S.upAt));
+    var wait = Math.max(0, Math.round(400*qf()) - (now() - S.upAt));
     var rec = later(function(){ var i = S.enterCbs.indexOf(rec); if(i>=0) S.enterCbs.splice(i,1); cb(); }, wait, true);
     S.enterCbs.push(rec);
   }
@@ -3579,8 +4594,67 @@ var Show = (function(){
     S.hidden.forEach(function(el){ if(want.indexOf(el)<0) el.style.visibility = ''; });
     want.forEach(function(el){ el.style.visibility = 'hidden'; });
     S.hidden = want;
+    // the hands those cards are for say nothing yet either: no Bust badge, no win/lose colour until the card has landed (css: .hold)
+    var boxes = [];
+    S.flights.forEach(function(f){
+      if(f.state==='landed') return;
+      var b = boxFor(f); if(b && boxes.indexOf(b)<0) boxes.push(b);
+    });
+    S.rolls.forEach(function(r){ var b = boxFor(r.f); if(b && boxes.indexOf(b)<0) boxes.push(b); });     // ...and so is a hand whose total is still counting up
+    S.heldBoxes.forEach(function(b){ if(boxes.indexOf(b)<0) b.classList.remove('hold'); });
+    boxes.forEach(function(b){ b.classList.add('hold'); });
+    S.heldBoxes = boxes;
   }
-  function releaseAll(){ S.hidden.forEach(function(el){ el.style.visibility = ''; }); S.hidden = []; }
+  function releaseAll(){
+    S.hidden.forEach(function(el){ el.style.visibility = ''; }); S.hidden = [];
+    S.heldBoxes.forEach(function(b){ b.classList.remove('hold'); }); S.heldBoxes = [];
+  }
+  function boxFor(f){
+    if(f.kind==='d') return $('dealer-box');
+    if(f.kind==='h') return handBoxEl(f.hi);
+    var t = targetEl(f); return (t && t.closest) ? t.closest('.bot-seat') : null;
+  }
+
+  /* ---------- a card in the air has not happened yet ----------
+     Nothing may announce what it did -- a bust, a total, a count -- until it has landed and turned over. The game asks here
+     (whenLanded) before it settles a hit, and the readouts it feeds (odds, count, cards seen) keep showing what was true before. */
+  function pendingLand(){ return S.flights.some(function(f){ return f.state!=='landed' && flightAlive(f); }); }
+  /* cb runs when every card on its way has landed (right away if none is), then `beat` ms later if it had to wait */
+  function whenLanded(cb, beat){
+    if(!S.ready || !S.built || !on() || !pendingLand()){ cb(); return; }
+    var w = {cb:cb, beat:beat||0, rec:null};
+    w.rec = setTimeout(function(){ var i = S.landWaiters.indexOf(w); if(i>=0) S.landWaiters.splice(i,1); err('land timeout', 'forced'); cb(); }, 6000);   // real time: a safety net for a card that never lands
+    S.landWaiters.push(w);
+  }
+  function flushLandWaiters(force){
+    if(!S.landWaiters.length || (!force && pendingLand())) return;
+    var ws = S.landWaiters.splice(0);
+    ws.forEach(function(w){
+      clearTimeout(w.rec);
+      if(force || !w.beat) { try{ w.cb(); }catch(e){ err('land waiter', e); } }
+      else later(function(){ try{ w.cb(); }catch(e){ err('land waiter', e); } }, w.beat);
+    });
+  }
+  /* The readouts that follow the cards (odds, count, cards seen) keep showing what was true before while a card is in the air, and catch up when it lands. */
+  var READOUTS = [['renderOddsPanel', 'odds-panel'], ['renderCountBar', 'count-bar'], ['renderSeen', 'seen-table']];
+  function takeReadouts(){
+    return READOUTS.map(function(x){
+      var el = $(x[1]); if(!el) return null;
+      var fr = document.createDocumentFragment(), disp = el.style.display;
+      while(el.firstChild) fr.appendChild(el.firstChild);
+      return {el:el, fr:fr, disp:disp};
+    });
+  }
+  function putReadouts(keep){
+    if(!pendingLand()) return;                                  // nothing in the air: what was just drawn stands
+    keep.forEach(function(k){ if(k){ k.el.textContent = ''; k.el.appendChild(k.fr); k.el.style.display = k.disp; } });
+    if(S.readWait) return;
+    S.readWait = true;
+    whenLanded(function(){
+      S.readWait = false;
+      READOUTS.forEach(function(x){ try{ if(typeof W[x[0]] === 'function') W[x[0]](); }catch(e){ err(x[0], e); } });
+    });
+  }
 
   /* ---------- what's new on the felt? ---------- */
   function key(c, hidden){ return hidden ? 'back' : c.r + c.suit; }
@@ -3643,20 +4717,203 @@ var Show = (function(){
     var i = S.flights.indexOf(f); if(i>=0) S.flights.splice(i,1);
     var el = targetEl(f);
     applyHides();
-    if(el && f.kind!=='b'){ el.classList.add('landed'); setTimeout(function(){ try{ el.classList.remove('landed'); }catch(e){} }, 240); }
+    if(S.motion && el && f.kind!=='b'){ el.classList.add('landed'); setTimeout(function(){ try{ el.classList.remove('landed'); }catch(e){} }, 340); }
+    try{ squeezeEnd(f); }catch(e){ err('settle', e); }
+    try{ rollFor(f); }catch(e){ err('roll', e); }
     sfxLand();
     if(f.kind==='d'){ try{ dealerDrawMood(); }catch(e){ err('draw mood', e); } }
+    flushLandWaiters();
+    try{ checkBusts(); }catch(e){ err('busts', e); }
     checkIdle();
+  }
+
+  /* ---------- weight: a card lands a hair above the felt and settles; the cards beside it give way a little ---------- */
+  function cardRot(c){ return c.classList.contains('dbl') ? ' rotate(90deg)' : ''; }
+  function squeezeStart(f, el, dur){
+    if(!S.motion || f.kind==='b' || !fx()) return;
+    var out = [], p = el.previousElementSibling;
+    while(p){
+      if(p.classList && p.classList.contains('card')){
+        try{ out.push({c:p, a:p.animate([{transform:'translateX(0px)'+cardRot(p)}, {transform:'translateX(-5px)'+cardRot(p)}], {duration:Math.max(1, Math.round(dur*0.7)), easing:'cubic-bezier(.2,.7,.3,1)', fill:'forwards'})}); }catch(e){ err('squeeze', e); }
+      }
+      p = p.previousElementSibling;
+    }
+    f.sq = out;
+  }
+  function squeezeEnd(f){
+    if(!f.sq) return;
+    var sq = f.sq; f.sq = null;
+    sq.forEach(function(x){
+      try{ x.a.cancel(); }catch(e){}
+      if(!x.c.isConnected || !fx()) return;
+      try{ x.c.animate([{transform:'translateX(-5px)'+cardRot(x.c), offset:0}, {transform:'translateX(1.5px)'+cardRot(x.c), offset:0.55}, {transform:'translateX(0px)'+cardRot(x.c), offset:1}], {duration:Math.max(1, Math.round(280*S.k)), easing:'cubic-bezier(.3,1.2,.5,1)'}); }catch(e){}
+    });
+  }
+
+  /* ---------- the total counts up to what the card made ---------- */
+  function totalText(f){
+    if(f.kind==='d'){ var dc = G.dealer.cards; if(!dc.length) return ''; return String(G.holeRevealed ? handTotal(dc).total : handTotal([dc[0]]).total); }
+    var h = G.hands[f.hi]; if(!h) return null;
+    return h.cards.length ? String(handTotal(h.cards).total) : '';
+  }
+  function rollFor(f){
+    if(!S.motion || !fx() || (f.kind!=='h' && f.kind!=='d')) return;
+    var tot = totalElFor(f); if(!tot || tot.style.visibility==='hidden') return;
+    var cards = f.kind==='d' ? G.dealer.cards : (G.hands[f.hi] && G.hands[f.hi].cards);
+    if(!cards || f.idx < 2) return;                                   // the opening cards just appear; it is a hit that counts up
+    if(f.kind==='d' && !G.holeRevealed) return;                       // the hole card is face down: his total stays on the card you can see
+    var from = handTotal(cards.slice(0, f.idx)).total, to = handTotal(cards).total;
+    if(!(from > 0) || from === to) return;
+    S.rolls = S.rolls.filter(function(r){ if(r.el !== tot) return true; r.timers.forEach(unlater); r.el.classList.remove('rolling'); return false; });
+    var n = Math.max(1, Math.min(Math.abs(to - from), 6)), ms = 230;
+    var rec = {f:f, el:tot, cur:from, step:0, timers:[]};
+    S.rolls.push(rec); S.stats.rolls++;
+    tot.textContent = String(from); tot.classList.add('rolling');
+    for(var i = 1; i <= n; i++) (function(i){
+      rec.timers.push(later(function(){
+        if(S.rolls.indexOf(rec) < 0 || i <= rec.step) return;           // done already, or a later step has run
+        rec.step = i;
+        if(i < n){ rec.cur = Math.round(from + (to - from) * i / n); if(tot.isConnected) tot.textContent = String(rec.cur); }
+        else rollEnd(rec);
+      }, ms * i / n));
+    })(i);
+    applyHides();                                                   // the hand keeps quiet until the number is done
+  }
+  function rollEnd(rec){
+    var i = S.rolls.indexOf(rec); if(i < 0) return;
+    S.rolls.splice(i, 1);
+    var el = rec.el, txt = totalText(rec.f);
+    if(el.isConnected){
+      if(txt !== null) el.textContent = txt;
+      el.classList.remove('rolling');
+      el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+      later(function(){ el.classList.remove('pop'); }, 300);
+    }
+    applyHides(); checkBusts();
+  }
+  function reapplyRolls(){ S.rolls.forEach(function(r){ if(r.el.isConnected){ r.el.textContent = String(r.cur); r.el.classList.add('rolling'); } }); }
+
+  /* ---------- a bust you can feel ---------- */
+  function checkBusts(){
+    var dt = handTotal(G.dealer.cards), list = [{who:'d', box:$('dealer-box'), bust:!!(G.holeRevealed && dt.total > 21), hi:-1}];
+    G.hands.forEach(function(h, i){ list.push({who:'h', box:handBoxEl(i), bust:h.status==='bust', hi:i}); });
+    list.forEach(function(o){
+      var b = o.box; if(!b) return;
+      var has = b.hasAttribute('data-bust');
+      if(!o.bust){ if(has){ b.removeAttribute('data-bust'); b.style.removeProperty('--tilt'); } return; }
+      if(has || b.classList.contains('hold') || !fx() || !S.motion) return;
+      bustMoment(o);
+    });
+  }
+  function bustMoment(o){
+    var b = o.box; S.stats.busts++;
+    b.style.setProperty('--tilt', (o.hi % 2 ? '2.2deg' : '-2.2deg'));
+    b.setAttribute('data-bust', '1');                                // css: the hand sags and dims, the badge drops in
+    var tot = o.who==='d' ? $('dealer-total') : (b.children[1] && b.children[1].children[1]);
+    if(tot){ tot.classList.remove('shake'); void tot.offsetWidth; tot.classList.add('shake'); later(function(){ tot.classList.remove('shake'); }, 420); }
+    if(o.who==='h'){ vignette('rgba(225,93,69,'); sfxThud(); buzz(34); }
+    else { ringPulse(b); sfxClack(); }
+  }
+  function vignette(rgba){
+    if(!S.layer || !fx()) return;
+    var v = document.createElement('div'); v.className = 'bust-vig'; v.style.background = 'radial-gradient(ellipse at 50% 55%,'+rgba+'0) 42%,'+rgba+'.4) 100%)';
+    S.layer.appendChild(v);
+    var gone = function(){ if(v.parentNode) v.parentNode.removeChild(v); };
+    try{ var a = v.animate([{opacity:0}, {opacity:1, offset:0.22}, {opacity:0}], {duration:Math.max(1, Math.round(760*S.k)), easing:'ease-out', fill:'forwards'}); a.onfinish = gone; }catch(e){ gone(); }
+  }
+
+  /* ---------- a double: the card is turned on its side, and a second chip goes onto the bet ---------- */
+  function markDoubles(){
+    var live = on() && S.dbl;
+    G.hands.forEach(function(h, i){
+      var b = handBoxEl(i), row = b && b.children[1] && b.children[1].children[0]; if(!row) return;
+      Array.prototype.forEach.call(row.children, function(c, ci){
+        var is = live && h.dblIdx === ci;
+        if(is !== c.classList.contains('dbl')){ c.classList.toggle('dbl', is); if(is) c.style.setProperty('--r', '90deg'); else c.style.removeProperty('--r'); }
+      });
+    });
+  }
+  function chipSource(hi){
+    var cand = [document.querySelector('.dbl-handle .dh-chip'), document.querySelector('.hb-act-btn.act-double'), $('chip-stack')], i, e, r;
+    for(i = 0; i < cand.length; i++){ e = cand[i]; if(!e) continue; r = e.getBoundingClientRect(); if(r.width > 0 || r.height > 0) return rectInLayer(e); }
+    var rp = ringPoint(hi); return rp ? {x:rp.x, y:rp.y + 90} : {x:0, y:0};
+  }
+  function onDouble(h){
+    if(!S.dbl || !S.ready || !S.built || !on() || !fx() || !S.layer) return;
+    var hi = G.hands.indexOf(h); if(hi < 0) return;
+    S.stats.doubles++;
+    if(h.freeDoubleBonus) return;                                    // a free double puts no chip down
+    var old = Math.round(h.bet / 2), rp = ringPoint(hi); if(!rp) return;
+    S.chipHold[hi] = old;                                            // the pile on the ring stays as it was until the chip is there
+    bankHoldStart();
+    var chips = computeChipBreakdown(old).slice(0, 3), src = chipSource(hi), left = chips.length;
+    chips.forEach(function(d, n){
+      var c = chipEl(d); S.layer.appendChild(c);
+      pathChip(c, src, {x:rp.x + n*3, y:rp.y - n*4}, {dur:430, delay:n*60, s0:.8, s1:.95, done:function(){
+        sfxClack();
+        if(c.parentNode) c.parentNode.removeChild(c);
+        if(--left === 0){ delete S.chipHold[hi]; try{ updateSignalUi(); }catch(e){ err('pile', e); } ringRip(rp.x, rp.y); ringPulse(handBoxEl(hi)); bankTween(G.bankroll, 380); }
+      }});
+    });
+    sfxCoin(2);
+  }
+
+  /* ---------- chips: one chip along an arc; a ring that spreads; a number that counts ---------- */
+  function chipEl(d, label){ var c = document.createElement('i'); c.className = 'pchip ' + chipColorClass(d); c.textContent = label === undefined ? chipLabel(d) : label; return c; }
+  function pathChip(el, a, b, o){
+    o = o || {};
+    var dist = Math.sqrt((b.x-a.x)*(b.x-a.x) + (b.y-a.y)*(b.y-a.y));
+    var dur = Math.max(1, Math.round((o.dur || 420) * S.k * qf())), delay = Math.round((o.delay || 0) * S.k * qf());
+    var arc = o.arc == null ? Math.min(46, 14 + dist*0.12) : o.arc, s0 = o.s0 == null ? .8 : o.s0, s1 = o.s1 == null ? 1 : o.s1, o1 = o.o1 == null ? 1 : o.o1;
+    function tf(x, y, sc){ return 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+sc.toFixed(3)+')'; }
+    el.style.transform = tf(a.x, a.y, s0);
+    var xm = a.x + (b.x - a.x)*.5, ym = a.y + (b.y - a.y)*.5 - arc;
+    var an;
+    function fin(){ el.style.transform = tf(b.x, b.y, s1); el.style.opacity = String(o1); if(o.done){ try{ o.done(); }catch(e){ err('chip done', e); } } }
+    try{
+      an = el.animate([{transform:tf(a.x, a.y, s0), offset:0}, {transform:tf(xm, ym, (s0+s1)/2*1.1), offset:.5}, {transform:tf(b.x, b.y, s1), opacity:o1, offset:1}],
+        {duration:dur, delay:delay, easing:o.ease || 'cubic-bezier(.3,.6,.4,1)', fill:'both'});
+      an.onfinish = fin;
+    }catch(e){ err('chip', e); fin(); return null; }
+    return an;
+  }
+  function ringRip(x, y){
+    if(!S.layer || !fx()) return;
+    var rg = document.createElement('div'); rg.className = 'ring-rip'; S.layer.appendChild(rg);
+    var gone = function(){ if(rg.parentNode) rg.parentNode.removeChild(rg); };
+    function tf(sc){ return 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+sc+')'; }
+    rg.style.transform = tf(.8);
+    try{ var a = rg.animate([{transform:tf(.8), opacity:.85}, {transform:tf(2), opacity:0}], {duration:Math.max(1, Math.round(640*S.k)), easing:'ease-out', fill:'forwards'}); a.onfinish = gone; }catch(e){ gone(); }
+  }
+  function bankNum(){ var e = $('bankroll-val'); return e ? (parseInt(String(e.textContent).replace(/[^\d-]/g, ''), 10) || 0) : 0; }
+  function bankHoldStart(){ if(S.bankHold == null) S.bankHold = bankNum(); }
+  /* the bankroll shows what it showed, then counts to what it is */
+  function bankTween(to, ms, delay){
+    var e = $('bankroll-val'); if(!e){ S.bankHold = null; return; }
+    var from = S.bankHold != null ? S.bankHold : bankNum();
+    if(S.bankRec){ S.bankRec.forEach(unlater); } S.bankRec = [];
+    function finish(){ S.bankHold = null; S.bankRec = null; e.textContent = String(G.bankroll); }
+    if(!fx() || from === to){ finish(); return; }
+    var steps = Math.max(4, Math.min(16, Math.round(ms / 45)));
+    for(var i = 1; i <= steps; i++) (function(i){
+      S.bankRec.push(later(function(){
+        if(i === steps){ finish(); return; }
+        var q = 1 - Math.pow(1 - i/steps, 3); S.bankHold = Math.round(from + (to - from)*q); e.textContent = String(S.bankHold);
+      }, ((delay || 0) + ms * i / steps) * qf()));
+    })(i);
+    var pill = e.closest ? e.closest('.bankroll-pill') : null;
+    if(pill){ later(function(){ pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); later(function(){ pill.classList.remove('bump'); }, 520); }, delay || 0); }
   }
   function launch(f, from){
     var el = targetEl(f), card = cardFor(f);
     if(!el || !card || !S.layer){ land(f); return; }
     var lr = S.layer.getBoundingClientRect(), r = el.getBoundingClientRect();
     var shown = el.classList.contains('show');
-    var tw = shown ? r.width : r.width/0.94;
+    var tw = el.offsetWidth > 0 ? el.offsetWidth : (shown ? r.width : r.width/0.94);       // its own width, not the box a turned card takes up
     var x1 = r.left + r.width/2 - lr.left, y1 = r.top + r.height/2 - lr.top + (shown ? 0 : 8);
     var mini = f.kind==='b';
     var s1 = mini ? 0.3 : clamp(tw/88, 0.5, 1.2);
+    var endRot = (S.dbl && f.dbl) ? 90 : 0, lift = (mini || !S.motion) ? 0 : 7, sEnd = (mini || !S.motion) ? s1 : s1*1.06;           // it comes down from a hair above the felt
     var faceDown = !!f.back;
     var fly = makeFlyer(card, faceDown);
     f.fl = fly.el;
@@ -3674,12 +4931,12 @@ var Show = (function(){
     var kfT = [
       {transform:tr(x0,y0), offset:0, easing:e1},
       {transform:tr(xm,ym), offset:0.55, easing:e2},
-      {transform:tr(x1,y1), offset:1}
+      {transform:tr(x1,y1-lift), offset:1}
     ];
     var kfS = [
       {transform:sr(0.3,r0), offset:0, easing:e1},
       {transform:sr((0.3+s1)/2*1.12,rm), offset:0.55, easing:e2},
-      {transform:sr(s1,0), offset:1}
+      {transform:sr(sEnd,endRot), offset:1}
     ];
     if(mini){ kfS[0].opacity = 1; kfS[1].opacity = 1; kfS[2].opacity = 0; }
     var a, b;
@@ -3692,7 +4949,8 @@ var Show = (function(){
       ], {duration:dur, fill:'forwards'});
     }catch(e){ err('animate', e); land(f); return; }
     f.state = 'flying';
-    f.anim = a; f.animS = b; f.tr = tr; f.plan = {x:x1, y:y1, t:now(), dur:dur};
+    f.anim = a; f.animS = b; f.tr = tr; f.plan = {x:x1, y:y1, t:now(), dur:dur, lift:lift};
+    squeezeStart(f, el, dur);
     f.lt = later(function(){ land(f); }, dur + 700);   // never leave a card stranded if the animation event is missed
     a.onfinish = function(){ land(f); };
     if(!f.quick) sfxFlick(); else sfxSlide();
@@ -3708,9 +4966,10 @@ var Show = (function(){
     var c = f.fl.getBoundingClientRect(), cx = c.left + c.width/2 - lr.left, cy = c.top + c.height/2 - lr.top;
     f.anim.onfinish = null; try{ f.anim.cancel(); }catch(e){}
     f.fl.style.transform = f.tr(cx, cy);
-    var a = f.fl.animate([{transform:f.tr(cx,cy)}, {transform:f.tr(x,y)}], {duration:remain, easing:'ease-out', fill:'forwards'});
+    var lf = f.plan.lift || 0;
+    var a = f.fl.animate([{transform:f.tr(cx,cy)}, {transform:f.tr(x,y-lf)}], {duration:remain, easing:'ease-out', fill:'forwards'});
     a.onfinish = function(){ land(f); };
-    f.anim = a; f.plan = {x:x, y:y, t:now(), dur:remain};
+    f.anim = a; f.plan = {x:x, y:y, t:now(), dur:remain, lift:lf};
     S.stats.retargets++;
   }
   function shoePoint(){ return stageXY(S.shoeCard); }
@@ -3720,7 +4979,7 @@ var Show = (function(){
   }
   function dealRun(f, done){
     if(!flightAlive(f) || !targetEl(f)){ land(f); done(); return; }
-    var quick = S.queue.length >= 2;       // a backlog (bots hitting all at once) is cleared faster
+    var quick = S.queue.length >= 2 || !!(on() && G.quickDeal);       // a backlog (bots hitting all at once) is cleared faster, and Quick deal skips the reach
     f.quick = quick; S.stats.flights++; if(quick) S.stats.quick++;
     if(quick){
       var sp = rectInLayer(S.shoeCard);
@@ -3759,6 +5018,30 @@ var Show = (function(){
     }});
   }
 
+  /* ---------- a hand makes room: whatever was already sitting there slides to where the layout now puts it ---------- */
+  var FLIP_SEL = '#dealer-cards .card, #hands-row .cards-row .card, #hands-row .big-total, #dealer-total';
+  function flipBegin(){
+    var out = [];
+    try{
+      Array.prototype.forEach.call(document.querySelectorAll(FLIP_SEL), function(el){
+        if(el.style.visibility === 'hidden' || el.classList.contains('landed')) return;
+        var r = el.getBoundingClientRect(); out.push({el:el, x:r.left, y:r.top});
+      });
+    }catch(e){ return []; }
+    return out;
+  }
+  function flipEnd(rec){
+    rec.forEach(function(o){
+      var el = o.el; if(!el.isConnected || el.style.visibility === 'hidden' || el.classList.contains('landed')) return;
+      var r = el.getBoundingClientRect(), dx = o.x - r.left, dy = o.y - r.top;
+      if(Math.abs(dx) < 2.5 && Math.abs(dy) < 2.5) return;
+      if(Math.abs(dx) > 420 || Math.abs(dy) > 420) return;             // across the table is a new layout, not a slide
+      var cs = ''; try{ cs = getComputedStyle(el).transform; }catch(e){} if(!cs || cs === 'none') cs = '';
+      S.stats.flips++;
+      try{ el.animate([{transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) '+cs}, {transform:cs || 'none'}], {duration:Math.max(1, Math.round(230*S.k)), easing:'cubic-bezier(.25,.8,.3,1)'}); }catch(e){ err('flip', e); }
+    });
+  }
+
   /* ---------- after every render ---------- */
   function syncBody(){
     var b = document.body;
@@ -3771,6 +5054,9 @@ var Show = (function(){
   }
   function afterRender(){
     if(!S.ready) return;
+    try{ markDoubles(); }catch(e){ err('doubles', e); }
+    try{ trackBets(); }catch(e){ err('track bets', e); }
+    try{ syncHint(); }catch(e){ err('hint', e); }
     syncBody();
     try{ tableUi(); }catch(e){ err('tableUi', e); }
     try{ updateActs(); }catch(e){ err('acts', e); }
@@ -3786,6 +5072,7 @@ var Show = (function(){
       res.flights.forEach(function(f){
         f.id = ++S.flightSeq; f.state = 'queued';
         if(f.kind==='d' && f.idx===1 && !G.holeRevealed) f.back = true;
+        if(f.kind==='h' && G.hands[f.hi] && G.hands[f.hi].dblIdx === f.idx) f.dbl = true;
         S.flights.push(f);
         enqueue({name:'deal', max:2400, run:function(done){ dealRun(f, done); }});
       });
@@ -3793,7 +5080,10 @@ var Show = (function(){
     }
     S.flights = S.flights.filter(function(f){ if(flightAlive(f)) return true; if(f.fl && f.fl.parentNode) f.fl.parentNode.removeChild(f.fl); if(f.lt) unlater(f.lt); return false; });
     applyHides();
+    reapplyRolls();
+    flushLandWaiters();
     S.flights.forEach(retarget);
+    try{ checkBusts(); }catch(e){ err('busts', e); }
     if(G.phase!=='dealer') S.dmKey = '';
     try{ dealerDrawMood(); }catch(e){ err('draw mood', e); }
     try{ nudgeSync(); }catch(e){ err('nudge', e); }
@@ -4091,14 +5381,14 @@ var Show = (function(){
         hole.classList.add('peeking'); sfxSlide();
         if(S.dealer){ S.dealer.setAttribute('data-nod','1'); }
         sayIt('Checking…', 900);
-      }, 230);
+      }, 230*qf());
       later(function(){
         hole.classList.remove('peeking'); sfxClack();
         if(dealerBJ){ setMood('smirk', 1800); }
         else { setMood('idle'); if(S.dealer){ S.dealer.removeAttribute('data-nod'); void S.dealer.offsetWidth; S.dealer.setAttribute('data-nod','1'); } }
         setArmMs(220); restPose();
-      }, 1080);
-      later(function(){ if(S.dealer) S.dealer.removeAttribute('data-nod'); done(); after(); }, 1330);
+      }, 1080*qf());
+      later(function(){ if(S.dealer) S.dealer.removeAttribute('data-nod'); done(); after(); }, 1330*qf());
     }});
   }
 
@@ -4220,6 +5510,141 @@ var Show = (function(){
     later(fade, life);
   }
 
+  /* ---------- payouts you can follow ----------
+     A win: the dealer pays from his rack onto your bet, and the lot slides to your bankroll, which counts up to match.
+     A loss: your chips are swept across to his rack. A push: your bet slides back to you. All of it can be skipped (tap the felt, Space). */
+  function rackPoint(){
+    if(S.tray && S.tray.getBoundingClientRect().width > 0) return rectInLayer(S.tray);
+    var db = $('dealer-box'); return db ? rectInLayer(db) : {x:0, y:0};
+  }
+  function pillPoint(){
+    var e = $('chip-stack') || $('bankroll-val'); if(!e) return {x:0, y:0};
+    var lr = S.layer.getBoundingClientRect(), r = e.getBoundingClientRect();
+    var cx = r.left + r.width/2, cy = r.top + r.height/2;
+    cx = clamp(cx, 16, Math.max(16, (W.innerWidth || 1000) - 16)); if(cy < 22) cy = 22;     // the pill is off the top of the screen: chips go to the edge of it
+    return {x:cx - lr.left, y:cy - lr.top};
+  }
+  function ringAnchor(i){
+    var hb = handBoxEl(i); if(!hb) return null;
+    var ring = hb.querySelector('.hb-ring'), rr = ring && ring.getBoundingClientRect();
+    if(rr && rr.width > 0) return rectInLayer(ring);
+    var row = hb.querySelector('.cards-row') || hb; return rectInLayer(row);
+  }
+  function payLater(fn, ms){ var r = later(fn, ms*qf()); if(S.pay) S.pay.recs.push(r); return r; }
+  function floatText(x, y, text, cls){
+    if(!S.layer) return;
+    var f = document.createElement('div'); f.className = 'pay-float ' + cls; f.textContent = text;
+    f.style.left = x + 'px'; f.style.top = y + 'px'; S.layer.appendChild(f); if(S.pay) S.pay.els.push(f);
+    var gone = function(){ if(f.parentNode) f.parentNode.removeChild(f); };
+    try{ var a = f.animate([{transform:'translate(-50%,-30%) scale(.8)', opacity:0, offset:0}, {transform:'translate(-50%,-70%) scale(1.06)', opacity:1, offset:.18}, {transform:'translate(-50%,-70%) scale(1)', opacity:1, offset:.7}, {transform:'translate(-50%,-150%) scale(1)', opacity:0, offset:1}], {duration:Math.max(1, Math.round(1250*S.k)), easing:'ease-out', fill:'forwards'}); a.onfinish = gone; }catch(e){ gone(); }
+  }
+  /* what one hand's money does; returns when the last chip of it has arrived.
+     Positions are read when each step happens, not when it is planned: the table has settled by then (the action buttons are gone, the box is a different height). */
+  function payHand(i, h, profit, ret, at){
+    var last = ringAnchor(i); if(!last || !S.layer) return at;
+    var hbEl = handBoxEl(i), bet = hbEl && hbEl.querySelector('.hb-bet');
+    var mine = computeChipBreakdown(h.bet).slice(0, 3), bj = h.status === 'bj';
+    function RP(){ var r = ringAnchor(i); if(r) last = r; return last; }
+    function add(c){ S.layer.appendChild(c); S.pay.els.push(c); return c; }
+    function put(c, x, y){ c.style.transform = 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'; }
+    // your own chips lift off the ring: a copy takes the pile's place and the pile itself is hidden
+    function lift(){
+      var rp = RP(); if(bet) bet.classList.add('pay-hide');
+      return mine.map(function(d, n){ var c = add(chipEl(d)); c._dx = 0; c._dy = n*4; put(c, rp.x, rp.y - c._dy); return c; });
+    }
+    function toPill(cs, t0){
+      cs.forEach(function(c, k){
+        payLater(function(){
+          if(!c.parentNode) return;
+          var rp = RP(), from = {x:rp.x + c._dx, y:rp.y - c._dy};
+          pathChip(c, from, pillPoint(), {dur:560, arc:12, s0:1, s1:.55, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
+        }, t0 + k*45);
+      });
+      return t0 + (cs.length - 1)*45 + 560;
+    }
+    if(ret === 0){                                                    // lost: the dealer sweeps it to his rack
+      var cs = [];
+      payLater(function(){ cs = lift(); }, at);
+      mine.forEach(function(d, k){
+        payLater(function(){ var c = cs[k]; if(!c || !c.parentNode) return; var rp = RP();
+          pathChip(c, {x:rp.x, y:rp.y - k*4}, rackPoint(), {dur:520, arc:10, s0:1, s1:.7, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k === 0) sfxClack(); }}); }, at + 220 + k*55);
+      });
+      payLater(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, '−' + money(h.bet), 'lose'); }, at + 260);
+      return at + 220 + (mine.length - 1)*55 + 520;
+    }
+    if(profit > 0){                                                   // won: paid from his rack, a beat, then it all goes to you
+      var pays = computeChipBreakdown(profit).slice(0, 4), base = [], pc = [], landed = at;
+      payLater(function(){ base = lift(); }, at);
+      pays.forEach(function(d, n){
+        payLater(function(){
+          var rp = RP(), rack = rackPoint(), c = add(chipEl(d)); c._dx = 34 + (n % 2)*4; c._dy = Math.floor(n/2)*4; pc.push(c);
+          pathChip(c, rack, {x:rp.x + c._dx, y:rp.y - c._dy}, {dur:430, arc:Math.min(52, 20 + Math.abs(rack.y - rp.y)*.1), s0:.75, s1:1, done:function(){ sfxClack(); }});
+        }, at + n*70);
+        landed = Math.max(landed, at + n*70 + 430);
+      });
+      var t0 = landed + 300, all = function(){ return base.concat(pc); };
+      if(!bj) payLater(function(){ var rp = RP(); floatText(rp.x + 20, rp.y - 30, '+' + money(profit), 'win'); }, landed - 120);
+      // they leave in the order they were laid down: yours first, then what he paid
+      var n0 = mine.length + pays.length, arrive = t0 + (n0 - 1)*45 + 560;
+      for(var k = 0; k < n0; k++) (function(k){
+        payLater(function(){
+          var c = all()[k]; if(!c || !c.parentNode) return;
+          var rp = RP(), from = {x:rp.x + c._dx, y:rp.y - c._dy};
+          pathChip(c, from, pillPoint(), {dur:560, arc:12, s0:1, s1:.55, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
+        }, t0 + k*45);
+      })(k);
+      S.pay.firstArrive = Math.min(S.pay.firstArrive, t0 + 560);
+      return arrive;
+    }
+    // a push (or half a bet back): your chips slide back to you
+    var back = [];
+    payLater(function(){ back = lift(); }, at);
+    payLater(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, profit < 0 ? '−' + money(-profit) : 'Push', profit < 0 ? 'lose' : 'push'); }, at + 120);
+    var arr = at + 380 + (mine.length - 1)*45 + 560;
+    mine.forEach(function(d, k){
+      payLater(function(){
+        var c = back[k]; if(!c || !c.parentNode) return;
+        var rp = RP(), from = {x:rp.x, y:rp.y - c._dy};
+        pathChip(c, from, pillPoint(), {dur:560, arc:12, s0:1, s1:.55, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
+      }, at + 380 + k*45);
+    });
+    S.pay.firstArrive = Math.min(S.pay.firstArrive, at + 380 + 560);
+    return arr;
+  }
+  function payout(results){
+    payFinish();
+    if(!S.motion || !fx() || !S.layer || !results) return 0;
+    S.pay = {recs:[], els:[], firstArrive:1e9, end:0};
+    var before = bankNum(), end = 0;
+    G.hands.forEach(function(h, i){
+      var res = results[i]; if(!res) return;
+      var t = payHand(i, h, res.amount, res.amount + h.bet, 260 + i*230);
+      end = Math.max(end, t);
+    });
+    S.pay.end = end;
+    // the bankroll shows what it showed, and counts up as the first chips reach it
+    if(before !== G.bankroll){
+      S.bankHold = before;
+      var from = S.pay.firstArrive < 1e9 ? S.pay.firstArrive : Math.max(300, end - 200);
+      bankTween(G.bankroll, Math.max(500, end - from + 560), from);
+      end = Math.max(end, from + 700);
+    }
+    S.pay.end = end;
+    payLater(function(){ payFinish(); }, end + 80);
+    return end;
+  }
+  /* put everything where it will be: chips gone, the number right, no pile hidden */
+  function payFinish(restore){
+    var p = S.pay; S.pay = null;
+    if(p){ p.recs.forEach(unlater); p.els.forEach(function(e){ if(e.parentNode) e.parentNode.removeChild(e); }); }
+    // the pile stays gone until the next hand (those chips were paid out or swept); only switching the show off puts it back
+    if(restore === true) Array.prototype.forEach.call(document.querySelectorAll('.hb-bet.pay-hide'), function(n){ n.classList.remove('pay-hide'); });
+    if(S.bankHold != null || S.bankRec){
+      if(S.bankRec){ S.bankRec.forEach(unlater); S.bankRec = null; }
+      S.bankHold = null; var e = $('bankroll-val'); if(e) e.textContent = String(G.bankroll);
+    }
+  }
+
   var HOT_LINES = ['You’re running hot.', 'Okay… okay.', 'Easy there.', 'Is it warm in here?'];
   var COLD_LINES = ['Shoe’s cold. Hang in there.', 'It’ll turn around.', 'Next one’s yours.', 'The cards are due.'];
   function payoff(results, headline){
@@ -4233,7 +5658,7 @@ var Show = (function(){
     if(headline.cls === 'win'){ S.run.w++; S.run.l = 0; } else if(headline.cls === 'lose'){ S.run.l++; S.run.w = 0; }
     var hot = headline.cls === 'win' && S.run.w >= 3 && (S.run.w - 3) % 2 === 0;
     var cold = headline.cls === 'lose' && !dealerBJ && S.run.l >= 4 && (S.run.l - 4) % 2 === 0;
-    W.RESULT_PAUSE = fx() ? Math.round(S.T.result * (bjIdx>=0 ? 1.2 : (push22 ? 1.25 : (dealerBJ ? 1.2 : (anyWin||anyLose ? 1.1 : 0.88))))) : S.orig.RESULT_PAUSE;
+    W.RESULT_PAUSE = fx() ? Math.round(S.T.result * (qf() < 1 ? 0.75 : 1) * (bjIdx>=0 ? 1.2 : (push22 ? 1.25 : (dealerBJ ? 1.2 : (anyWin||anyLose ? 1.1 : 0.88))))) : S.orig.RESULT_PAUSE;
     if(bjIdx>=0){ setMood('wow', 900); later(function(){ setMood('grin', 2400); }, 900); }
     else if(push22 && !anyWin){ setMood('smirk', 2200); }
     else if(hot){ setMood('sweat', 2800); }
@@ -4249,6 +5674,8 @@ var Show = (function(){
     if(push22) later(guard('push22', pushMarker), 30);
     if(dealerBJ) later(guard('dealer blackjack', function(){ throwMarker('dbj'); }), 30);
     if(!fx()) return;
+    var cEnd = 0; try{ cEnd = payout(results); }catch(e){ err('payout', e); payFinish(); }
+    if(cEnd) W.RESULT_PAUSE = Math.min(Math.max(W.RESULT_PAUSE, Math.round((cEnd + 380) * S.k * qf())), Math.round(3600 * S.k * qf()));       // long enough to watch it
     later(guard('payoff', function(){
       var shown = 0;
       G.hands.forEach(function(h, i){
@@ -4329,14 +5756,15 @@ var Show = (function(){
         hb.innerHTML = '<div class="hb-ring"><div class="hb-pile"></div></div><div class="hb-label"><b></b>on the felt</div>';
         box.appendChild(hb);
       }
-      var sig = h.bet+'|'+(G.phase==='player' && i===G.activeIdx ? 'a' : '');
+      var shownBet = S.chipHold[i] != null ? S.chipHold[i] : h.bet;
+      var sig = shownBet+'|'+(G.phase==='player' && i===G.activeIdx ? 'a' : '');
       if(hb.getAttribute('data-sig') !== sig){
         hb.setAttribute('data-sig', sig);
         // up to three flat chips, the biggest on top with its value on the face
-        var chips = computeChipBreakdown(h.bet).slice(0,3).reverse(), pile = hb.querySelector('.hb-pile');
+        var chips = computeChipBreakdown(shownBet).slice(0,3).reverse(), pile = hb.querySelector('.hb-pile');
         pile.innerHTML = chips.map(function(d, n){ var top = n === chips.length-1; return '<i class="hb-d '+chipColorClass(d)+(top ? ' top' : '')+'" style="--n:'+n+'">'+(top ? chipLabel(d) : '')+'</i>'; }).join('');
         pile.style.height = (38 + Math.max(0, chips.length-1)*4)+'px';
-        hb.querySelector('.hb-label b').textContent = h.bet;
+        hb.querySelector('.hb-label b').textContent = shownBet;
       }
     });
     // the chip to drag
@@ -4348,7 +5776,7 @@ var Show = (function(){
     var d0 = computeChipBreakdown(h0.bet)[0] || 5;
     var hd = document.createElement('div'); hd.className = 'dbl-handle'; hd.setAttribute('role','button'); hd.tabIndex = 0;
     hd.setAttribute('aria-label', 'Double down: drag this chip onto your bet, or press Enter');
-    hd.innerHTML = '<span class="dh-chip '+chipColorClass(d0)+'">'+chipLabel(d0)+'</span><span>Drag onto your bet<br>to double</span>';
+    hd.innerHTML = '<span class="dh-chip '+chipColorClass(d0)+'">'+chipLabel(d0)+'</span><span>Drag onto your bet <br>to double</span>';
     hd.addEventListener('pointerdown', guard('dbl down', function(e){ startDrag(e, hd, d0); }));
     hd.addEventListener('keydown', guard('dbl key', function(e){ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(canSignal()) doAction('D'); } }));
     (S.actPanel && S.actPanel.parentNode ? S.actPanel : ar).appendChild(hd);
@@ -4477,6 +5905,7 @@ var Show = (function(){
     var tip = $('bet-tip');
     if(tip && tip.parentNode){ var ln = document.createElement('p'); ln.id = 'limit-note'; ln.setAttribute('role', 'status'); ln.setAttribute('aria-live', 'polite'); tip.parentNode.insertBefore(ln, tip); }
     wireBet();
+    buildRebet();
     return true;
   }
   function updateRack(){
@@ -4573,6 +6002,7 @@ var Show = (function(){
   }
   function updateBetUi(){
     updateRack();
+    try{ updateRebet(); }catch(e){ err('rebet', e); }
     var nd = S.nextDrop; S.nextDrop = null;
     if(nd && now() - nd.t > 500){ dropGhost(nd.ghost); nd = null; }
     var used = false, firstSide = true;
@@ -4595,6 +6025,7 @@ var Show = (function(){
     reconcile(sp, betN(i));
     sp.chips.push(d); sp.val += d;
     putBet(i, betN(i) + d);
+    S.lastPlaced = i;                                                 // (after putBet: its chip sound also notes the selected hand)
   }
   function removeTop(i, d){
     var sp = S.spots[i];
@@ -4861,6 +6292,7 @@ var Show = (function(){
 
   /* ---------- on / off ---------- */
   function cancelAll(){
+    if(W.PitBoss) PitBoss.abort();
     // Anything the game is waiting for (the first deal step, the peek) still happens -- immediately.
     S.timers.forEach(function(r){ clearTimeout(r.id); });
     S.timers = [];
@@ -4868,7 +6300,12 @@ var Show = (function(){
     S.flights.forEach(function(f){ if(f.anim){ try{ f.anim.onfinish = null; f.anim.cancel(); }catch(e){} } if(f.animS){ try{ f.animS.cancel(); }catch(e){} } if(f.fl && f.fl.parentNode) f.fl.parentNode.removeChild(f.fl); });
     S.flights = [];
     if(S.layer) S.layer.innerHTML = '';
+    S.rolls.forEach(function(r){ if(r.el){ r.el.classList.remove('rolling', 'pop'); if(r.el.isConnected){ var tx = totalText(r.f); if(tx !== null) r.el.textContent = tx; } } }); S.rolls = [];
+    payFinish(true);
+    S.chipHold = {}; if(S.bankRec){ S.bankRec = null; } if(S.bankHold != null){ S.bankHold = null; var be = $('bankroll-val'); if(be) be.textContent = String(G.bankroll); }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-bust]'), function(n){ n.removeAttribute('data-bust'); });
     releaseAll();
+    flushLandWaiters(true);
     Array.prototype.forEach.call(document.querySelectorAll('.card.peeking,.card.flipin,.card.landed'), function(c){ c.classList.remove('peeking','flipin','landed'); });
     if(S.sig){ S.sig = null; }
     S.egg = null; S.dmKey = ''; S.nudgeRec = null; S.visit = null; S.dwellRec = null; S.dwellEv = null; S.shuf = null; S.shufRec = null;
@@ -4885,8 +6322,15 @@ var Show = (function(){
   }
   function applyTimings(){
     var o = S.orig; if(!o) return;
-    if(on() && fx()){ W.DEAL_DELAY = S.T.deal; W.HIT_RESOLVE_DELAY = S.T.hit; W.RESULT_PAUSE = S.T.result; }
+    var q = qf();
+    if(on() && fx()){ W.DEAL_DELAY = Math.round(S.T.deal*q); W.HIT_RESOLVE_DELAY = Math.round(S.T.hit*(q < 1 ? 0.78 : 1)); W.RESULT_PAUSE = Math.round(S.T.result*(q < 1 ? 0.75 : 1)); }
     else { W.DEAL_DELAY = o.DEAL_DELAY; W.HIT_RESOLVE_DELAY = o.HIT_RESOLVE_DELAY; W.RESULT_PAUSE = o.RESULT_PAUSE; }
+    // the dealer's own pace (not the show's): faster when Quick deal is on, and back to what the page had when it is not
+    if(S.qBase === undefined) S.qBase = null;
+    if(on() && fx() && q < 1){
+      if(!S.qBase) S.qBase = {dh:W.DEALER_HIT_DELAY, hf:W.HOLE_FLIP_DELAY};
+      W.DEALER_HIT_DELAY = Math.round(S.qBase.dh*0.62); W.HOLE_FLIP_DELAY = Math.round(S.qBase.hf*0.62);
+    } else if(S.qBase){ W.DEALER_HIT_DELAY = S.qBase.dh; W.HOLE_FLIP_DELAY = S.qBase.hf; S.qBase = null; }
   }
   function sync(){
     if(!S.ready) return;
@@ -4909,7 +6353,16 @@ var Show = (function(){
   /* ---------- hooking into the game ---------- */
   function hook(){
     var _renderAll = W.renderAll;
-    W.renderAll = function(){ var r = _renderAll.apply(this, arguments); try{ afterRender(); }catch(e){ err('afterRender', e); } return r; };
+    W.renderAll = function(){
+      var keep = null, fl = null;
+      try{ if(S.ready && S.built && on() && fx()) keep = takeReadouts(); }catch(e){ err('readouts', e); keep = null; }
+      try{ if(keep && S.motion) fl = flipBegin(); }catch(e){ err('flip', e); fl = null; }
+      var r = _renderAll.apply(this, arguments);
+      try{ afterRender(); }catch(e){ err('afterRender', e); }
+      try{ if(fl) flipEnd(fl); }catch(e){ err('flip', e); }
+      try{ if(keep) putReadouts(keep); }catch(e){ err('readouts', e); }
+      return r;
+    };
 
     var _run = W.runDealSequence;
     W.runDealSequence = function(totalSeats, cardsPerSeat, onComplete){
@@ -4941,7 +6394,15 @@ var Show = (function(){
     var _rr = W.renderResults;
     W.renderResults = function(results, headline){
       var r = _rr.apply(this, arguments);
+      var pbHold = 0;
+      try{                                                    // five wins or five losses in a row: the pit boss comes over (cosmetic only)
+        if(W.PitBoss){
+          var he = G.history && G.history[G.history.length - 1], net = he ? he.net : 0;
+          if(PitBoss.hand(net > 0 ? 'win' : net < 0 ? 'loss' : 'push')) pbHold = PitBoss.holdMs();
+        }
+      }catch(e){ err('pitboss', e); }
       try{ payoff(results, headline); }catch(e){ err('payoff', e); }
+      if(pbHold) W.RESULT_PAUSE = Math.max(W.RESULT_PAUSE || 0, pbHold);                   // the table waits for the whole scene
       return r;
     };
 
@@ -4974,13 +6435,175 @@ var Show = (function(){
 
     var _sfx = W.sfxCard;
     W.sfxCard = function(){ if(S.ready && on() && S.built) return; return _sfx.apply(this, arguments); };
+
+    // the bankroll keeps showing what it showed while chips are still on their way to it
+    var _rcb = W.renderCountBar;
+    if(typeof _rcb === 'function') W.renderCountBar = function(){
+      var r = _rcb.apply(this, arguments);
+      try{ if(S.bankHold != null){ var be = $('bankroll-val'); if(be) be.textContent = String(S.bankHold); } }catch(e){ err('bank hold', e); }
+      return r;
+    };
+    // chips on the felt click instead of beep
+    var _chip = W.sfxChip;
+    if(typeof _chip === 'function') W.sfxChip = function(){ try{ if(S.ready) S.lastPlaced = selSpot(); }catch(e){} if(S.ready && on() && S.built){ sfxClack(); return; } return _chip.apply(this, arguments); };   // a tapped chip lands on the selected hand: that is the one Backspace looks at first
   }
 
+  /* ---------- smoother play: Space deals, one tap to bet what you bet last, Backspace takes a chip back, tap the felt to move on ---------- */
+  function trackBets(){
+    var ph = G.phase;
+    if(S.prevPhase === 'betting' && ph !== 'betting' && G.hands.length){
+      var b = [0, 0], two = false;
+      G.hands.forEach(function(h){ if(!h.fromSplit && (h.spot === 0 || h.spot === 1)){ b[h.spot] = h.bet; if(h.spot === 1) two = true; } });
+      if(!b[0] && G.hands[0]) b[0] = G.hands[0].bet;
+      var side = {}; SIDE_KEYS.forEach(function(k){ if(G.sbAmounts && G.sbAmounts[k] > 0) side[k] = G.sbAmounts[k]; });
+      S.last = {n:two ? 2 : 1, b:b, side:side};
+    }
+    S.prevPhase = ph;
+  }
+  function lastTotal(){ var L = S.last; if(!L) return 0; var t = L.b[0] + (L.n === 2 ? L.b[1] : 0); SIDE_KEYS.forEach(function(k){ if(sideOn(k)) t += L.side[k] || 0; }); return t; }
+  function sameAsLast(){
+    var L = S.last; if(!L) return true;
+    if(spotN() !== L.n || betN(0) !== L.b[0] || (L.n === 2 && betN(1) !== L.b[1])) return false;
+    for(var i = 0; i < SIDE_KEYS.length; i++){ var k = SIDE_KEYS[i]; if((sideOn(k) ? sideVal(k) : 0) !== (sideOn(k) ? (L.side[k] || 0) : 0)) return false; }
+    return true;
+  }
+  function buildRebet(){
+    var deal = $('btn-deal'); if(!deal || !deal.parentNode || $('rebet-grp')) return;
+    var g = document.createElement('span'); g.id = 'rebet-grp'; g.className = 'rebet-grp'; g.style.display = 'none';
+    g.innerHTML = '<button type="button" id="btn-rebet" class="rebet-btn"></button><button type="button" id="btn-rebet-deal" class="rebet-btn">Rebet &amp; Deal</button>';
+    deal.parentNode.insertBefore(g, deal);
+    deal.title = 'Deal — or press Space';
+    $('btn-rebet').addEventListener('click', guard('rebet', function(){ rebet(); }));
+    $('btn-rebet-deal').addEventListener('click', guard('rebet deal', function(){ if(rebet()) dealKey(); }));
+  }
+  function updateRebet(){
+    var g = $('rebet-grp'); if(!g) return;
+    var L = S.last, total = lastTotal();
+    var show = !!(tblOn() && G.phase === 'betting' && L && total > 0 && total <= G.bankroll && !sameAsLast());
+    g.style.display = show ? 'inline-flex' : 'none';
+    document.body.classList.toggle('rebet-on', show);
+    if(show){ var t = '↺ Rebet ' + money(total); var b = $('btn-rebet'); if(b.textContent !== t) b.textContent = t; }
+  }
+  function rebet(){
+    var L = S.last; if(!L || G.phase !== 'betting' || !tblOn()) return false;
+    if(L.n !== spotN()) W.setHands(L.n);
+    for(var i = 0; i < L.n; i++) W.setBet(L.b[i], i);
+    SIDE_KEYS.forEach(function(k){ if(sideOn(k)){ var e = $('sb-' + k + '-amt'); if(e && L.side[k]) e.value = L.side[k]; } });
+    updateBetUi();
+    return true;
+  }
+  function dealKey(){
+    if(G.phase !== 'betting' || overlayOpen()) return false;
+    if(on()) return shoeDeal();
+    if(dealIssue()) return false;
+    var btn = $('btn-deal'); if(btn) btn.click();
+    return true;
+  }
+  /* Backspace: the last chip you put down comes back to the rack */
+  function undoChip(){
+    if(G.phase !== 'betting' || !tblOn() || !S.tbuilt) return false;
+    var order = [], i, sp;
+    if(S.lastPlaced != null) order.push(S.lastPlaced);
+    order.push(selSpot());
+    for(i = 0; i < S.spots.length; i++) order.push(i);
+    for(var n = 0; n < order.length; n++){
+      i = order[n]; sp = S.spots[i];
+      if(!sp || !sp.bc || (i === 1 && spotN() !== 2) || (i >= 2 && !sideOn(sp.side))) continue;
+      reconcile(sp, betN(i));
+      if(!sp.chips.length) continue;
+      var d = sp.chips[sp.chips.length - 1];
+      if(S.motion && fxUi() && S.rack && sp.stack && sp.stack.lastChild){
+        try{
+          var p = stackPoint(sp, sp.chips.length - 1), b = rackChipPoint(d), g = makeGhost(d);
+          ghostFly(g, [{transform:ghostXf(p.x, p.y, 1, 1, 0), opacity:1}, {transform:ghostXf(b.x, b.y, .9, .9, -20), opacity:0}], 240, 'cubic-bezier(.4,0,.8,.6)');
+        }catch(e){ err('undo ghost', e); }
+      }
+      removeTop(i, d); sfxPick();
+      S.lastPlaced = null;
+      return true;
+    }
+    return false;
+  }
+  function typingIn(e){ var t = e.target, tag = t && t.tagName; return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || !!(t && t.isContentEditable); }
+  function ownsKey(t){
+    // things that answer a key themselves (the shoe, the side-bet circles, the double handle, links) keep it; so does a button you tabbed to.
+    // A button you only clicked with the mouse does not: Space then means deal, and the click it would repeat is cancelled.
+    if(!t || !t.tagName || !t.closest) return false;
+    if(t.closest('a[href], summary')) return true;
+    // a button, the shoe or a bet circle answers Space itself only when you got there with the keyboard
+    // (:focus-visible lies here: a key press turns it on for something you only clicked)
+    if(t.tagName === 'BUTTON' || t.closest('[role="button"], .bc, .ds-shoe')) return !!S.kbNav;
+    return false;
+  }
+  function onKey(e){
+    if(!S.ready || !tblOn() || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    if(typingIn(e) || overlayOpen()) return;
+    var k = e.key;
+    if(k === ' ' || k === 'Spacebar' || k === 'Enter'){
+      if(ownsKey(e.target)) return;
+      if(e.repeat){ if(G.phase === 'betting' || G.phase === 'result') e.preventDefault(); return; }       // holding the key down is one press
+      if(G.phase === 'betting'){ e.preventDefault(); e.stopPropagation(); S.spaceKey = true; dealKey(); }
+      else if(G.phase === 'result' && typeof W.skipResult === 'function'){
+        e.preventDefault(); e.stopPropagation(); S.spaceKey = true; hintDone();
+        if(W.skipResult()) dealKey();                                // Space again straight away is the next hand
+      }
+    } else if(k === 'Backspace' || k === 'Delete'){
+      if(G.phase === 'betting' && !(e.target && e.target.closest && e.target.closest('.bc')) && undoChip()) e.preventDefault();
+    }
+  }
+  function onKeyUp(e){ if(S.spaceKey && (e.key === ' ' || e.key === 'Spacebar')){ S.spaceKey = false; e.preventDefault(); } if(e.key === 'Enter') S.spaceKey = false; }
+  function onTapFelt(e){
+    if(!S.ready || !tblOn() || G.phase !== 'result' || typeof W.skipResult !== 'function' || overlayOpen()) return;
+    var t = e.target; if(!t || !t.closest) return;
+    if(t.closest('button,a,input,select,textarea,label,.term,[role="button"]')) return;
+    if(!t.closest('.table-felt, #result-zone')) return;
+    hintDone();
+    W.skipResult();
+  }
+  /* a quiet hint under the result, for the first few hands only: you can move on whenever you like */
+  var HINT_KEY = 'bj_skiphint', HINT_MAX = 6;
+  function hintCount(){ try{ return parseInt(localStorage.getItem(HINT_KEY), 10) || 0; }catch(e){ return S.hintMem || 0; } }
+  function hintSet(n){ S.hintMem = n; try{ localStorage.setItem(HINT_KEY, String(n)); }catch(e){} }
+  function hintDone(){ if(hintCount() < HINT_MAX) hintSet(HINT_MAX); }
+  function syncHint(){
+    var h = $('skip-hint'), res = tblOn() && G.phase === 'result' && typeof W.skipResult === 'function';
+    if(!res){ S.hintShown = false; if(h && h.parentNode) h.parentNode.removeChild(h); return; }
+    if(h || (!S.hintShown && hintCount() >= HINT_MAX)) return;
+    S.hintShown = true; hintSet(hintCount() + 1);
+    h = document.createElement('div'); h.id = 'skip-hint'; h.setAttribute('aria-hidden', 'true');
+    var touch = false; try{ touch = !!(W.matchMedia && W.matchMedia('(pointer:coarse)').matches); }catch(e){}
+    h.textContent = touch ? 'Tap the table for the next hand' : 'Tap the table or press Space for the next hand';
+    document.body.appendChild(h);
+  }
+  function wireKeys(){
+    var mouse = function(){ S.kbNav = false; };
+    document.addEventListener('pointerdown', mouse, true); document.addEventListener('mousedown', mouse, true); document.addEventListener('touchstart', mouse, true);
+    document.addEventListener('keydown', function(e){ if(e.key === 'Tab') S.kbNav = true; }, true);
+    document.addEventListener('keydown', guard('keys', onKey), true);
+    document.addEventListener('keyup', guard('keys up', onKeyUp), true);
+    document.addEventListener('click', guard('tap felt', onTapFelt));
+  }
+
+  function pbConfig(){
+    return {
+      game: 'bj', delay: 2300, scenes: PB_SCENES,
+      api: {
+        stage: function(){ return S.st; }, dealer: function(){ return S.dealer; }, shoe: function(){ return S.shoe; },
+        ready: function(){ return !!(S.built && fx() && S.state === 'up' && W.G && G.phase === 'result'); },
+        say: function(t, ms){ sayIt(t, ms, false); },
+        mood: function(m, h){ setMood(S.st.querySelector('.face-' + m) ? m : 'idle', h); },
+        k: function(){ return S.k; }, chat: chatLvl, announce: function(t){ try{ if(W.announce) W.announce(t); }catch(e){} },
+        dealerArm: function(w){ if(!S.st) return; if(w === 'up'){ var sh = shoulder(); setArmMs(380); held(false); armTo(sh.x + 24, sh.y - 54); } else restPose(); }
+      }
+    };
+  }
   function init(){
     if(S.ready) return;
     S.orig = {DEAL_DELAY:W.DEAL_DELAY, HIT_RESOLVE_DELAY:W.HIT_RESOLVE_DELAY, RESULT_PAUSE:W.RESULT_PAUSE};
     S.ready = true;
+    try{ if(W.PitBoss){ PitBoss.init(pbConfig()); var ts = $('set-tableshow'); if(ts && ts.parentNode) PitBoss.mountToggle(ts.parentNode, 'check-row'); } }catch(e){ err('pitboss', e); }
     hook();
+    wireKeys();
     sync();
     if(on() && S.built){
       S.snap = snapshot(); S.needSnap = false;
@@ -4990,9 +6613,98 @@ var Show = (function(){
     }
   }
 
-  return {init:init, sync:sync, afterRender:afterRender, cancelAll:cancelAll, whenIdle:whenIdle, enter:enter, _S:S, _on:on, _fx:fx, _sigOn:sigOn, _targetEl:targetEl, _dealIssue:dealIssue, _shoeDeal:shoeDeal, _throwMarker:throwMarker, _shuffleMoment:shuffleMoment, _shuffleStop:shuffleStop, refuseShuffle:refuseShuffle, _pump:pump, _nudgeSync:nudgeSync, _nudgeLines:NUDGE_LINES};
+  return {init:init, sync:sync, afterRender:afterRender, _say: sayIt, cancelAll:cancelAll, whenIdle:whenIdle, whenLanded:whenLanded, onDouble:onDouble, payFinish:payFinish, enter:enter, _S:S, _on:on, _fx:fx, _sigOn:sigOn, _targetEl:targetEl, _dealIssue:dealIssue, _shoeDeal:shoeDeal, _throwMarker:throwMarker, _shuffleMoment:shuffleMoment, _shuffleStop:shuffleStop, refuseShuffle:refuseShuffle, _pump:pump, _nudgeSync:nudgeSync, _nudgeLines:NUDGE_LINES};
 })();
 try{ Show.init(); }catch(e){ if(window.console && console.warn) console.warn('[table show] init failed', e); }
+</script>
+<script>
+/* ============ PHONE LAYOUT (behaviour) ============
+   The layout itself is CSS (mobile.css). This only does the few things CSS cannot: a menu for what is not needed
+   mid-hand, the settings as a sheet, and a nudge so the table is in view when a hand starts. On a wide screen it puts everything back. */
+(function(){
+  'use strict';
+  if(!window.matchMedia) return;
+  var mq = window.matchMedia('(max-width:700px), (max-height:520px) and (pointer:coarse)');        // a phone upright, or on its side
+  window.__phoneMQ = window.matchMedia('(max-width:700px)');                                               // the game's own render asks this (two hands sit side by side on a phone)
+  function $(id){ return document.getElementById(id); }
+  var bar = $('topbar'), btn = $('m-menu-btn'), header = bar && bar.querySelector('header');
+  if(!bar || !btn || !header) return;
+  var home = header.children[1];                                       // the column the links normally live in
+  var items = [$('btn-toggle-settings'), $('btn-manners'), home && home.querySelector('a[href*="glossary"]')].filter(Boolean);
+  var menu = document.createElement('div'); menu.id = 'm-menu'; menu.className = 'm-menu';
+  var shuffle = document.createElement('button'); shuffle.type = 'button'; shuffle.id = 'm-shuffle'; shuffle.textContent = 'Shuffle the shoe';
+  shuffle.addEventListener('click', function(){ try{ if(typeof window.fullReshuffle === 'function') window.fullReshuffle(); }catch(e){} });
+  var rules = document.createElement('div'); rules.className = 'm-rules'; rules.setAttribute('aria-hidden', 'true');
+  bar.appendChild(menu);
+
+  function ruleText(){
+    function val(id){ var e = $(id); return e ? e.options[e.selectedIndex].text : ''; }
+    var d = val('set-decks'), p = val('set-payout'), h = val('set-hitsoft17'), v = val('set-variant');
+    return [d, 'Blackjack pays ' + p, 'Dealer ' + h.replace(/\s*\(.*\)/, '').toLowerCase() + ' on soft 17'].concat(v && v !== 'Standard' ? [v] : []).join(' · ');
+  }
+  function openMenu(on){
+    on = !!on; bar.classList.toggle('m-open', on); btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    if(on) rules.textContent = ruleText();
+  }
+  btn.addEventListener('click', function(e){ e.stopPropagation(); openMenu(!bar.classList.contains('m-open')); });
+  menu.addEventListener('click', function(e){ if(e.target.closest('button, a')) openMenu(false); });
+  document.addEventListener('click', function(e){ if(bar.classList.contains('m-open') && !bar.contains(e.target)) openMenu(false); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && bar.classList.contains('m-open')){ openMenu(false); btn.focus(); } });
+
+  function layout(){
+    if(mq.matches){ items.forEach(function(e, i){ menu.appendChild(e); if(i === 0) menu.appendChild(shuffle); }); menu.appendChild(rules); }
+    else { items.forEach(function(e){ home.appendChild(e); }); openMenu(false); if(rules.parentNode) rules.parentNode.removeChild(rules); if(shuffle.parentNode) shuffle.parentNode.removeChild(shuffle); }
+  }
+  /* the settings panel as a sheet: the game still shows and hides it itself; this only dresses it while it is open on a phone */
+  var panel = $('settings-panel'), backdrop = document.createElement('div'), head = document.createElement('div');
+  if(panel){
+    backdrop.className = 'm-backdrop'; document.body.appendChild(backdrop);
+    head.className = 'm-sheet-head'; head.innerHTML = '<b>Table settings</b><button type="button" class="primary" id="m-sheet-done">Done</button>';
+    panel.insertBefore(head, panel.firstChild);
+    var open = false;
+    function sheet(){
+      var on = mq.matches && panel.style.display === 'block';
+      if(on === open) return; open = on;
+      document.body.classList.toggle('m-sheet', on);
+      if(on){ panel.scrollTop = 0; var d = $('m-sheet-done'); if(d) d.focus({preventScroll:true}); }
+    }
+    function closeSheet(){ panel.style.display = 'none'; }
+    new MutationObserver(sheet).observe(panel, {attributes:true, attributeFilter:['style']});
+    backdrop.addEventListener('click', closeSheet);
+    head.querySelector('button').addEventListener('click', function(){ closeSheet(); btn.focus({preventScroll:true}); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && open){ closeSheet(); btn.focus({preventScroll:true}); } });
+    mq.addEventListener ? mq.addEventListener('change', sheet) : mq.addListener(sheet);
+  }
+
+  /* when a hand starts, bring the whole table into view (you may have been reading the chart below it) */
+  function toTable(){
+    if(!mq.matches) return;
+    var felt = document.querySelector('.table-felt'); if(!felt) return;
+    var want = bar.offsetHeight + 6, target = Math.max(0, felt.getBoundingClientRect().top + window.pageYOffset - want), delta = window.pageYOffset - target;
+    if(delta > 70 || delta < -20){                                      // far from the table (reading the chart, say), not just a nudge
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      try{ window.scrollTo({ top: target, behavior: reduce ? 'auto' : 'smooth' }); }catch(e){ window.scrollTo(0, target); }
+    }
+  }
+  var deal = $('btn-deal'); if(deal) deal.addEventListener('click', function(){ setTimeout(toTable, 30); });
+
+  /* on a short phone the chip tray can sit under the pinned Deal bar: while betting, scroll just enough to bring it clear */
+  function overlayOpen(){ return ['tablesetup-overlay','manners-overlay','cutcard-overlay'].some(function(id){ var e = $(id); return e && e.style.display && e.style.display !== 'none'; }) || document.body.classList.contains('m-sheet'); }
+  function chipsClear(){
+    if(!mq.matches || !document.body.classList.contains('phase-betting') || overlayOpen()) return;
+    var rack = document.querySelector('.chip-rack'), dock = $('deal-dock'); if(!rack || !dock) return;
+    var r = rack.getBoundingClientRect(), d = dock.getBoundingClientRect(); if(!r.height || !d.height) return;
+    var dockTop = Math.min(d.top, window.innerHeight - 56), over = r.bottom - (dockTop - 6);
+    if(over > 2 && over < 140) window.scrollBy(0, Math.ceil(over));
+  }
+  var lastPhase = '';
+  function phaseWatch(){ var on = document.body.classList.contains('phase-betting'); if(on && lastPhase !== 'betting') setTimeout(chipsClear, 350); lastPhase = on ? 'betting' : 'other'; }
+  new MutationObserver(phaseWatch).observe(document.body, {attributes:true, attributeFilter:['class']});
+  setTimeout(chipsClear, 900);
+
+  layout();
+  if(mq.addEventListener) mq.addEventListener('change', layout); else if(mq.addListener) mq.addListener(layout);
+})();
 </script>
 </body>
 </html>
