@@ -18,379 +18,287 @@
 <meta name="twitter:description" content="A free practice casino for learning real strategy — Blackjack, Baccarat, Pai Gow Poker, Ultimate Texas Hold'em, and Craps are all live now. No real money, ever.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500..700&family=Inter:wght@400..600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500..700&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<script>window.TR_TH={"emerald":{"label":"Emerald Felt","felt":"#0F3D36","felt-dark":"#0A2B26","panel":"#123832","panel-2":"#163F38","brass":"#C9A24B","brass-bright":"#E8C468","text":"#E8E4D8","muted":"#9FB5AE","line":"rgba(232,228,216,.14)","card":"#F7F3E9","ink":"#16211C"},"graphite":{"label":"Graphite","felt":"#0C0D10","felt-dark":"#08090B","panel":"#15171B","panel-2":"#1D2025","brass":"#D6A94B","brass-bright":"#F0C46B","text":"#EDEEF0","muted":"#8A8F98","line":"rgba(237,238,240,.09)","card":"#F4F5F7","ink":"#15171B"},"midnight":{"label":"Midnight","felt":"#0B0F1A","felt-dark":"#060810","panel":"#131826","panel-2":"#1B2233","brass":"#4FB8E0","brass-bright":"#7ED0F0","text":"#EAEEF5","muted":"#8790A3","line":"rgba(234,238,245,.09)","card":"#F2F4F8","ink":"#12141C"},"crimson":{"label":"Crimson","felt":"#1A0E10","felt-dark":"#120A0B","panel":"#241318","panel-2":"#2E1920","brass":"#D6935A","brass-bright":"#EBAF7C","text":"#F3ECEA","muted":"#A6949B","line":"rgba(243,236,234,.09)","card":"#F6F0F0","ink":"#1A0E10"}};(function(){try{var n=localStorage.getItem('house_edge_theme_v1'),t=Object.prototype.hasOwnProperty.call(window.TR_TH,n)?window.TR_TH[n]:null;if(t&&n!=='graphite'){var s=document.documentElement.style;for(var k in t){if(k!=='label')s.setProperty('--'+k,t[k]);}document.documentElement.setAttribute('data-theme',n);}}catch(e){}})();</script>
 <style>
 @view-transition { navigation: auto; }
-:root{
-  --felt:#0C0D10; --felt-dark:#08090B; --panel:#15171B; --panel-2:#1D2025;
-  --card-face:#F4F5F7; --ink:#15171B;
-  --brass:#D6A94B; --brass-bright:#F0C46B;
-  --coral:#E15D45; --sage:#3FA484; --sage-bright:#65C7A3; --dusty-blue:#5B8DE0; --violet:#9C82E0; --rose:#E8799F;
-  --text:#EDEEF0; --text-muted:#8A8F98; --line:rgba(237,238,240,0.09);
+:root{--felt:#0C0D10;--felt-dark:#08090B;--panel:#15171B;--panel-2:#1D2025;--brass:#D6A94B;--brass-bright:#F0C46B;--text:#EDEEF0;--muted:#8A8F98;--line:rgba(237,238,240,.09);--card:#F4F5F7;--ink:#15171B;--chip5:#B33F3F;--chip10:#2F6FB0;--chip25:#2E8F63;--chip50:#3A3D44;--chip100:#7C5CC4;--chip500:#EDEDE6;--chip1k:#D97B29;--display:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+html{background:var(--felt-dark)}
+body{margin:0;background:var(--felt-dark);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;line-height:1.5;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--brass-bright);outline-offset:3px;border-radius:12px}
+.top{max-width:1280px;width:100%;margin:0 auto;padding:0 32px;height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:relative;z-index:3}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;font:700 21px var(--display);letter-spacing:-.02em;white-space:nowrap}
+.mark{position:absolute;inset:0;border-radius:50%;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 72%);box-shadow:0 0 14px -2px color-mix(in srgb,var(--brass) 60%,transparent)}
+.mark::before{content:"";position:absolute;inset:7%;border-radius:50%;border:2px dashed rgba(32,22,10,.34)}
+.mark::after{content:"";position:absolute;inset:28.5%;border-radius:50%;border:1.5px solid rgba(32,22,10,.3)}
+.nav{display:flex;gap:2px;margin-left:26px}
+.nav a{text-decoration:none;font-size:15px;font-weight:500;padding:8px 14px;border-radius:999px;color:var(--muted)}
+.nav a:hover{color:var(--text);background:var(--panel)}
+.nav a[aria-current]{color:var(--text);background:var(--panel-2)}
+.lft{display:flex;align-items:center}
+.rgt{display:flex;align-items:center;gap:14px}
+.themes{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--panel);border:1px solid var(--line);border-radius:999px}
+.themes button{width:20px;height:20px;border-radius:50%;border:2px solid transparent;background:var(--sw);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);cursor:pointer;padding:0}
+.themes button[aria-pressed="true"]{border-color:var(--brass-bright);box-shadow:0 0 0 2px var(--panel)}
+.bank{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 16px 7px 12px;white-space:nowrap}
+.bank span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bank i{width:12px;height:12px;border-radius:50%;background:var(--chip1k);box-shadow:inset 0 0 0 2px rgba(255,255,255,.55)}
+.bank b{font:700 17px var(--display);font-variant-numeric:tabular-nums}
+.pillbtn{display:inline-flex;align-items:center;gap:8px;background:var(--brass);color:#1B1608;text-decoration:none;font:700 16px var(--display);padding:14px 26px;border-radius:999px;box-shadow:0 10px 34px -10px var(--brass);transition:transform .15s,background .15s,box-shadow .15s}
+.pillbtn:hover{transform:translateY(-2px);background:var(--brass-bright)}
+.pillbtn:active{transform:translateY(1px)}
+.seglab{font-size:13.5px;color:var(--muted);margin:0 0 9px}
+.seg{display:inline-flex;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:600 13.5px var(--body);background:transparent;color:var(--muted);border:0;border-radius:999px;padding:9px 15px;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--brass);color:#1B1608}
+footer{border-top:1px solid var(--line);padding:26px 32px 40px;text-align:center;font-size:13px;color:var(--muted);line-height:1.8}
+footer a{color:var(--text);text-underline-offset:3px}
+@media (max-width:760px){
+  .top{padding:0 16px;height:64px}.nav{display:none}.bank span{display:none}.themes{padding:4px 6px;gap:4px}.themes button{width:17px;height:17px}.rgt{gap:8px}
+  .brand{font-size:18px}.brandwrap{gap:8px}.coin{--cs:24px}.bank{padding:6px 11px 6px 9px}.bank b{font-size:15px}
+  footer{padding:22px 16px 36px}
 }
-*{box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-.wrap{max-width:1160px;margin:0 auto;padding:0 20px;}
-a{color:inherit;}
-:focus-visible{outline:2px solid var(--brass-bright);outline-offset:3px;border-radius:4px;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
-/* ---------- header ---------- */
-header.site{display:flex;align-items:center;justify-content:space-between;padding:26px 0 0;}
-.wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.3px;display:flex;align-items:center;gap:8px;}
-.header-nav-link{font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;color:var(--text-muted);text-decoration:none;padding-bottom:2px;border-bottom:1px solid transparent;transition:color 160ms ease,border-color 160ms ease;}
-.header-nav-link:hover{color:var(--brass-bright);border-color:rgba(240,196,107,0.4);}
-@media(max-width:640px){ #rv-nav{display:none !important;} }
-.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--brass);box-shadow:0 0 10px 1px rgba(214,169,75,0.6);}
-.bankroll-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 10px;}
-.bankroll-pill .chip{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 70%);border:2px solid rgba(8,9,11,0.35);flex-shrink:0;}
-.bankroll-pill .label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-right:2px;}
-.bankroll-pill .amount{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;}
+.brandwrap{display:flex;align-items:center;gap:11px;min-width:0}
+.coin{--cs:28px;position:relative;flex:none;width:var(--cs);height:var(--cs);padding:0;margin:0;border:0;background:none;border-radius:50%;cursor:pointer;perspective:240px;-webkit-tap-highlight-color:transparent;color:inherit;font:inherit}
+.coin::after{content:"";position:absolute;inset:-8px;border-radius:50%}
+.coin:focus-visible{outline:3px solid var(--brass-bright);outline-offset:4px;border-radius:50%}
+.coin-hop{display:block;width:100%;height:100%;transition:transform 220ms ease}
+@media (hover:hover){.coin:hover .coin-hop{transform:translateY(-2px)}}
+@keyframes coinHop{0%{transform:translateY(0) scale(1)}38%{transform:translateY(-9px) scale(1.12)}100%{transform:translateY(0) scale(1)}}
+.coin-hop.hop{animation:coinHop 760ms cubic-bezier(.33,.05,.3,1)}
+.coin-in{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 760ms cubic-bezier(.33,.05,.25,1)}
+.mark.back{transform:rotateY(180deg)}
+.suit{position:absolute;left:50%;top:50%;transform:translate(-50%,-53%);z-index:1;font:700 calc(var(--cs) * .5)/1 var(--display);color:#20160A;opacity:.66}
+@media (prefers-reduced-motion:reduce){.coin-in,.coin-hop{transition:none!important}.coin-hop.hop{animation:none!important}.coin:hover .coin-hop{transform:none!important}}
 
-/* ---------- hero ---------- */
-.hero{padding:92px 0 76px;display:flex;align-items:center;gap:56px;}
-.hero-copy{flex:1;}
-.hero h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(38px,5vw,56px);line-height:1.05;letter-spacing:-1.4px;margin:0 0 20px;}
-.hero p{font-size:clamp(14.5px,1.6vw,16px);color:var(--text-muted);max-width:440px;margin:0 0 30px;line-height:1.6;}
-.cta{display:inline-flex;align-items:center;gap:9px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;background:var(--brass);color:#20160A;border:none;border-radius:12px;padding:15px 26px;cursor:pointer;text-decoration:none;transition:background 160ms ease,transform 100ms ease,box-shadow 160ms ease;box-shadow:0 8px 22px -10px rgba(214,169,75,0.55);}
-.cta:hover{background:var(--brass-bright);transform:translateY(-1px);box-shadow:0 12px 28px -10px rgba(240,196,107,0.6);}
-.cta:active{transform:translateY(0) scale(0.98);}
-.cta svg{transition:transform 160ms ease;}
-.cta:hover svg{transform:translateX(3px);}
-.hero-anim{flex-shrink:0;position:relative;width:220px;height:190px;}
-/* The chip is a real <button>: keyboard, touch and mouse all flip it. Centering uses margins
-   (not transform) so the hover/away transforms never fight the flip transforms inside it. */
-.hero-chip{position:absolute;left:50%;top:50%;width:104px;height:104px;margin:-52px 0 0 -52px;padding:0;border:0;background:none;border-radius:50%;cursor:pointer;perspective:720px;-webkit-tap-highlight-color:transparent;transition:opacity 260ms ease,transform 260ms ease;}
-.hero-chip:focus-visible{outline:2px solid var(--brass-bright);outline-offset:7px;}
-.hero-chip.away{opacity:0;transform:scale(0.7);pointer-events:none;}
-.chip-hop{display:block;width:100%;height:100%;transition:transform 220ms ease;}
-.hero-chip:hover .chip-hop{transform:translateY(-3px);}
-@keyframes chipHop{0%{transform:translateY(0) scale(1);}38%{transform:translateY(-20px) scale(1.07);}100%{transform:translateY(0) scale(1);}}
-.chip-hop.hop{animation:chipHop 760ms cubic-bezier(.33,.05,.3,1);}
-.chip-inner{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 760ms cubic-bezier(.33,.05,.25,1);}
-.chip-face{position:absolute;inset:0;border-radius:50%;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 72%);box-shadow:0 18px 36px -14px rgba(214,169,75,0.42),0 0 0 1px rgba(8,9,11,0.3) inset;}
-.chip-back{transform:rotateY(180deg);}
-.chip-face svg{position:absolute;inset:0;width:100%;height:100%;}
-.chip-suit{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;line-height:1;color:#20160A;opacity:0.62;}
-.hero-moment{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 280ms ease;--tc-rgb:214,169,75;}
-.hero-moment.show{opacity:1;}
-.hero-moment-cards{position:relative;width:100%;height:100%;}
-.hero-moment .flip-card{position:absolute;left:50%;top:50%;width:84px;height:116px;perspective:900px;}
-.hero-moment .flip-card:nth-child(1){transform:translate(-72px,-66px) rotate(-8deg);}
-.hero-moment .flip-card:nth-child(2){transform:translate(-12px,-50px) rotate(7deg);}
-.hero-moment .flip-front .idx{font-size:17px;}
-.hero-moment .flip-front .idx .s{font-size:13px;}
-.hero-moment-label{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--tc-accent, var(--brass-bright));white-space:nowrap;opacity:0;transition:opacity 280ms ease 120ms;}
-.hero-moment.show .hero-moment-label{opacity:1;}
-@media(max-width:640px){.hero-anim{margin-top:8px;}}
-
-/* ---------- reveal-on-load ---------- */
-.rv{transition:opacity 620ms cubic-bezier(.16,1,.3,1),transform 620ms cubic-bezier(.16,1,.3,1);}
-/* hidden-until-revealed only when scripts run, so the page is never blank without JavaScript */
-@media (scripting:enabled){ .rv{opacity:0;transform:translateY(14px);} }
-.rv.show{opacity:1;transform:translateY(0);}
-
-/* ---------- floor section ---------- */
-.floor{padding:8px 0 64px;}
-.floor h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:22px;margin:0 0 24px;letter-spacing:-0.3px;}
-.floor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
-/* five tables in one row on wide screens; on mid-size screens three on the first row, two centred beneath them */
-@media(max-width:1079px){
-  .floor-grid{grid-template-columns:repeat(6,1fr);gap:16px;}
-  .floor-grid .table-card{grid-column:span 2;}
-  .floor-grid .table-card:nth-child(4){grid-column:2 / span 2;}
-  .floor-grid .table-card:nth-child(5){grid-column:4 / span 2;}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.bank b{min-width:3.2ch;text-align:right}
+/* small tablets (an iPad held upright is 768px): the nav and the right-hand pills need a little less air */
+@media (min-width:761px) and (max-width:860px){
+  .top{padding:0 20px}.nav{margin-left:14px}.nav a{padding:8px 11px}
 }
-@media(max-width:900px){
-  .floor-grid{grid-template-columns:repeat(2,1fr);}
-  .floor-grid .table-card,.floor-grid .table-card:nth-child(4),.floor-grid .table-card:nth-child(5){grid-column:auto;}
-  .floor-grid .table-card:nth-child(5){grid-column:1 / -1;justify-self:center;width:calc(50% - 8px);}
+/* the header must fit the narrowest phones (320-360px) even with a long bankroll */
+.rgt{min-width:0}.bank{min-width:0}.bank b{min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:400px){
+  .top{padding:0 12px;gap:8px}
+  .brand{font-size:17px}.brandwrap{gap:7px}.coin{--cs:22px}
+  .rgt{gap:6px}
+  .themes{padding:4px 5px;gap:3px}.themes button{width:16px;height:16px}
+  .bank{padding:6px 10px;gap:7px}.bank b{font-size:14px;min-width:0}.bank i{display:none}
 }
-@media(max-width:560px){
-  .floor-grid{grid-template-columns:1fr;}
-  .floor-grid .table-card:nth-child(5){width:auto;justify-self:stretch;}
+@media (max-width:340px){
+  .brand{font-size:15px}.brandwrap{gap:6px}.coin{--cs:20px}
+  .themes{padding:4px;gap:2px}.themes button{width:15px;height:15px}.bank{padding:6px 8px}
 }
 
-.table-card{position:relative;border-radius:16px;padding:24px 22px 22px;min-height:230px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);transition:opacity 560ms cubic-bezier(.16,1,.3,1),transform 560ms cubic-bezier(.16,1,.3,1),box-shadow 220ms ease,border-color 220ms ease,background 220ms ease;background:var(--panel);}
-@media (scripting:enabled){ .table-card{opacity:0;transform:translateY(18px);} }
-.table-card.show{opacity:1;transform:translateY(0);}
-/* in a row of five the cards are narrower, so they trade a little padding for room */
-@media(min-width:1080px){ .table-card{padding:22px 18px 20px;min-height:0;} }
-.table-card:hover,.table-card:focus-within{transform:translateY(-4px);box-shadow:0 20px 38px -18px var(--tc-shadow, rgba(0,0,0,0.4));border-color:var(--tc-accent);}
-.table-card a.cover{position:absolute;inset:0;z-index:2;}
-.tc-blackjack{--tc-accent:var(--dusty-blue);--tc-rgb:91,141,224;--tc-shadow:rgba(91,141,224,0.35);}
-.tc-baccarat{--tc-accent:var(--sage-bright);--tc-rgb:101,199,163;--tc-shadow:rgba(101,199,163,0.35);}
-.tc-paigow{--tc-accent:var(--coral);--tc-rgb:225,93,69;--tc-shadow:rgba(225,93,69,0.35);}
-.tc-uth{--tc-accent:var(--violet);--tc-rgb:156,130,224;--tc-shadow:rgba(156,130,224,0.35);}
-.tc-craps{--tc-accent:var(--rose);--tc-rgb:232,121,159;--tc-shadow:rgba(232,121,159,0.35);}
 
-.stage-fit{--k:1;height:calc(100px * var(--k));margin-bottom:18px;}
-@media(min-width:1080px){ .stage-fit{--k:0.88;} }
-@media(min-width:1200px){ .stage-fit{--k:0.95;} }
-.icon-stage{position:relative;width:180px;height:100px;transform:scale(var(--k));transform-origin:0 0;}
-.flip-card{position:absolute;width:62px;height:86px;perspective:900px;}
-.flip-inner{position:relative;width:100%;height:100%;transition:transform 520ms cubic-bezier(.34,1.56,.64,1);transform-style:preserve-3d;}
-.flip-card.flipped .flip-inner{transform:rotateY(180deg);}
-.flip-back,.flip-front{position:absolute;inset:0;backface-visibility:hidden;border-radius:8px;}
-.flip-back{background-color:var(--panel-2);border:1.5px solid var(--tc-accent);background-image:repeating-linear-gradient(45deg, var(--tc-accent) 0, var(--tc-accent) 1.5px, transparent 1.5px, transparent 9px);background-blend-mode:normal;opacity:0.92;}
-.flip-back::after{content:'';position:absolute;inset:0;background:var(--panel-2);opacity:0.72;border-radius:6.5px;}
-.flip-front{background:var(--card-face);transform:rotateY(180deg);}
-.flip-front .idx{position:absolute;top:4px;left:5px;font-family:'Space Grotesk',sans-serif;font-weight:800;line-height:1;display:flex;flex-direction:column;align-items:center;font-size:14px;}
-.flip-front .idx .s{font-size:11px;line-height:1;margin-top:1px;}
-.flip-front .idx.br{top:auto;left:auto;bottom:4px;right:5px;transform:rotate(180deg);}
-.flip-front .idx.joker-idx{font-size:7px;letter-spacing:0.2px;}
-.flip-front .idx.joker-idx .s{display:none;}
-.flip-front .center-pip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;line-height:1;}
-.flip-front .center-pip svg{display:block;}
+.tsp{fill:rgba(0,0,0,.12);stroke:var(--brass);stroke-width:1.6;stroke-dasharray:5 4}
+.tbx{fill:var(--panel-2);stroke:var(--line);stroke-width:2}
+.tl{font:700 12px 'Space Grotesk',sans-serif;fill:var(--text);letter-spacing:.04em;text-transform:uppercase}
+.ts{font:500 9.5px 'Inter',sans-serif;fill:var(--muted)}
+.tarc{font:600 11px 'Inter',sans-serif;fill:var(--brass);letter-spacing:.22em;text-transform:uppercase}
+.tline{fill:none;stroke:var(--brass);stroke-opacity:.5;stroke-width:1.5}
+.tfelt{fill:var(--felt);stroke:var(--line);stroke-width:2}
 
-/* two-card stage (blackjack, uth): fanned pair */
-.icon-stage[data-count="2"] .flip-card:nth-child(1){left:26px;top:6px;transform:rotate(-8deg);z-index:1;}
-.icon-stage[data-count="2"] .flip-card:nth-child(2){left:78px;top:0;transform:rotate(7deg);z-index:2;}
+main{flex:1;width:100%;max-width:1280px;margin:0 auto;padding:0 32px 70px;position:relative}
+.hero{position:relative;text-align:center;padding:34px 0 46px}
+.hero::before{content:"";position:absolute;left:50%;top:-80px;width:min(980px,100%);height:520px;transform:translateX(-50%);background:conic-gradient(from 180deg at 50% 0,transparent 164deg,color-mix(in srgb,var(--brass-bright) 16%,transparent) 180deg,transparent 196deg);filter:blur(14px);pointer-events:none;-webkit-mask-image:linear-gradient(#000 20%,transparent 92%);mask-image:linear-gradient(#000 20%,transparent 92%)}
+.hero>*{position:relative}
+.kick{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 18px}
+.kick i{width:8px;height:8px;border-radius:50%;background:var(--brass-bright);box-shadow:0 0 12px var(--brass-bright)}
+h1{margin:0 auto;font:700 clamp(46px,7.6vw,108px)/.98 var(--display);letter-spacing:-.045em;max-width:980px;text-wrap:balance}
+h1 em{font-style:normal;color:var(--brass-bright)}
+.lede{font-size:19px;line-height:1.55;color:var(--muted);max-width:520px;margin:22px auto 0}
+.act{display:flex;flex-direction:column;align-items:center;gap:20px;margin-top:28px}
+.pillbtn svg{transition:transform .15s}.pillbtn:hover svg{transform:translateX(3px)}
+/* the experience level lives in the footer now */
+.xp-line{margin:2px 0 4px}
+.xp-change{background:none;border:0;padding:0;margin:0 0 0 8px;font:inherit;color:var(--text);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.xp-change:hover{color:var(--brass-bright)}
+@media (scripting:none){.xp-line{display:none}}
 
-/* three-card stage (pai gow): light fan */
-.icon-stage[data-count="3"] .flip-card:nth-child(1){left:4px;top:10px;transform:rotate(-10deg);z-index:1;}
-.icon-stage[data-count="3"] .flip-card:nth-child(2){left:58px;top:0;transform:rotate(0deg);z-index:2;}
-.icon-stage[data-count="3"] .flip-card:nth-child(3){left:112px;top:10px;transform:rotate(10deg);z-index:1;}
+/* Each pane is its game's table. The art keeps one size (the open pane's) and the pane is a window onto it, so a closed pane shows the middle of its table and opening it uncovers the rest. */
+.stagebox{container-type:inline-size}
+.stage{--ow:calc((min(100vw,1280px) - 112px) * .5745);display:flex;gap:12px;height:clamp(280px,calc(var(--ow) * .6),440px)}
+@supports (width:1cqw){.stage{--ow:calc((100cqw - 48px) * .5745)}}
+.pane{position:relative;flex:1 1 0;min-width:0;overflow:hidden;border-radius:26px;background:var(--felt-dark);border:1px solid var(--line);text-decoration:none;transition:flex-grow .55s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .4s;isolation:isolate;display:block}
+.pane.on{flex-grow:5.4;border-color:color-mix(in srgb,var(--brass-bright) 50%,transparent);box-shadow:0 30px 80px -34px color-mix(in srgb,var(--brass-bright) 55%,transparent)}
+.pane:focus-visible{outline-offset:4px;border-radius:26px}
+.pane::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.88) 0,rgba(0,0,0,.6) 38%,rgba(0,0,0,.2) 78%);transition:opacity .4s}
+.pane.on::after{background:linear-gradient(to top,rgba(0,0,0,.8) 0,rgba(0,0,0,.42) 28%,transparent 56%)}
+.board{position:absolute;left:50%;top:50%;width:var(--ow);transform:translate(-50%,-50%);opacity:.45;filter:saturate(.65) brightness(.8);transition:opacity .4s,filter .4s;pointer-events:none}
+.board .tfelt{fill:var(--panel)}
+.pane.on .board{opacity:1;filter:none}
+.board svg{display:block;width:100%;height:auto}
+/* the hand is dealt onto the felt every time a table opens; dice are thrown */
+.dl{transform-box:fill-box;transform-origin:center}
+.pane.on .dl{animation:dealIn .5s cubic-bezier(.2,.8,.25,1) both;animation-delay:calc(200ms + var(--i,0)*85ms)}
+.pane.on .dl.dd{animation-name:rollIn;animation-duration:.66s}
+@keyframes dealIn{from{opacity:0;transform:translateY(-34px) rotate(-8deg) scale(.88)}to{opacity:1;transform:none}}
+@keyframes rollIn{0%{opacity:0;transform:translateY(-44px) rotate(-220deg) scale(.9)}55%{opacity:1;transform:translateY(0) rotate(24deg)}76%{transform:translateY(-9px) rotate(-7deg)}100%{opacity:1;transform:none}}
+/* the game's name, bottom left: sideways on a closed pane, level once it is open */
+.vname,.nm{position:absolute;z-index:2;color:var(--text);text-shadow:0 2px 16px rgba(0,0,0,.6)}
+.vname{left:24px;bottom:24px;writing-mode:vertical-rl;transform:rotate(180deg);font:700 19px var(--display);letter-spacing:-.01em;white-space:nowrap;transition:opacity .25s}
+.pane.on .vname{opacity:0}
+.nm{left:28px;bottom:24px;font:700 clamp(22px,calc(var(--ow) * .055),40px)/1.04 var(--display);letter-spacing:-.035em;white-space:nowrap;opacity:0;transform:translateY(10px);transition:opacity .3s,transform .4s;pointer-events:none}
+.pane.on .nm{opacity:1;transform:none;transition-delay:.15s}
+.go{position:absolute;z-index:2;right:22px;bottom:22px;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--brass);color:#1B1608;font:700 20px/1 var(--display);box-shadow:0 10px 30px -8px var(--brass);opacity:0;transform:translateY(10px) scale(.9);transition:opacity .3s,transform .4s;pointer-events:none}
+.pane.on .go{opacity:1;transform:none;transition-delay:.18s}
+.go b{transition:transform .2s}.pane:hover .go b{transform:translateX(3px)}
 
-/* four-card stage, two per side (baccarat: Banker vs Player, two cards each) */
-.icon-stage[data-count="bp"] .flip-card:nth-child(1){left:2px;top:4px;z-index:1;}
-.icon-stage[data-count="bp"] .flip-card:nth-child(2){left:22px;top:4px;z-index:2;}
-.icon-stage[data-count="bp"] .flip-card:nth-child(3){left:98px;top:4px;z-index:1;}
-.icon-stage[data-count="bp"] .flip-card:nth-child(4){left:118px;top:4px;z-index:2;}
-.icon-stage[data-count="bp"]::after{content:'vs';position:absolute;left:91px;top:50%;transform:translate(-50%,-50%);font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;z-index:0;}
+/* page-load reveal */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.hero>*{animation:rise .8s cubic-bezier(.16,1,.3,1) both}
+.hero>:nth-child(2){animation-delay:.07s}.hero>:nth-child(3){animation-delay:.14s}.hero>:nth-child(4){animation-delay:.21s}
+.stage .pane{animation:rise .8s cubic-bezier(.16,1,.3,1) both}
+.stage .pane:nth-child(1){animation-delay:.28s}.stage .pane:nth-child(2){animation-delay:.34s}.stage .pane:nth-child(3){animation-delay:.40s}.stage .pane:nth-child(4){animation-delay:.46s}.stage .pane:nth-child(5){animation-delay:.52s}
 
-/* two-dice stage (craps). Same life cycle as a hand of cards: the outline of two dice at rest (like the
-   face-down cards at the other tables), and on open they roll and turn into real dice.
-   .die-back is the outline, .die-face is the real die. */
-.die{position:absolute;width:58px;height:58px;--rot:0deg;transform:rotate(var(--rot));}
-.die-back,.die-face{position:absolute;inset:0;border-radius:12px;transition:opacity 150ms ease;}
-.die-back{background-color:var(--panel-2);border:1.5px solid var(--tc-accent);background-image:repeating-linear-gradient(45deg, var(--tc-accent) 0, var(--tc-accent) 1.5px, transparent 1.5px, transparent 9px);opacity:0.92;
-  --rc:rgba(var(--tc-rgb),0.6);--ring:transparent 3px,var(--rc) 3.5px,var(--rc) 5px,transparent 5.5px;}
-.die-back::before{content:'';position:absolute;inset:0;background:var(--panel-2);opacity:0.72;border-radius:10.5px;}
-.die-back::after{content:'';position:absolute;inset:0;border-radius:inherit;}
-.die-back.r3::after{background:radial-gradient(circle at 27% 27%,var(--ring)),radial-gradient(circle at 50% 50%,var(--ring)),radial-gradient(circle at 73% 73%,var(--ring));}
-.die-back.r5::after{background:radial-gradient(circle at 27% 27%,var(--ring)),radial-gradient(circle at 73% 27%,var(--ring)),radial-gradient(circle at 50% 50%,var(--ring)),radial-gradient(circle at 27% 73%,var(--ring)),radial-gradient(circle at 73% 73%,var(--ring));}
-.die-back.r6::after{background:radial-gradient(circle at 27% 27%,var(--ring)),radial-gradient(circle at 73% 27%,var(--ring)),radial-gradient(circle at 27% 50%,var(--ring)),radial-gradient(circle at 73% 50%,var(--ring)),radial-gradient(circle at 27% 73%,var(--ring)),radial-gradient(circle at 73% 73%,var(--ring));}
-.die-face{padding:9px;display:grid;grid-template:repeat(3,1fr) / repeat(3,1fr);opacity:0;
-  background:linear-gradient(145deg,#FBF6EA,#E4DBC4);box-shadow:0 8px 14px -6px rgba(0,0,0,0.6),0 0 0 1px rgba(0,0,0,0.2) inset,0 -3px 0 rgba(0,0,0,0.07) inset;}
-.die-face i{width:9px;height:9px;border-radius:50%;background:#1A1B1F;place-self:center;box-shadow:0 1px 0 rgba(255,255,255,0.45);}
-.die.one .die-face i{width:13px;height:13px;background:var(--coral);}
-.die.up .die-face{opacity:1;}
-.die.up .die-back{opacity:0;}
-.icon-stage[data-count="dice"] .die:nth-child(1){left:28px;top:24px;--rot:-9deg;z-index:1;}
-.icon-stage[data-count="dice"] .die:nth-child(2){left:96px;top:12px;--rot:8deg;z-index:2;}
-@keyframes dieTumble{
-  0%{transform:translateY(0) rotate(var(--rot)) scale(1);}
-  30%{transform:translateY(-20px) rotate(calc(var(--rot) + 200deg)) scale(1.06);}
-  58%{transform:translateY(0) rotate(calc(var(--rot) + 330deg)) scale(1);}
-  74%{transform:translateY(-8px) rotate(calc(var(--rot) + 352deg)) scale(1);}
-  100%{transform:translateY(0) rotate(calc(var(--rot) + 360deg)) scale(1);}
+@media (max-width:760px){
+  main{padding:0 16px 50px}
+  .hero{padding:22px 0 34px}
+  .stage{--ow:min(calc(100vw - 32px),560px);flex-direction:column;height:auto;gap:10px}
+  @supports (width:1cqw){.stage{--ow:min(100cqw,560px)}}
+  .pane{flex:none;height:76px;transition:height .5s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .4s}
+  /* the table is pinned to the top and the pane grows downward: a closed strip shows the top of its table, and an open pane has a band underneath the table for the name */
+  .pane.on{height:calc(var(--ow) * .68 + 58px)}
+  .board{top:calc(6px + var(--ow) * .34)}
+  .pane::after{background:linear-gradient(90deg,rgba(0,0,0,.8) 0,rgba(0,0,0,.45) 55%,rgba(0,0,0,.1))}
+  .pane.on::after{background:linear-gradient(to top,rgba(0,0,0,.75) 0,rgba(0,0,0,.4) 22%,transparent 40%)}
+  .vname{writing-mode:horizontal-tb;transform:translateY(-50%);left:20px;bottom:auto;top:50%;font-size:20px}
+  .nm{left:20px;bottom:15px;font-size:clamp(18px,calc(var(--ow) * .062),28px)}
+  .go{right:14px;bottom:8px;width:42px;height:42px}
 }
-.die.tumble{animation:dieTumble 560ms cubic-bezier(.3,.6,.4,1) both;}
-.icon-stage .die.tumble:nth-child(2),.hero-moment-dice .die.tumble:nth-child(2){animation-delay:70ms;}
-.hero-moment-dice{position:absolute;inset:0;display:none;}
-.hero-moment.dice-mode .hero-moment-cards{display:none;}
-.hero-moment.dice-mode .hero-moment-dice{display:block;}
-.hero-moment-dice .die{width:70px;height:70px;left:50%;top:50%;}
-.hero-moment-dice .die-back,.hero-moment-dice .die-face{border-radius:14px;}
-.hero-moment-dice .die-back::before{border-radius:12.5px;}
-.hero-moment-dice .die-face{padding:11px;}
-.hero-moment-dice .die-face i{width:11px;height:11px;}
-.hero-moment-dice .die.one .die-face i{width:16px;height:16px;}
-.hero-moment-dice .die:nth-child(1){margin:-52px 0 0 -84px;--rot:-9deg;}
-.hero-moment-dice .die:nth-child(2){margin:-64px 0 0 -2px;--rot:8deg;}
 
-.badge-live{display:inline-flex;align-items:center;gap:5px;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--tc-accent);margin-bottom:6px;}
-.badge-live .dot{width:6px;height:6px;border-radius:50%;background:var(--tc-accent);box-shadow:0 0 6px 0 var(--tc-accent);}
-.table-card h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;margin:0 0 6px;letter-spacing:-0.2px;}
-.table-card p{font-size:13.5px;color:var(--text-muted);margin:0;line-height:1.55;flex:1;}
-.table-card .enter{margin-top:14px;display:flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;color:var(--tc-accent);opacity:0;transform:translateX(-4px);transition:opacity 200ms ease,transform 200ms ease;}
-.table-card:hover .enter,.table-card:focus-within .enter{opacity:1;transform:translateX(0);}
-.table-card .enter svg{transition:transform 200ms ease;}
-.table-card:hover .enter svg,.table-card:focus-within .enter svg{transform:translateX(3px);}
-
-@media(max-width:640px){.hero{padding:56px 0 48px;flex-direction:column;text-align:center;}.hero-copy p{margin-left:auto;margin-right:auto;}.floor{padding:4px 0 48px;}}
-
-/* ---------- footer ---------- */
-footer{padding:30px 0 50px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--text-muted);}
-footer a{text-decoration:none;color:var(--text-muted);transition:color 140ms ease;}
-footer a:hover{color:var(--brass-bright);}
-
-@media (prefers-reduced-motion: reduce){
-  html{scroll-behavior:auto;}
-  .rv,.table-card{transition:none !important;opacity:1 !important;transform:none !important;}
-  .flip-inner{transition:none !important;}
-  .table-card:hover,.table-card:focus-within{transform:none !important;}
-  .cta:hover{transform:none;}
-  .hero-chip{transition:none !important;}
-  .chip-inner,.chip-hop{transition:none !important;}
-  .chip-hop.hop{animation:none !important;}
-  .hero-chip:hover .chip-hop{transform:none !important;}
-  .hero-moment{transition:none !important;}
-  .hero-moment .flip-inner{transition:none !important;}
-  .hero-moment-label{transition:none !important;}
-  .die.tumble{animation:none !important;}
-  .die-back,.die-face{transition:none !important;}
-}
 /* ---------- first-visit "how familiar are you?" dialog ---------- */
-.xp-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;background:rgba(6,7,8,0.80);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
-.xp-overlay[hidden]{display:none !important;}
-.xp-dialog{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px 24px 20px;box-shadow:0 30px 70px -20px rgba(0,0,0,0.7);animation:xpIn 320ms cubic-bezier(.16,1,.3,1);}
-@keyframes xpIn{from{opacity:0;transform:translateY(14px) scale(0.98);}to{opacity:1;transform:none;}}
-.xp-dialog h2{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.3px;margin:0 0 8px;}
-.xp-dialog p{font-size:14px;line-height:1.55;color:var(--text-muted);margin:0 0 18px;}
-.xp-options{display:grid;gap:10px;}
-.xp-opt{display:flex;flex-direction:column;gap:3px;text-align:left;width:100%;padding:14px 16px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;transition:border-color 160ms ease,background 160ms ease,transform 100ms ease;}
-.xp-opt:hover,.xp-opt:focus-visible{border-color:var(--brass);background:#23272D;}
-.xp-opt:active{transform:scale(0.99);}
-.xp-opt.selected{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset;}
-.xp-opt-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15.5px;}
-.xp-opt-desc{font-size:13px;color:var(--text-muted);line-height:1.45;}
-.xp-skip{display:block;margin:14px auto 0;background:none;border:0;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;padding:6px 10px;border-radius:6px;}
-.xp-skip:hover{color:var(--text);}
-.xp-change{background:none;border:0;padding:0;margin:0 0 0 6px;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;transition:color 140ms ease;}
-.xp-change:hover{color:var(--brass-bright);}
-/* a card that will teach you first keeps its call-to-action visible, not hover-only */
-.table-card.learn-first .enter{opacity:1;transform:translateX(0);}
-@media (prefers-reduced-motion: reduce){ .xp-dialog{animation:none;} .xp-opt{transition:none;} }
+.xp-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;background:color-mix(in srgb,var(--felt-dark) 84%,transparent);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+.xp-overlay[hidden]{display:none !important}
+.xp-dialog{width:100%;max-width:480px;background:var(--panel);border:1px solid color-mix(in srgb,var(--brass-bright) 38%,var(--line));border-radius:24px;padding:30px 26px 20px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 60px -30px var(--brass);animation:xpIn .32s cubic-bezier(.16,1,.3,1)}
+@keyframes xpIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.xp-dialog h2{font:700 26px var(--display);letter-spacing:-.03em;margin:0 0 8px}
+.xp-dialog p{font-size:14.5px;line-height:1.55;color:var(--muted);margin:0 0 18px}
+.xp-options{display:grid;gap:10px}
+.xp-opt{display:flex;flex-direction:column;gap:3px;text-align:left;width:100%;padding:14px 18px;background:var(--panel-2);border:1px solid var(--line);border-radius:16px;color:var(--text);cursor:pointer;font-family:var(--body);transition:border-color .16s,background .16s,transform .1s}
+.xp-opt:hover,.xp-opt:focus-visible{border-color:var(--brass)}
+.xp-opt:active{transform:scale(.99)}
+.xp-opt.selected{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset}
+.xp-opt-title{font:600 16px var(--display)}
+.xp-opt-desc{font-size:13.5px;color:var(--muted);line-height:1.45}
+.xp-skip{display:block;margin:14px auto 0;background:none;border:0;color:var(--muted);font:500 13.5px var(--body);cursor:pointer;padding:6px 10px;border-radius:8px}
+.xp-skip:hover{color:var(--text)}
+@media (prefers-reduced-motion:reduce){.xp-dialog,.hero>*,.stage .pane{animation:none !important}.dl{animation:none !important}html{scroll-behavior:auto}}
+
+/* draft: colour-coded panes */
+.pane{background:color-mix(in srgb,var(--c) 20%,var(--felt-dark));border-color:color-mix(in srgb,var(--c) 45%,var(--line))}
+.pane::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--c);z-index:3}
+.board .tfelt{fill:color-mix(in srgb,var(--c) 36%,var(--felt))}
+.board .tbx{fill:color-mix(in srgb,var(--c) 24%,var(--panel-2))}
+.board{opacity:.9;filter:saturate(.9) brightness(.92)}
+.pane.on{border-color:var(--c);box-shadow:0 30px 80px -34px var(--c)}
+.go{background:var(--c);color:#fff;box-shadow:0 10px 30px -8px var(--c)}
+
+/* poster strips with a crisp object */
+.pane{background:color-mix(in srgb,var(--c) 18%,var(--felt-dark))}
+.pane::before{height:100%;top:0;bottom:0;background:linear-gradient(172deg,color-mix(in srgb,var(--c) 78%,#fff 0%) 0,color-mix(in srgb,var(--c) 44%,var(--felt-dark)) 100%);z-index:0;opacity:1;transition:opacity .45s}
+.pane.on::before{opacity:0}
+.board{opacity:0;filter:none}
+.pane.on .board{opacity:1}
+.icon{position:absolute;z-index:2;pointer-events:none;transition:opacity .3s,transform .5s;filter:drop-shadow(0 14px 14px rgba(0,0,0,.42))}
+.icon svg{display:block;width:100%;height:auto}
+.pane::after{background:linear-gradient(to top,rgba(0,0,0,.55) 0,rgba(0,0,0,.15) 45%,transparent 75%)}
+.pane.on::after{background:linear-gradient(to top,rgba(0,0,0,.8) 0,rgba(0,0,0,.42) 28%,transparent 56%)}
+.vname{color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+.go{background:#fff;color:#161616;box-shadow:0 10px 30px -8px rgba(0,0,0,.5)}
+/* a closed pane is as wide as one fifth of the open table (--ow / 5.4): the object sits at the top, the name runs up from the bottom and wraps to a second line when it would reach the object (Ultimate Texas Hold'em) */
+@media (min-width:761px){
+  .stage{--ph:clamp(280px,calc(var(--ow) * .6),440px);--iw:min(calc(var(--ow) * .165),116px)}
+  .icon{left:50%;top:calc(var(--ph) * .07);width:var(--iw);transform:translateX(-50%)}
+  .pane.on .icon{opacity:0;transform:translateX(-50%) scale(.72)}
+  .vname{left:50%;bottom:26px;transform:translateX(-50%) rotate(180deg);font-size:clamp(17px,calc(var(--ow) * .036),25px);line-height:1.08;white-space:normal;max-height:calc(var(--ph) - 26px - 14px - var(--ph) * .07 - var(--iw) * 1.12)}
+}
+@media (max-width:760px){
+  .icon{right:14px;top:50%;width:62px;transform:translateY(-50%)}
+  .pane.on .icon{opacity:0;transform:translateY(-50%) scale(.72)}
+  .pane::before{background:linear-gradient(100deg,color-mix(in srgb,var(--c) 78%,#fff 0%) 0,color-mix(in srgb,var(--c) 40%,var(--felt-dark)) 100%)}
+  .vname{font-size:clamp(20px,5.6vw,26px);line-height:1.08;white-space:normal;max-width:calc(100% - 114px)}
+  .pane::after{background:linear-gradient(90deg,rgba(0,0,0,.35) 0,transparent 70%)}
+  .pane.on::after{background:linear-gradient(to top,rgba(0,0,0,.75) 0,rgba(0,0,0,.4) 22%,transparent 40%)}
+}
+
+/* draft: all five rest closed and share the row; hovering one opens it */
+@media (min-width:761px){
+  .icon{transition:opacity .3s,transform .5s,width .55s cubic-bezier(.2,.8,.2,1),top .55s cubic-bezier(.2,.8,.2,1)}
+  .stage.rest .icon{top:calc(var(--ph) * .12);width:min(calc(var(--ow) * .3),160px)}
+  .stage.rest .vname{opacity:0}
+  .stage.rest .nm{opacity:1;transform:none;left:24px;bottom:24px;font-size:clamp(20px,calc(var(--ow) * .04),30px);white-space:normal;max-width:calc(100% - 40px);color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+}
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <header class="site">
-    <div style="display:flex;align-items:center;gap:30px;">
-      <div class="wordmark rv" id="rv-wordmark"><span class="dot"></span>Table Ready</div>
-      <nav class="rv" id="rv-nav" style="display:flex;gap:22px;">
-        <a href="/learn/" class="header-nav-link">Learn to play</a>
-        <a href="/learn/glossary/" class="header-nav-link">Glossary</a>
-      </nav>
+<header class="top">
+  <div class="lft"><span class="brandwrap"><button type="button" class="coin" id="brand-coin" aria-label="Flip the coin"><span class="coin-hop"><span class="coin-in"><span class="mark front" aria-hidden="true"></span><span class="mark back" aria-hidden="true"><b class="suit">♠</b></span></span></span></button><a class="brand" href="/">Table Ready</a></span>
+    <nav class="nav" aria-label="Site"><a href="/learn/">Learn to play</a><a href="/learn/glossary/">Glossary</a></nav></div>
+  <div class="rgt"><div class="themes" role="group" aria-label="Table theme"><button type="button" data-th="graphite" aria-pressed="true" aria-label="Graphite theme" title="Graphite" style="--sw:#1D2025"></button><button type="button" data-th="emerald" aria-pressed="false" aria-label="Emerald Felt theme" title="Emerald Felt" style="--sw:#0F3D36"></button><button type="button" data-th="midnight" aria-pressed="false" aria-label="Midnight theme" title="Midnight" style="--sw:#1B2233"></button><button type="button" data-th="crimson" aria-pressed="false" aria-label="Crimson theme" title="Crimson" style="--sw:#2E1920"></button></div>
+  <div class="bank" role="group" aria-label="Bankroll"><i aria-hidden="true"></i><span>Bankroll</span><b id="bankroll-amount">$1,000</b></div></div>
+</header>
+<main>
+  <section class="hero" aria-labelledby="rv-h1">
+    <p class="kick"><i></i>Free practice tables</p>
+    <h1 id="rv-h1">Be table <em>ready.</em></h1>
+    <p class="lede">Five real casino games, one shared bankroll, and the correct play at every decision — worked out before you ever risk real money.</p>
+    <div class="act">
+      <a class="pillbtn" id="rv-cta" href="/blackjack/"><span id="cta-label">Sit down at Blackjack</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
-    <div class="bankroll-pill rv" id="rv-bankroll"><span class="chip"></span><span class="label">Bankroll</span><span class="amount" id="bankroll-amount">$1,000</span></div>
-  </header>
-
-  <section class="hero">
-    <div class="hero-copy">
-      <h1 class="rv" id="rv-h1">Be table ready.</h1>
-      <p class="rv" id="rv-p">Five real casino games, one shared bankroll, and the correct play at every decision — worked out before you ever risk real money.</p>
-      <a class="cta rv" id="rv-cta" href="/blackjack/">
-        <span id="cta-label">Sit down at Blackjack</span>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </section>
+  <h2 class="sr">Five tables</h2>
+  <div class="stagebox"><nav class="stage rest" id="stage" aria-label="The five tables">
+      <a class="pane" href="/blackjack/" style="--c:var(--chip10)" data-i="0" data-game="blackjack" aria-label="Play Blackjack" aria-describedby="bl-blackjack">
+        <span class="board" aria-hidden="true"><svg viewBox="0 0 440 300" class="tbl" role="img" aria-label="The Blackjack table: a half-moon with five betting circles and the line Blackjack pays 3 to 2"><path d="M16 16 H424 V24 C424 172 340 282 220 282 C100 282 16 172 16 24 Z" class="tfelt"/><path d="M46.8 120 A200 200 0 0 0 393.2 120" class="tline"/><path id="bjarc2" d="M60.6 111 A190 190 0 0 0 379.4 111" fill="none"/><text class="tarc"><textPath href="#bjarc2" startOffset="50%" text-anchor="middle">Blackjack pays 3 to 2</textPath></text><g class="dl" style="--i:0"><g transform="translate(204 62) rotate(-6)" data-up="1"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-13.0" y="-11.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">K</text><text class="su" x="0" y="8.64" text-anchor="middle" font-family="Inter,sans-serif" font-size="23.56" fill="#17231D">♠</text></g></g><g class="dl" style="--i:1"><g transform="translate(236 62) rotate(6)"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5"/><rect x="-15.0" y="-23.0" width="30" height="46" rx="3" fill="#C23B30"/></g></g><circle cx="88" cy="90" r="22" class="tsp"/><circle cx="142" cy="128" r="22" class="tsp"/><circle cx="220" cy="148" r="22" class="tsp"/><circle cx="298" cy="128" r="22" class="tsp"/><circle cx="352" cy="90" r="22" class="tsp"/><g class="dl" style="--i:2"><g transform="translate(212 140) rotate(-8)" data-up="1"><rect x="-14.0" y="-20.0" width="28" height="40" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-8.0" y="-4.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">A</text><text class="su" x="0" y="6.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="17.36" fill="#17231D">♠</text></g></g><g class="dl" style="--i:3"><g transform="translate(228 142) rotate(8)" data-up="1"><rect x="-14.0" y="-20.0" width="28" height="40" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-8.0" y="-4.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">K</text><text class="su" x="0" y="6.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="17.36" fill="#C23B30">♥</text></g></g><g><ellipse cx="220" cy="172.2" rx="11" ry="11" fill="#000" opacity=".35"/><circle cx="220" cy="170" r="11" fill="var(--chip25)"/><circle cx="220" cy="170" r="8.36" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.6" stroke-dasharray="4.62 3.3"/><circle cx="220" cy="170" r="5.720000000000001" fill="rgba(0,0,0,.18)"/><text x="220" y="173.06" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">25</text></g></svg></span><span class="icon" aria-hidden="true"><svg viewBox="0 0 100 110" aria-hidden="true" focusable="false"><g transform="translate(36 56) rotate(-10)"><rect x="-23.0" y="-32.0" width="46" height="64" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-18.5" y="-12.8" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="17.3" fill="#17231D">A</text><text x="0" y="12.8" text-anchor="middle" font-family="Inter,sans-serif" font-size="25.8" fill="#17231D">♠</text></g><g transform="translate(64 52) rotate(10)"><rect x="-23.0" y="-32.0" width="46" height="64" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-18.5" y="-12.8" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="17.3" fill="#C23B30">K</text><text x="0" y="12.8" text-anchor="middle" font-family="Inter,sans-serif" font-size="25.8" fill="#C23B30">♥</text></g></svg></span>
+        <span class="vname" aria-hidden="true">Blackjack</span>
+        <span class="nm">Blackjack</span>
+        <span class="bl sr" id="bl-blackjack">Beat the dealer to 21 — and know exactly when to hit.</span>
+        <span class="go"><span class="enter-label sr">Sit down</span><b aria-hidden="true">→</b></span>
       </a>
-    </div>
-    <div class="hero-anim rv" id="rv-hero-anim">
-      <button type="button" class="hero-chip" id="hero-chip" aria-label="Flip the chip">
-        <span class="chip-hop" id="chip-hop">
-          <span class="chip-inner" id="chip-inner">
-            <span class="chip-face chip-front">
-              <svg viewBox="0 0 88 88" aria-hidden="true">
-                <circle cx="44" cy="44" r="39" fill="none" stroke="#20160A" stroke-width="2.5" stroke-dasharray="5.2 7.3" opacity="0.28"/>
-                <circle cx="44" cy="44" r="28" fill="none" stroke="#20160A" stroke-width="1.5" opacity="0.22"/>
-                <circle cx="44" cy="44" r="4" fill="#20160A" opacity="0.22"/>
-              </svg>
-            </span>
-            <span class="chip-face chip-back">
-              <svg viewBox="0 0 88 88" aria-hidden="true">
-                <circle cx="44" cy="44" r="39" fill="none" stroke="#20160A" stroke-width="2.5" stroke-dasharray="5.2 7.3" opacity="0.28"/>
-                <circle cx="44" cy="44" r="28" fill="none" stroke="#20160A" stroke-width="1.5" opacity="0.22"/>
-              </svg>
-              <span class="chip-suit" id="chip-suit" aria-hidden="true">♠</span>
-            </span>
-          </span>
-        </span>
-      </button>
-      <div class="hero-moment" id="hero-moment">
-        <div class="hero-moment-cards">
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div>
-        <div class="hero-moment-dice" aria-hidden="true"><span class="die"><span class="die-back r5"></span><span class="die-face"></span></span><span class="die"><span class="die-back r6"></span><span class="die-face"></span></span></div>
-        <div class="hero-moment-label" id="hero-moment-label"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="floor">
-    <h2>Five tables.</h2>
-    <div class="floor-grid" id="floor-grid">
-
-      <div class="table-card tc-blackjack" data-card>
-        <a class="cover" href="/blackjack/" aria-label="Play Blackjack"></a>
-        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="2" data-game="blackjack">
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div></div>
-        <span class="badge-live"><span class="dot"></span>Live now</span>
-        <h3>Blackjack</h3>
-        <p>Beat the dealer to 21 — and know exactly when to hit.</p>
-        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-
-      <div class="table-card tc-baccarat" data-card>
-        <a class="cover" href="/baccarat/" aria-label="Play Baccarat"></a>
-        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="bp" data-game="baccarat">
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div></div>
-        <span class="badge-live"><span class="dot"></span>Live now</span>
-        <h3>Baccarat</h3>
-        <p>Bet Banker or Player, and let the cards decide.</p>
-        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-
-      <div class="table-card tc-paigow" data-card>
-        <a class="cover" href="/pai-gow/" aria-label="Play Pai Gow Poker"></a>
-        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="3" data-game="paigow">
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div></div>
-        <span class="badge-live"><span class="dot"></span>Live now</span>
-        <h3>Pai Gow Poker</h3>
-        <p>Seven cards, two hands — set them right and you're ahead.</p>
-        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-
-      <div class="table-card tc-uth" data-card>
-        <a class="cover" href="/ultimate-texas-holdem/" aria-label="Play Ultimate Texas Hold'em"></a>
-        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="2" data-game="uth">
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-          <div class="flip-card"><div class="flip-inner"><div class="flip-back"></div><div class="flip-front"><span class="idx"><span class="r"></span><span class="s"></span></span><span class="idx br"><span class="r"></span><span class="s"></span></span><span class="center-pip"></span></div></div></div>
-        </div></div>
-        <span class="badge-live"><span class="dot"></span>Live now</span>
-        <h3>Ultimate Texas Hold'em</h3>
-        <p>Real hold'em rules, except you're up against the house.</p>
-        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-
-      <div class="table-card tc-craps" data-card>
-        <a class="cover" href="/craps/" aria-label="Play Craps"></a>
-        <div class="stage-fit" aria-hidden="true"><div class="icon-stage" data-count="dice" data-game="craps">
-          <span class="die"><span class="die-back r3"></span><span class="die-face"></span></span>
-          <span class="die"><span class="die-back r5"></span><span class="die-face"></span></span>
-        </div></div>
-        <span class="badge-live"><span class="dot"></span>Live now</span>
-        <h3>Craps</h3>
-        <p>Two dice, one roll &mdash; learn which bets are worth making.</p>
-        <span class="enter"><span class="enter-label">Sit down</span><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </div>
-
-    </div>
-  </section>
-
-  <footer>
-    <span style="display:block;">
-      <a href="/learn/" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Learn to play</a>
-      <span style="opacity:0.4;margin:0 6px;">&middot;</span>
-      <a href="/learn/glossary/" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
-    </span>
-    <span style="display:block;margin-top:10px;" id="xp-status-line"><span id="xp-status-text"></span><button type="button" class="xp-change" id="xp-change"></button></span>
-    <span style="display:block;margin-top:10px;">For education only — free practice tables, not real-money gambling.</span>
-    <span style="display:block;margin-top:4px;">© 2026 SledgeMakesGames. All rights reserved.</span>
-  </footer>
-</div>
+      <a class="pane" href="/baccarat/" style="--c:var(--chip25)" data-i="1" data-game="baccarat" aria-label="Play Baccarat" aria-describedby="bl-baccarat">
+        <span class="board" aria-hidden="true"><svg viewBox="0 0 440 300" class="tbl" role="img" aria-label="The Baccarat table: Player, Tie and Banker bets"><rect x="14" y="16" width="412" height="268" rx="26" class="tfelt"/><g class="dl" style="--i:0"><g transform="translate(142 70) rotate(-6)" data-up="1"><rect x="-20.0" y="-28.0" width="40" height="56" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-14.0" y="-12.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">9</text><text class="su" x="0" y="8.96" text-anchor="middle" font-family="Inter,sans-serif" font-size="24.8" fill="#C23B30">♥</text></g></g><g class="dl" style="--i:1"><g transform="translate(176 70) rotate(6)" data-up="1"><rect x="-20.0" y="-28.0" width="40" height="56" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-14.0" y="-12.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">K</text><text class="su" x="0" y="8.96" text-anchor="middle" font-family="Inter,sans-serif" font-size="24.8" fill="#17231D">♠</text></g></g><g class="dl" style="--i:2"><g transform="translate(264 70) rotate(-6)" data-up="1"><rect x="-20.0" y="-28.0" width="40" height="56" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-14.0" y="-12.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">3</text><text class="su" x="0" y="8.96" text-anchor="middle" font-family="Inter,sans-serif" font-size="24.8" fill="#C23B30">♦</text></g></g><g class="dl" style="--i:3"><g transform="translate(298 70) rotate(6)" data-up="1"><rect x="-20.0" y="-28.0" width="40" height="56" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-14.0" y="-12.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">5</text><text class="su" x="0" y="8.96" text-anchor="middle" font-family="Inter,sans-serif" font-size="24.8" fill="#17231D">♣</text></g></g><text x="159" y="116" text-anchor="middle" class="ts">PLAYER</text><text x="281" y="116" text-anchor="middle" class="ts">BANKER</text><rect x="46" y="150" width="108" height="104" rx="14" class="tbx"/><text x="100.0" y="172" text-anchor="middle" class="tl">Player</text><text x="100.0" y="187" text-anchor="middle" class="ts">Pays 1:1</text><rect x="166" y="150" width="108" height="104" rx="14" class="tbx"/><text x="220.0" y="172" text-anchor="middle" class="tl">Tie</text><text x="220.0" y="187" text-anchor="middle" class="ts">Pays 8:1</text><rect x="286" y="150" width="108" height="104" rx="14" class="tbx"/><text x="340.0" y="172" text-anchor="middle" class="tl">Banker</text><text x="340.0" y="187" text-anchor="middle" class="ts">Pays 1:1 (7 pushes)</text><g><ellipse cx="100" cy="227.2" rx="16" ry="16" fill="#000" opacity=".35"/><circle cx="100" cy="224" r="16" fill="var(--chip25)"/><circle cx="100" cy="224" r="12.16" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.92" stroke-dasharray="6.72 4.8"/><circle cx="100" cy="224" r="8.32" fill="rgba(0,0,0,.18)"/><text x="100" y="228.08" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="12" fill="#fff">25</text></g><g><ellipse cx="340" cy="230.8" rx="14" ry="14" fill="#000" opacity=".35"/><circle cx="340" cy="228" r="14" fill="var(--chip10)"/><circle cx="340" cy="228" r="10.64" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.68" stroke-dasharray="5.88 4.2"/><circle cx="340" cy="228" r="7.28" fill="rgba(0,0,0,.18)"/><text x="340" y="231.74" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11" fill="#fff">10</text></g><g><ellipse cx="344" cy="222.8" rx="14" ry="14" fill="#000" opacity=".35"/><circle cx="344" cy="220" r="14" fill="var(--chip5)"/><circle cx="344" cy="220" r="10.64" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.68" stroke-dasharray="5.88 4.2"/><circle cx="344" cy="220" r="7.28" fill="rgba(0,0,0,.18)"/><text x="344" y="223.74" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11" fill="#fff">5</text></g></svg></span><span class="icon" aria-hidden="true"><svg viewBox="0 0 100 110" aria-hidden="true" focusable="false"><g transform="translate(23 56) rotate(-13)"><rect x="-17.0" y="-24.0" width="34" height="48" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-12.5" y="-9.600000000000001" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13.0" fill="#C23B30">9</text><text x="0" y="9.6" text-anchor="middle" font-family="Inter,sans-serif" font-size="19.0" fill="#C23B30">♥</text></g><g transform="translate(39 52) rotate(-3)"><rect x="-17.0" y="-24.0" width="34" height="48" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-12.5" y="-9.600000000000001" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13.0" fill="#17231D">K</text><text x="0" y="9.6" text-anchor="middle" font-family="Inter,sans-serif" font-size="19.0" fill="#17231D">♠</text></g><g transform="translate(61 52) rotate(3)"><rect x="-17.0" y="-24.0" width="34" height="48" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-12.5" y="-9.600000000000001" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13.0" fill="#C23B30">3</text><text x="0" y="9.6" text-anchor="middle" font-family="Inter,sans-serif" font-size="19.0" fill="#C23B30">♦</text></g><g transform="translate(77 56) rotate(13)"><rect x="-17.0" y="-24.0" width="34" height="48" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-12.5" y="-9.600000000000001" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13.0" fill="#17231D">5</text><text x="0" y="9.6" text-anchor="middle" font-family="Inter,sans-serif" font-size="19.0" fill="#17231D">♣</text></g></svg></span>
+        <span class="vname" aria-hidden="true">Baccarat</span>
+        <span class="nm">Baccarat</span>
+        <span class="bl sr" id="bl-baccarat">Bet Banker or Player, and let the cards decide.</span>
+        <span class="go"><span class="enter-label sr">Sit down</span><b aria-hidden="true">→</b></span>
+      </a>
+      <a class="pane" href="/pai-gow/" style="--c:var(--chip5)" data-i="2" data-game="paigow" aria-label="Play Pai Gow Poker" aria-describedby="bl-paigow">
+        <span class="board" aria-hidden="true"><svg viewBox="0 0 440 300" class="tbl" role="img" aria-label="The Pai Gow Poker table: the dealer hand, your seven cards and the Ante circle"><rect x="14" y="16" width="412" height="268" rx="26" class="tfelt"/><text x="220" y="40" text-anchor="middle" class="ts">DEALER</text><g class="dl" style="--i:0.00"><g transform="translate(110 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:0.43"><g transform="translate(146 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:0.86"><g transform="translate(182 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:1.29"><g transform="translate(218 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:1.71"><g transform="translate(254 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:2.14"><g transform="translate(290 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:2.57"><g transform="translate(326 76) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="5" fill="#FBFAF5"/><rect x="-11.0" y="-17.0" width="22" height="34" rx="3" fill="#C23B30"/></g></g><text x="220" y="132" text-anchor="middle" class="ts">YOU</text><g class="dl" style="--i:3.00"><g transform="translate(100 172) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">A</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#17231D">♠</text></g></g><g class="dl" style="--i:3.43"><g transform="translate(140 172) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">K</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#C23B30">♥</text></g></g><g class="dl" style="--i:3.86"><g transform="translate(180 172) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">9</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#17231D">♣</text></g></g><g class="dl" style="--i:4.29"><g transform="translate(220 172) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">7</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#C23B30">♦</text></g></g><g class="dl" style="--i:4.71"><g transform="translate(260 172) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">7</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#C23B30">♥</text></g></g><g class="dl" style="--i:5.14"><g transform="translate(300 174) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">4</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#17231D">♠</text></g></g><g class="dl" style="--i:5.57"><g transform="translate(340 174) rotate(0)" data-up="1"><rect x="-17.0" y="-24.0" width="34" height="48" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-11.0" y="-8.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">2</text><text class="su" x="0" y="7.68" text-anchor="middle" font-family="Inter,sans-serif" font-size="21.08" fill="#17231D">♣</text></g></g><circle cx="200" cy="250" r="22" class="tsp"/><g><ellipse cx="200" cy="252.4" rx="12" ry="12" fill="#000" opacity=".35"/><circle cx="200" cy="250" r="12" fill="var(--chip25)"/><circle cx="200" cy="250" r="9.120000000000001" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.6" stroke-dasharray="5.04 3.5999999999999996"/><circle cx="200" cy="250" r="6.24" fill="rgba(0,0,0,.18)"/><text x="200" y="253.06" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">25</text></g><text x="236" y="247" class="tl">Ante</text><text x="236" y="260" class="ts">Pays 1:1, no commission</text></svg></span><span class="icon" aria-hidden="true"><svg viewBox="0 0 100 110" aria-hidden="true" focusable="false"><g transform="translate(19.4 55.9) rotate(-36)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#17231D">A</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#17231D">♠</text></g><g transform="translate(28.8 50.5) rotate(-24)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#C23B30">K</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#C23B30">♥</text></g><g transform="translate(39.2 47.1) rotate(-12)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#17231D">9</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#17231D">♣</text></g><g transform="translate(50.0 46.0) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#C23B30">7</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#C23B30">♦</text></g><g transform="translate(60.8 47.1) rotate(12)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#C23B30">7</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#C23B30">♥</text></g><g transform="translate(71.2 50.5) rotate(24)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#17231D">4</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#17231D">♠</text></g><g transform="translate(80.6 55.9) rotate(36)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#17231D">2</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#17231D">♣</text></g></svg></span>
+        <span class="vname" aria-hidden="true">Pai Gow Poker</span>
+        <span class="nm">Pai Gow Poker</span>
+        <span class="bl sr" id="bl-paigow">Seven cards, two hands — set them right and you’re ahead.</span>
+        <span class="go"><span class="enter-label sr">Sit down</span><b aria-hidden="true">→</b></span>
+      </a>
+      <a class="pane" href="/ultimate-texas-holdem/" style="--c:var(--chip100)" data-i="3" data-game="uth" aria-label="Play Ultimate Texas Hold’em" aria-describedby="bl-uth">
+        <span class="board" aria-hidden="true"><svg viewBox="0 0 440 300" class="tbl" role="img" aria-label="The Ultimate Texas Hold’em table: Ante, Blind, Trips and Play spots with the board"><rect x="14" y="16" width="412" height="268" rx="26" class="tfelt"/><g class="dl" style="--i:0.00"><g transform="translate(128 70) rotate(0)" data-up="1"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-13.0" y="-11.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">Q</text><text class="su" x="0" y="8.64" text-anchor="middle" font-family="Inter,sans-serif" font-size="23.56" fill="#C23B30">♥</text></g></g><g class="dl" style="--i:0.86"><g transform="translate(174 70) rotate(0)" data-up="1"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-13.0" y="-11.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">7</text><text class="su" x="0" y="8.64" text-anchor="middle" font-family="Inter,sans-serif" font-size="23.56" fill="#17231D">♣</text></g></g><g class="dl" style="--i:1.71"><g transform="translate(220 70) rotate(0)" data-up="1"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-13.0" y="-11.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">2</text><text class="su" x="0" y="8.64" text-anchor="middle" font-family="Inter,sans-serif" font-size="23.56" fill="#C23B30">♦</text></g></g><g class="dl" style="--i:2.57"><g transform="translate(266 70) rotate(0)"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5"/><rect x="-15.0" y="-23.0" width="30" height="46" rx="3" fill="#C23B30"/></g></g><g class="dl" style="--i:3.43"><g transform="translate(312 70) rotate(0)"><rect x="-19.0" y="-27.0" width="38" height="54" rx="5" fill="#FBFAF5"/><rect x="-15.0" y="-23.0" width="30" height="46" rx="3" fill="#C23B30"/></g></g><text x="220" y="118" text-anchor="middle" class="ts">THE BOARD</text><circle cx="92" cy="172" r="27" class="tsp"/><text x="92" y="222" text-anchor="middle" class="tl">Ante</text><circle cx="166" cy="172" r="27" class="tsp"/><text x="166" y="222" text-anchor="middle" class="tl">Blind</text><circle cx="274" cy="172" r="27" class="tsp"/><text x="274" y="222" text-anchor="middle" class="tl">Trips</text><circle cx="348" cy="172" r="27" class="tsp"/><text x="348" y="222" text-anchor="middle" class="tl">Play</text><g><ellipse cx="92" cy="174.4" rx="12" ry="12" fill="#000" opacity=".35"/><circle cx="92" cy="172" r="12" fill="var(--chip25)"/><circle cx="92" cy="172" r="9.120000000000001" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.6" stroke-dasharray="5.04 3.5999999999999996"/><circle cx="92" cy="172" r="6.24" fill="rgba(0,0,0,.18)"/><text x="92" y="175.06" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">25</text></g><g><ellipse cx="166" cy="174.4" rx="12" ry="12" fill="#000" opacity=".35"/><circle cx="166" cy="172" r="12" fill="var(--chip25)"/><circle cx="166" cy="172" r="9.120000000000001" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.6" stroke-dasharray="5.04 3.5999999999999996"/><circle cx="166" cy="172" r="6.24" fill="rgba(0,0,0,.18)"/><text x="166" y="175.06" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">25</text></g><g class="dl" style="--i:4.29"><g transform="translate(213 177) rotate(-7)" data-up="1"><rect x="-12.0" y="-17.0" width="24" height="34" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-6.0" y="-1.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#17231D">A</text><text class="su" x="0" y="5.44" text-anchor="middle" font-family="Inter,sans-serif" font-size="14.879999999999999" fill="#17231D">♠</text></g></g><g class="dl" style="--i:5.14"><g transform="translate(228 179) rotate(7)" data-up="1"><rect x="-12.0" y="-17.0" width="24" height="34" rx="5" fill="#FBFAF5" stroke="rgba(0,0,0,.18)" stroke-width="1"/><text class="rk" x="-6.0" y="-1.0" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="15" fill="#C23B30">A</text><text class="su" x="0" y="5.44" text-anchor="middle" font-family="Inter,sans-serif" font-size="14.879999999999999" fill="#C23B30">♥</text></g></g></svg></span><span class="icon" aria-hidden="true"><svg viewBox="0 0 100 110" aria-hidden="true" focusable="false"><g transform="translate(18 56) rotate(-6)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#C23B30">Q</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#C23B30">♥</text></g><g transform="translate(34 56) rotate(-3)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#17231D">7</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#17231D">♣</text></g><g transform="translate(50 56) rotate(0)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><text x="-10.5" y="-8.4" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="11.3" fill="#C23B30">2</text><text x="0" y="8.4" text-anchor="middle" font-family="Inter,sans-serif" font-size="16.8" fill="#C23B30">♦</text></g><g transform="translate(66 56) rotate(3)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><rect x="-11.5" y="-17.5" width="23" height="35" rx="2.5" fill="#C23B30"/></g><g transform="translate(82 56) rotate(6)"><rect x="-15.0" y="-21.0" width="30" height="42" rx="4.5" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><rect x="-11.5" y="-17.5" width="23" height="35" rx="2.5" fill="#C23B30"/></g></svg></span>
+        <span class="vname" aria-hidden="true">Ultimate Texas Hold’em</span>
+        <span class="nm">Ultimate Texas Hold’em</span>
+        <span class="bl sr" id="bl-uth">Real hold’em rules, except you’re up against the house.</span>
+        <span class="go"><span class="enter-label sr">Sit down</span><b aria-hidden="true">→</b></span>
+      </a>
+      <a class="pane" href="/craps/" style="--c:var(--chip1k)" data-i="4" data-game="craps" aria-label="Play Craps" aria-describedby="bl-craps">
+        <span class="board" aria-hidden="true"><svg viewBox="0 0 440 300" class="tbl" role="img" aria-label="The Craps layout: number boxes, the Pass Line and Don’t Pass bars"><rect x="14" y="16" width="412" height="268" rx="26" class="tfelt"/><rect x="34" y="38" width="58" height="70" rx="10" class="tbx"/><text x="63" y="82" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="26" fill="var(--text)">4</text><rect x="98" y="38" width="58" height="70" rx="10" class="tbx"/><text x="127" y="82" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="26" fill="var(--text)">5</text><rect x="162" y="38" width="58" height="70" rx="10" class="tbx"/><text x="191" y="82" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="26" fill="var(--text)">6</text><rect x="226" y="38" width="58" height="70" rx="10" class="tbx"/><text x="255" y="82" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="26" fill="var(--text)">8</text><rect x="290" y="38" width="58" height="70" rx="10" class="tbx"/><text x="319" y="82" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="26" fill="var(--text)">9</text><rect x="354" y="38" width="58" height="70" rx="10" class="tbx"/><text x="383" y="82" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="26" fill="var(--text)">10</text><rect x="34" y="122" width="372" height="40" rx="20" class="tbx"/><text x="220" y="147" text-anchor="middle" class="tl">Pass Line</text><rect x="34" y="172" width="372" height="30" rx="15" class="tbx"/><text x="220" y="192" text-anchor="middle" class="tl">Don’t Pass</text><g class="dl dd" style="--i:0"><g transform="translate(186 242) rotate(-14)" data-die="5" data-s="38"><rect x="-19.0" y="-19.0" width="38" height="38" rx="7.6000000000000005" fill="#FBFAF5" stroke="rgba(0,0,0,.18)"/><g class="pp"><circle cx="-9.88" cy="-9.88" r="4.56" fill="#17231D"/><circle cx="9.88" cy="-9.88" r="4.56" fill="#17231D"/><circle cx="0.0" cy="0.0" r="4.56" fill="#17231D"/><circle cx="-9.88" cy="9.88" r="4.56" fill="#17231D"/><circle cx="9.88" cy="9.88" r="4.56" fill="#17231D"/></g></g></g><g class="dl dd" style="--i:1"><g transform="translate(232 240) rotate(12)" data-die="2" data-s="38"><rect x="-19.0" y="-19.0" width="38" height="38" rx="7.6000000000000005" fill="#FBFAF5" stroke="rgba(0,0,0,.18)"/><g class="pp"><circle cx="-9.88" cy="-9.88" r="4.56" fill="#17231D"/><circle cx="9.88" cy="9.88" r="4.56" fill="#17231D"/></g></g></g><g><ellipse cx="110" cy="146.2" rx="11" ry="11" fill="#000" opacity=".35"/><circle cx="110" cy="144" r="11" fill="var(--chip25)"/><circle cx="110" cy="144" r="8.36" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.6" stroke-dasharray="4.62 3.3"/><circle cx="110" cy="144" r="5.720000000000001" fill="rgba(0,0,0,.18)"/><text x="110" y="147.06" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">25</text></g><g><ellipse cx="330" cy="244.4" rx="12" ry="12" fill="#000" opacity=".35"/><circle cx="330" cy="242" r="12" fill="var(--chip10)"/><circle cx="330" cy="242" r="9.120000000000001" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="1.6" stroke-dasharray="5.04 3.5999999999999996"/><circle cx="330" cy="242" r="6.24" fill="rgba(0,0,0,.18)"/><text x="330" y="245.06" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">10</text></g></svg></span><span class="icon" aria-hidden="true"><svg viewBox="0 0 100 110" aria-hidden="true" focusable="false"><g transform="translate(34 62) rotate(-12)"><rect x="-23.0" y="-23.0" width="46" height="46" rx="9.2" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><circle cx="-11.96" cy="-11.96" r="5.29" fill="#17231D"/><circle cx="11.96" cy="-11.96" r="5.29" fill="#17231D"/><circle cx="0.00" cy="0.00" r="5.29" fill="#17231D"/><circle cx="-11.96" cy="11.96" r="5.29" fill="#17231D"/><circle cx="11.96" cy="11.96" r="5.29" fill="#17231D"/></g><g transform="translate(68 50) rotate(14)"><rect x="-23.0" y="-23.0" width="46" height="46" rx="9.2" fill="#FBFAF5" stroke="rgba(0,0,0,.2)"/><circle cx="-11.96" cy="-11.96" r="5.29" fill="#17231D"/><circle cx="11.96" cy="11.96" r="5.29" fill="#17231D"/></g></svg></span>
+        <span class="vname" aria-hidden="true">Craps</span>
+        <span class="nm">Craps</span>
+        <span class="bl sr" id="bl-craps">Two dice, one roll — learn which bets are worth making.</span>
+        <span class="go"><span class="enter-label sr">Sit down</span><b aria-hidden="true">→</b></span>
+      </a>
+  </nav></div>
+</main>
+<footer>
+  <div><a href="/learn/">Learn to play</a> &nbsp;&nbsp; <a href="/learn/glossary/">Glossary</a></div>
+  <div class="xp-line" id="xp-status-line"><span id="xp-status-text"></span><button type="button" class="xp-change" id="xp-change"></button></div>
+  <div>For education only — free practice tables, not real-money gambling.<br>© 2026 SledgeMakesGames. All rights reserved.</div>
+</footer>
 
 <div class="xp-overlay" id="xp-overlay" hidden>
   <div class="xp-dialog" role="dialog" aria-modal="true" aria-labelledby="xp-title" aria-describedby="xp-sub">
@@ -406,12 +314,9 @@ footer a:hover{color:var(--brass-bright);}
 </div>
 
 <script>
+
 var BANKROLL_KEY = 'house_edge_bankroll_v1';
-
-function formatMoney(n){
-  return '$' + Math.round(n).toLocaleString('en-US');
-}
-
+function formatMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
 function renderBankroll(){
   var el = document.getElementById('bankroll-amount');
   if(!el) return;
@@ -420,7 +325,7 @@ function renderBankroll(){
     var balance = 1000;
     if(raw){
       var parsed = JSON.parse(raw);
-      if(typeof parsed.balance === 'number' && !isNaN(parsed.balance)) balance = parsed.balance;
+      if(parsed && typeof parsed.balance === 'number' && !isNaN(parsed.balance)) balance = parsed.balance;
     } else {
       localStorage.setItem(BANKROLL_KEY, JSON.stringify({balance:1000, lastUpdated:new Date().toISOString()}));
     }
@@ -431,266 +336,46 @@ function renderBankroll(){
 }
 renderBankroll();
 
-/* ---------- random card generator, shared by the hero and every table's hover reveal ---------- */
-var RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-var SUITS = [{sym:'♠',color:'#15171B'},{sym:'♣',color:'#15171B'},{sym:'♥',color:'#E15D45'},{sym:'♦',color:'#E15D45'}];
-function randomCard(){
-  var rank = RANKS[Math.floor(Math.random()*RANKS.length)];
-  var suit = SUITS[Math.floor(Math.random()*SUITS.length)];
-  return {rank: rank, sym: suit.sym, color: suit.color};
-}
-function isFaceCard(rank){ return rank==='J'||rank==='Q'||rank==='K'; }
+/* ---------- the brand coin flips when you click or tap it (Enter and Space too); it always turns forward and lands on a new suit ---------- */
+(function(){
+  var coin = document.getElementById('brand-coin'); if(!coin) return;
+  var inner = coin.querySelector('.coin-in'), hop = coin.querySelector('.coin-hop'), suit = coin.querySelector('.suit');
+  if(!inner || !hop) return;
+  var SUITS = ['\u2660', '\u2665', '\u2666', '\u2663'], angle = 0;
+  var calm = false; try{ calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){}
+  coin.addEventListener('click', function(){
+    angle += 180;
+    if((angle / 180) % 2 === 1 && suit) suit.textContent = SUITS[Math.floor(Math.random() * SUITS.length)];
+    inner.style.transform = 'rotateY(' + angle + 'deg)';
+    coin.setAttribute('data-side', (angle / 180) % 2 === 1 ? 'back' : 'front');
+    if(!calm){ hop.classList.remove('hop'); void hop.offsetWidth; hop.classList.add('hop'); }
+  });
+  hop.addEventListener('animationend', function(){ hop.classList.remove('hop'); });
+})();
 
-/* Ported directly from the actual games' card rendering (same viewBox and paths, just scaled
-   width/height per context) so face cards look identical everywhere on the site. */
-function faceCardSVG(rank, w, h){
-  if(rank==='J'){
-    return '<svg viewBox="0 0 40 56" width="'+w+'" height="'+h+'" style="overflow:visible;">'+
-      '<circle cx="20" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
-      '<line x1="14" y1="3.5" x2="26" y2="3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="15.5" x2="20" y2="34" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="20" x2="10" y2="27" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="20" x2="30" y2="27" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="34" x2="11" y2="51" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="34" x2="29" y2="51" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '</svg>';
+/* ---------- table theme: the same four looks as the tables; remembered on this device ---------- */
+var THEME_KEY = 'house_edge_theme_v1';
+(function(){
+  var TH = window.TR_TH || {}, btns = document.querySelectorAll('.themes button');
+  function paint(n){
+    var t = Object.prototype.hasOwnProperty.call(TH, n) ? TH[n] : null; if(!t) return;
+    var s = document.documentElement.style;
+    Object.keys(t).forEach(function(k){ if(k !== 'label') s.setProperty('--' + k, t[k]); });
+    document.documentElement.setAttribute('data-theme', n);
+    Array.prototype.forEach.call(btns, function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-th') === n)); });
   }
-  if(rank==='Q'){
-    return '<svg viewBox="0 0 40 56" width="'+w+'" height="'+h+'" style="overflow:visible;">'+
-      '<circle cx="20" cy="11" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
-      '<polyline points="13,4 16,8 20,3 24,8 27,4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
-      '<line x1="20" y1="16.5" x2="20" y2="32" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="21" x2="11" y2="28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<line x1="20" y1="21" x2="29" y2="28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-      '<polygon points="20,32 9,52 31,52" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>'+
-    '</svg>';
-  }
-  return '<svg viewBox="0 0 40 56" width="'+w+'" height="'+h+'" style="overflow:visible;">'+
-    '<circle cx="20" cy="13" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/>'+
-    '<polyline points="12,5 15,10 20,4 25,10 28,5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
-    '<line x1="20" y1="1.5" x2="20" y2="4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'+
-    '<line x1="17.5" y1="2.5" x2="22.5" y2="2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'+
-    '<line x1="20" y1="18.5" x2="20" y2="36" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="23" x2="10" y2="30" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="23" x2="32" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="36" x2="11" y2="52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-    '<line x1="20" y1="36" x2="29" y2="52" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'+
-  '</svg>';
-}
-
-function jokerStarSVG(w, h){
-  return '<svg viewBox="0 0 40 40" width="'+w+'" height="'+h+'" style="overflow:visible;">'+
-    '<polygon points="20,2 24.5,14.5 38,15.5 27.5,24 31,37 20,29.5 9,37 12.5,24 2,15.5 15.5,14.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'+
-  '</svg>';
-}
-
-/* Fills a .flip-front element's corner indices and center pip/face-card art for one card.
-   svgSize is {w,h} for the face-card SVG; pipSize is the font-size (px) for a plain suit pip. */
-function applyCardVisual(frontEl, card, svgSize, pipSize){
-  var centerPip = frontEl.querySelector('.center-pip');
-  if(card.joker){
-    frontEl.querySelectorAll('.idx').forEach(function(idx){
-      idx.querySelector('.r').textContent = 'JOKER';
-      idx.querySelector('.s').textContent = '';
-      idx.style.color = card.color;
-      idx.classList.add('joker-idx');
+  Array.prototype.forEach.call(btns, function(b){
+    b.addEventListener('click', function(){
+      var n = b.getAttribute('data-th'); paint(n);
+      try{ localStorage.setItem(THEME_KEY, n); }catch(e){}
     });
-    if(centerPip){
-      centerPip.style.color = card.color;
-      centerPip.style.fontSize = '';
-      centerPip.innerHTML = jokerStarSVG(svgSize.w, svgSize.h);
-    }
-    return;
-  }
-  frontEl.querySelectorAll('.idx').forEach(function(idx){
-    idx.classList.remove('joker-idx');
-    idx.querySelector('.r').textContent = card.rank;
-    idx.querySelector('.s').textContent = card.sym;
-    idx.style.color = card.color;
   });
-  if(!centerPip) return;
-  if(isFaceCard(card.rank)){
-    centerPip.style.color = card.color;
-    centerPip.style.fontSize = '';
-    centerPip.innerHTML = faceCardSVG(card.rank, svgSize.w, svgSize.h);
-  } else {
-    centerPip.innerHTML = '';
-    centerPip.textContent = card.sym;
-    centerPip.style.color = card.color;
-    centerPip.style.fontSize = pipSize + 'px';
-  }
-}
+  var saved = null;
+  try{ saved = localStorage.getItem(THEME_KEY); }catch(e){}
+  paint(saved && Object.prototype.hasOwnProperty.call(TH, saved) ? saved : 'graphite');
+})();
 
-/* ---------- hover/focus card-flip reveal on each table card ---------- */
-var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/* Every staggered flip is a pending timer. They MUST be tracked and cancelled, otherwise a flip
-   scheduled for 330ms can fire after a quick mouse-leave has already reset the cards, leaving
-   the last card of a hand stuck face-up (this is the Baccarat bug: it has four cards, so its
-   last flip has the longest delay). */
-function clearFlipTimers(owner){
-  if(!owner._flipTimers) owner._flipTimers = [];
-  while(owner._flipTimers.length){ clearTimeout(owner._flipTimers.pop()); }
-}
-/* ---------- craps: two dice instead of cards. Same life cycle as a hand: the outline of two dice at rest,
-   "roll" on open (the outlines tumble and turn into real dice), back to the outline on close.
-   Each die is its own random 1-6 (cosmetic only, nothing here is a game). ---------- */
-var DIE_PIPS = {1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[1,3],[3,1],[3,3]],5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]};
-function randomDie(){ return Math.floor(Math.random()*6) + 1; }
-function paintDie(el, v){
-  var face = el.querySelector('.die-face');
-  if(!face) return;
-  face.innerHTML = DIE_PIPS[v].map(function(q){ return '<i style="grid-area:'+q[0]+' / '+q[1]+'"></i>'; }).join('');
-  el.classList.toggle('one', v === 1);
-  el.setAttribute('data-face', String(v));
-}
-/* "up" = the real die is showing, "rolled" = it has settled on its final face, "tumble" = mid-roll */
-function clearDie(d){ d.classList.remove('up', 'rolled', 'tumble'); }
-function rollDiceIn(owner, dice, finals){
-  clearFlipTimers(owner);
-  Array.prototype.forEach.call(dice, function(d, i){
-    var fin = finals ? finals[i] : randomDie();
-    clearDie(d);
-    if(prefersReducedMotion){ paintDie(d, fin); d.classList.add('up', 'rolled'); return; }
-    paintDie(d, randomDie());
-    void d.offsetWidth;                         // restart the tumble if it is already running
-    d.classList.add('tumble');
-    // the outline turns into the real die while it is in the air, then faces blur past as it spins
-    owner._flipTimers.push(setTimeout(function(){ d.classList.add('up'); }, i*70 + 90));
-    for(var k = 1; k < 4; k++){
-      owner._flipTimers.push(setTimeout(function(){ paintDie(d, randomDie()); }, i*70 + k*95));
-    }
-    owner._flipTimers.push(setTimeout(function(){ paintDie(d, fin); d.classList.add('rolled'); }, i*70 + 400));
-  });
-}
-function restDice(owner, dice){
-  clearFlipTimers(owner);
-  Array.prototype.forEach.call(dice, clearDie);
-}
-
-function dealRandomHand(stage){
-  if(stage.querySelector('.die')){ rollDiceIn(stage, stage.querySelectorAll('.die'), null); return; }
-  clearFlipTimers(stage);
-  stage.querySelectorAll('.flip-card').forEach(function(fc, i){
-    var card = randomCard();
-    fc.classList.remove('flipped');
-    applyCardVisual(fc.querySelector('.flip-front'), card, {w:29, h:41}, 25);
-    if(prefersReducedMotion){
-      fc.classList.add('flipped');
-    } else {
-      stage._flipTimers.push(setTimeout(function(){ fc.classList.add('flipped'); }, i*110));
-    }
-  });
-}
-function cancelPendingFlips(stage){ clearFlipTimers(stage); }
-function resetHand(stage){
-  if(stage.querySelector('.die')){ restDice(stage, stage.querySelectorAll('.die')); return; }
-  clearFlipTimers(stage);
-  stage.querySelectorAll('.flip-card').forEach(function(fc){ fc.classList.remove('flipped'); });
-}
-
-
-
-/* ---------- per-game hero "moment": hovering a table swaps the hero's resting chip for a
-   specific, characteristic hand from that game ---------- */
-var HERO_MOMENTS = {
-  blackjack: { cards: [{rank:'A',sym:'♠',color:'#15171B'},{rank:'K',sym:'♥',color:'#E15D45'}], label: 'Blackjack!' },
-  baccarat:  { cards: [{rank:'4',sym:'♦',color:'#E15D45'},{rank:'5',sym:'♣',color:'#15171B'}], label: 'Natural 9' },
-  paigow:    { cards: [{joker:true,color:'#9C82E0'},{rank:'A',sym:'♠',color:'#15171B'}], label: 'The Joker' },
-  uth:       { cards: [{rank:'A',sym:'♠',color:'#15171B'},{rank:'A',sym:'♥',color:'#E15D45'}], label: 'Pocket Aces' },
-  craps:     { dice: [5,6], label: 'Yo eleven' }
-};
-var GAME_RGB = { blackjack:'91,141,224', baccarat:'101,199,163', paigow:'225,93,69', uth:'156,130,224', craps:'232,121,159' };
-var heroMomentEl = document.getElementById('hero-moment');
-var heroMomentLabelEl = document.getElementById('hero-moment-label');
-var heroChipEl = document.getElementById('hero-chip');
-var heroMomentCards = heroMomentEl ? heroMomentEl.querySelectorAll('.flip-card') : [];
-var heroMomentDice = heroMomentEl ? heroMomentEl.querySelectorAll('.hero-moment-dice .die') : [];
-var currentHeroGame = null;
-var heroHideTimer = null;
-
-function showHeroMoment(game){
-  var data = HERO_MOMENTS[game];
-  if(!data || !heroMomentEl) return;
-  if(heroHideTimer){ clearTimeout(heroHideTimer); heroHideTimer = null; }
-  clearFlipTimers(heroMomentEl);
-  currentHeroGame = game;
-  heroChipEl.classList.add('away');
-  heroMomentLabelEl.textContent = data.label;
-  heroMomentEl.style.setProperty('--tc-accent', 'var(--' + (
-    game==='blackjack' ? 'dusty-blue' : game==='baccarat' ? 'sage-bright' : game==='paigow' ? 'coral' : game==='craps' ? 'rose' : 'violet'
-  ) + ')');
-  heroMomentEl.style.setProperty('--tc-rgb', GAME_RGB[game]);
-  if(data.dice){
-    // a dice table: the two die outlines tumble and turn into real dice instead of cards flipping
-    heroMomentEl.classList.add('dice-mode');
-    heroMomentCards.forEach(function(fc){ fc.classList.remove('flipped'); });
-    heroMomentEl.classList.add('show');
-    rollDiceIn(heroMomentEl, heroMomentDice, data.dice);
-    return;
-  }
-  heroMomentEl.classList.remove('dice-mode');
-  Array.prototype.forEach.call(heroMomentDice, clearDie);
-  heroMomentCards.forEach(function(fc, i){
-    fc.classList.remove('flipped');
-    applyCardVisual(fc.querySelector('.flip-front'), data.cards[i], {w:38,h:53}, 34);
-  });
-  heroMomentEl.classList.add('show');
-  heroMomentCards.forEach(function(fc, i){
-    if(prefersReducedMotion){
-      fc.classList.add('flipped');
-    } else {
-      heroMomentEl._flipTimers.push(setTimeout(function(){ fc.classList.add('flipped'); }, i*130));
-    }
-  });
-}
-function hideHeroMoment(game){
-  if(heroHideTimer) clearTimeout(heroHideTimer);
-  // Cancel not-yet-fired flips right away so none can land after the hide below.
-  if(currentHeroGame === game) clearFlipTimers(heroMomentEl);
-  heroHideTimer = setTimeout(function(){
-    if(currentHeroGame !== game) return; // a different game has already taken over -- don't hide it
-    currentHeroGame = null;
-    clearFlipTimers(heroMomentEl);
-    heroMomentEl.classList.remove('show');
-    heroChipEl.classList.remove('away');
-    heroMomentCards.forEach(function(fc){ fc.classList.remove('flipped'); });
-    Array.prototype.forEach.call(heroMomentDice, clearDie);
-  }, 90);
-}
-
-document.querySelectorAll('.table-card').forEach(function(card){
-  var stage = card.querySelector('.icon-stage');
-  if(!stage) return;
-  var resetTimer = null;
-  var game = stage.dataset.game;
-  // One shared "is this card wanted open?" state: pointer over it OR keyboard focus inside it.
-  // Acting only on changes of that state means hover + focus together can't deal the hand twice.
-  var hovering = false, focused = false, wasOpen = false;
-  function sync(){
-    var open = hovering || focused;
-    if(open === wasOpen) return;
-    wasOpen = open;
-    if(open){
-      if(resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
-      dealRandomHand(stage);
-      if(game) showHeroMoment(game);
-    } else {
-      cancelPendingFlips(stage);
-      if(resetTimer) clearTimeout(resetTimer);
-      resetTimer = setTimeout(function(){ resetTimer = null; resetHand(stage); }, 240);
-      if(game) hideHeroMoment(game);
-    }
-  }
-  card.addEventListener('mouseenter', function(){ hovering = true; sync(); });
-  card.addEventListener('mouseleave', function(){ hovering = false; sync(); });
-  card.addEventListener('focusin', function(){ focused = true; sync(); });
-  card.addEventListener('focusout', function(e){
-    if(card.contains(e.relatedTarget)) return;
-    focused = false; sync();
-  });
-});
-
+var prefersReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 /* ---------- "how familiar are you?" + where each table sends you ----------
    One answer is shared by every game (house_edge_experience_v1): 'new' | 'rules' | 'pro'.
@@ -733,24 +418,21 @@ var GAME_ROUTES = {
   uth:      { name:"Ultimate Texas Hold'em",  play:'/ultimate-texas-holdem/',   learn:'/learn/?from=floor#uth' },
   craps:    { name:'Craps',                   play:'/craps/',                   learn:'/learn/?from=floor#craps' }
 };
-/* snap = { level, learned } lets one routing pass read storage once instead of once per card */
+/* snap = { level, learned } lets one routing pass read storage once instead of once per table */
 function learnFirst(game, snap){
   var level = snap ? snap.level : readLevel();
   if(level !== 'new') return false;
   return (snap ? snap.learned : readLearned())[game] !== true;
 }
 
-function routeCard(card, snap){
-  var stage = card.querySelector('.icon-stage');
-  var cover = card.querySelector('a.cover');
-  if(!stage || !cover) return;
-  var game = stage.dataset.game, r = GAME_ROUTES[game];
+function routePane(pane, snap){
+  var game = pane.getAttribute('data-game'), r = GAME_ROUTES[game];
   if(!r) return;
   var lf = learnFirst(game, snap);
-  cover.setAttribute('href', lf ? r.learn : r.play);
-  cover.setAttribute('aria-label', lf ? 'Learn how to play ' + r.name + ' first' : 'Play ' + r.name);
-  card.classList.toggle('learn-first', lf);
-  var label = card.querySelector('.enter-label');
+  pane.setAttribute('href', lf ? r.learn : r.play);
+  pane.setAttribute('aria-label', lf ? 'Learn how to play ' + r.name + ' first' : 'Play ' + r.name);
+  pane.classList.toggle('learn-first', lf);
+  var label = pane.querySelector('.enter-label');
   if(label) label.textContent = lf ? 'Learn the basics' : 'Sit down';
 }
 function routeHeroCta(snap){
@@ -760,52 +442,43 @@ function routeHeroCta(snap){
   cta.setAttribute('href', lf ? GAME_ROUTES.blackjack.learn : GAME_ROUTES.blackjack.play);
   label.textContent = lf ? 'Learn Blackjack first' : 'Sit down at Blackjack';
 }
+/* the footer says what the saved answer is, and lets them change it (or give one if they skipped) */
 function updateExperienceStatus(level){
   if(level === undefined) level = readLevel();
   var text = document.getElementById('xp-status-text'), btn = document.getElementById('xp-change');
   if(!text || !btn) return;
   if(level){ text.textContent = 'Your level: ' + XP_LABELS[level]; btn.textContent = 'Change'; }
-  else { text.textContent = ''; btn.textContent = 'How familiar are you with these games?'; }
+  else { text.textContent = ''; btn.textContent = 'How well do you know these games?'; btn.style.marginLeft = '0'; }
+  if(level) btn.style.marginLeft = '';
 }
 function applyRouting(){
   var snap = { level: readLevel(), learned: readLearned() };
-  document.querySelectorAll('.table-card').forEach(function(card){ routeCard(card, snap); });
+  Array.prototype.forEach.call(document.querySelectorAll('.pane'), function(p){ routePane(p, snap); });
   routeHeroCta(snap);
   updateExperienceStatus(snap.level);
 }
 
-// Clicking a learn-first link counts as "this game's lesson has been offered": next time it goes
-// straight to the table. The href is refreshed first so the navigation itself always uses the
-// current answer, and the labels are deliberately NOT redrawn here (they'd flicker mid-navigation);
-// they refresh when you come back to the page.
+/* Clicking a learn-first link counts as "this game's lesson has been offered": next time it goes
+   straight to the table. The href is refreshed first so the navigation itself always uses the
+   current answer, and the labels are deliberately NOT redrawn here (they'd flicker mid-navigation);
+   they refresh when you come back to the page. */
 function wireRouteClicks(){
-  function onUse(el, game, card){
-    var handler = function(){
-      if(card) routeCard(card); else routeHeroCta();
-      if(learnFirst(game)) markLearned(game);
-    };
-    el.addEventListener('click', handler);
-    el.addEventListener('auxclick', handler);
-  }
-  document.querySelectorAll('.table-card').forEach(function(card){
-    var stage = card.querySelector('.icon-stage'), cover = card.querySelector('a.cover');
-    if(stage && cover) onUse(cover, stage.dataset.game, card);
-  });
   var cta = document.getElementById('rv-cta');
-  if(cta) onUse(cta, 'blackjack', null);
+  if(cta){
+    var h = function(){ routeHeroCta(); if(learnFirst('blackjack')) markLearned('blackjack'); };
+    cta.addEventListener('click', h); cta.addEventListener('auxclick', h);
+  }
 }
-
-/* ---- the dialog ---- */
+/* ---- the first-visit dialog ---- */
 var xpOverlay = document.getElementById('xp-overlay');
-var xpReturnFocus = null;
 function xpFocusables(){ return Array.prototype.slice.call(xpOverlay.querySelectorAll('button')); }
-function openExperienceDialog(fromUser){
+function openExperienceDialog(){
   if(!xpOverlay) return;
-  xpReturnFocus = fromUser ? document.activeElement : null;
   var current = readLevel();
   xpOverlay.querySelectorAll('.xp-opt').forEach(function(b){
     b.classList.toggle('selected', b.getAttribute('data-level') === current);
   });
+  var skipBtn = document.getElementById('xp-skip'); if(skipBtn) skipBtn.textContent = current ? 'Cancel' : 'Skip for now';
   xpOverlay.hidden = false;
   document.body.style.overflow = 'hidden';
   var first = xpOverlay.querySelector('.xp-opt.selected') || xpOverlay.querySelector('.xp-opt');
@@ -815,8 +488,6 @@ function closeExperienceDialog(){
   if(!xpOverlay) return;
   xpOverlay.hidden = true;
   document.body.style.overflow = '';
-  if(xpReturnFocus && xpReturnFocus.focus){ try{ xpReturnFocus.focus(); }catch(e){} }
-  xpReturnFocus = null;
 }
 function chooseExperience(level){
   if(!isLevel(level)) return;
@@ -833,7 +504,7 @@ function maybeAskExperience(){
   var skipped = false;
   try{ skipped = sessionStorage.getItem(XP_SKIPPED_KEY) === '1'; }catch(e){}
   if(skipped) return;
-  setTimeout(function(){ if(!readLevel() && xpOverlay.hidden) openExperienceDialog(false); }, 650);
+  openExperienceDialog();   // a first-time visitor is asked at once, before anything else
 }
 if(xpOverlay){
   xpOverlay.querySelectorAll('.xp-opt').forEach(function(b){
@@ -850,8 +521,94 @@ if(xpOverlay){
     }
   });
 }
+
+/* ---------- the stage: one table open at a time, and its hand is dealt when it opens ---------- */
+var RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+var SUITS = [{sym:'♠',color:'#17231D'},{sym:'♣',color:'#17231D'},{sym:'♥',color:'#C23B30'},{sym:'♦',color:'#C23B30'}];
+var DIE_PIPS = {1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
+var SVGNS = 'http://www.w3.org/2000/svg';
+function randInt(n){ return Math.floor(Math.random() * n); }
+function randomDie(){ return randInt(6) + 1; }
+function paintDie(g, v){
+  var pp = g.querySelector('.pp'), s = +g.getAttribute('data-s'), step = s * 0.26, r = s * 0.12;
+  while(pp.firstChild) pp.removeChild(pp.firstChild);
+  DIE_PIPS[v].forEach(function(p){
+    var c = document.createElementNS(SVGNS, 'circle');
+    c.setAttribute('cx', p[0] * step); c.setAttribute('cy', p[1] * step);
+    c.setAttribute('r', v === 1 ? r * 1.35 : r);
+    c.setAttribute('fill', v === 1 ? '#C23B30' : '#17231D');
+    pp.appendChild(c);
+  });
+  g.setAttribute('data-die', String(v));
+}
+function paintCard(g, rank, suit){
+  var rk = g.querySelector('.rk'), su = g.querySelector('.su');
+  rk.textContent = rank; su.textContent = suit.sym;
+  rk.setAttribute('fill', suit.color); su.setAttribute('fill', suit.color);
+}
+/* Every pending throw is a timer, and they are all tracked and cancelled: a table that closes mid-throw
+   must not be left changing faces afterwards. */
+function clearBoardTimers(pane){
+  if(!pane._timers) pane._timers = [];
+  while(pane._timers.length) clearTimeout(pane._timers.pop());
+}
+/* a fresh shuffled deck for each deal, so a hand never shows the same card twice */
+function shuffledDeck(){
+  var d = [];
+  RANKS.forEach(function(r){ SUITS.forEach(function(s){ d.push({rank:r, suit:s}); }); });
+  for(var i = d.length - 1; i > 0; i--){ var j = randInt(i + 1), t = d[i]; d[i] = d[j]; d[j] = t; }
+  return d;
+}
+function dealBoard(pane){
+  clearBoardTimers(pane);
+  var deck = shuffledDeck();
+  Array.prototype.forEach.call(pane.querySelectorAll('[data-up]'), function(g){
+    var c = deck.pop();
+    paintCard(g, c.rank, c.suit);
+  });
+  Array.prototype.forEach.call(pane.querySelectorAll('[data-die]'), function(g, i){
+    var fin = randomDie();
+    if(prefersReducedMotion){ paintDie(g, fin); return; }
+    paintDie(g, randomDie());
+    for(var k = 1; k < 4; k++){
+      pane._timers.push(setTimeout(function(){ paintDie(g, randomDie()); }, 200 + i * 70 + k * 100));
+    }
+    pane._timers.push(setTimeout(function(){ paintDie(g, fin); }, 200 + i * 70 + 440));
+  });
+}
+/* a mouse hovers; a finger can't, so on touch screens the first tap opens a table instead */
+function hoverCapable(){ return !window.matchMedia || window.matchMedia('(hover:hover)').matches; }
+(function(){
+  var stage = document.getElementById('stage'), panes = Array.prototype.slice.call(document.querySelectorAll('.pane')), cur = -1, pointerRecent = false, pointerTimer = null;
+  function close(){ if(cur < 0) return; clearBoardTimers(panes[cur]); cur = -1; panes.forEach(function(p){ p.classList.remove('on'); p.setAttribute('aria-current', 'false'); }); stage.classList.add('rest'); }
+  function open(i){
+    if(i === cur) return;
+    var prev = panes[cur];
+    if(prev) clearBoardTimers(prev);
+    cur = i; stage.classList.remove('rest');
+    panes.forEach(function(p, k){ p.classList.toggle('on', k === i); p.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+    dealBoard(panes[i]);
+  }
+  panes.forEach(function(p, i){
+    var game = p.getAttribute('data-game');
+    p.addEventListener('pointerdown', function(){ pointerRecent = true; clearTimeout(pointerTimer); pointerTimer = setTimeout(function(){ pointerRecent = false; }, 700); }, true);
+    p.addEventListener('mouseenter', function(){ if(hoverCapable()) open(i); });
+    p.addEventListener('focus', function(){ if(!pointerRecent) open(i); });
+    p.addEventListener('click', function(e){
+      // on a touch screen the first tap opens the table; the second tap goes in
+      if(cur !== i){ e.preventDefault(); open(i); return; }
+      routePane(p); if(learnFirst(game)) markLearned(game);
+    });
+    p.addEventListener('auxclick', function(){ routePane(p); if(learnFirst(game)) markLearned(game); });
+  });
+  panes.forEach(function(p){ p.setAttribute('aria-current', 'false'); });
+  stage.addEventListener('mouseleave', function(){ if(hoverCapable()) close(); });
+  stage.addEventListener('focusout', function(e){ if(!e.relatedTarget || !stage.contains(e.relatedTarget)) close(); });
+  document.addEventListener('pointerdown', function(e){ if(!stage.contains(e.target)) close(); });
+})();
+
 var xpChangeBtn = document.getElementById('xp-change');
-if(xpChangeBtn) xpChangeBtn.addEventListener('click', function(){ openExperienceDialog(true); });
+if(xpChangeBtn) xpChangeBtn.addEventListener('click', function(){ openExperienceDialog(); });
 
 wireRouteClicks();
 applyRouting();
@@ -859,58 +616,6 @@ maybeAskExperience();
 // Coming back via the back button (or from another tab) must show up-to-date labels.
 window.addEventListener('pageshow', applyRouting);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyRouting(); });
-
-
-/* ---------- page-load reveal sequence ---------- */
-var loadOrder = ['rv-wordmark','rv-nav','rv-bankroll','rv-h1','rv-p','rv-cta','rv-hero-anim'];
-loadOrder.forEach(function(id, i){
-  var el = document.getElementById(id);
-  if(!el) return;
-  setTimeout(function(){ el.classList.add('show'); }, 70 + i*70);
-});
-
-/* ---------- hero: one-time shuffle -> deal -> settle-into-a-chip sequence ---------- */
-/* ---------- hero chip: click (or Enter/Space) flips it ---------- */
-(function initHeroChip(){
-  var chip = document.getElementById('hero-chip');
-  var inner = document.getElementById('chip-inner');
-  var hop = document.getElementById('chip-hop');
-  var suitEl = document.getElementById('chip-suit');
-  if(!chip || !inner || !hop) return;
-  var CHIP_SUITS = ['\u2660','\u2665','\u2666','\u2663'];
-  var angle = 0; // always rotates forward, so the chip never "unwinds" backwards
-  chip.addEventListener('click', function(){
-    angle += 180;
-    if(Math.round(angle/180) % 2 === 1 && suitEl){
-      // we're turning to the back: pick its suit now, while the back is facing away
-      suitEl.textContent = CHIP_SUITS[Math.floor(Math.random()*CHIP_SUITS.length)];
-    }
-    inner.style.transform = 'rotateY(' + angle + 'deg)';
-    if(!prefersReducedMotion){
-      hop.classList.remove('hop');
-      void hop.offsetWidth; // restart the hop if clicked again mid-flip
-      hop.classList.add('hop');
-    }
-  });
-  hop.addEventListener('animationend', function(){ hop.classList.remove('hop'); });
-})();
-
-/* ---------- scroll-triggered reveal for table cards ---------- */
-if('IntersectionObserver' in window){
-  var cards = document.querySelectorAll('[data-card]');
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting){
-        var idx = Array.prototype.indexOf.call(cards, entry.target);
-        setTimeout(function(){ entry.target.classList.add('show'); }, (idx % 5) * 70);
-        io.unobserve(entry.target);
-      }
-    });
-  }, {threshold:0.15});
-  cards.forEach(function(c){ io.observe(c); });
-} else {
-  document.querySelectorAll('[data-card]').forEach(function(c){ c.classList.add('show'); });
-}
 </script>
 </body>
 </html>
