@@ -277,15 +277,13 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .num::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(180px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,0.09),transparent 65%);opacity:0;transition:opacity 220ms ease;pointer-events:none;}
 .spot:hover:not(.off),.num:hover:not(.off){border-color:rgba(237,238,240,0.2);transform:translateY(-2px);}
 .spot.has-bet{border-color:rgba(214,169,75,0.45);background:linear-gradient(180deg,rgba(214,169,75,0.11),rgba(214,169,75,0.03));}
+/* The Pass Line is the bet to begin with, so its name is gold. Nothing else about the card is different from any other bet. */
+.spot[data-key="pass"] .spot-title{color:var(--brass-bright);}
 .spot.off,.num.off{opacity:0.45;}
 .spot.off .spot-hit,.num.off .spot-hit{cursor:not-allowed;}
 .spot[hidden]{display:none;}
 .edge.ctr{align-self:center;margin-top:3px;}
 .num-edge{display:flex;justify-content:center;min-height:19px;}
-.numbers.static .num{min-height:58px;justify-content:center;}
-.numbers.static .num-sub,.numbers.static .num-edge,.numbers.static .edge,.numbers.static .num-stack,.numbers.static .pb-switch,.numbers.static .press-row{display:none;}
-.numbers.static .num:hover{transform:none;border-color:var(--line);}
-.numbers.static .num.is-point:hover{border-color:rgba(240,196,107,0.55);}
 .spot-hit{position:absolute;inset:0;width:100%;height:100%;background:transparent;border:none;border-radius:inherit;padding:0;z-index:1;cursor:pointer;}
 .spot-hit:hover{border:none;}
 .spot-hit:active{transform:none;}
@@ -308,7 +306,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .spot.has-bet .spot-x.can,.num.has-bet .spot-x.can{display:flex;}
 .spot-x:hover{color:var(--coral);border-color:rgba(225,93,69,0.5);}
 .odds-row{position:relative;z-index:3;display:none;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
-.odds-row.show{display:flex;}
+.odds-row.show{display:flex;padding-right:104px;}
 .odds-stack{display:inline-flex;align-items:flex-end;gap:6px;min-height:20px;pointer-events:none;}
 .odds-stack .amt{font-size:12px;color:var(--sage-bright);}
 .odds-stack .lab{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);font-weight:700;align-self:center;}
@@ -316,7 +314,18 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .odds-btn:hover{border-color:rgba(101,199,163,0.7);}
 .odds-btn small{font-weight:500;opacity:0.8;}
 .odds-x{width:24px;height:24px;border-radius:50%;padding:0;font-size:13px;line-height:1;}
+/* the green Max odds buttons: one tap puts the most the table allows behind a bet */
+.odds-max,.maxodds-btn{--mo:#4FE3A0;font-family:'Space Grotesk',sans-serif;font-weight:800;letter-spacing:0.2px;background:linear-gradient(180deg,#63EBAE,#32C985);border:1px solid #8AF3C4;color:#03281B;font-variant-numeric:tabular-nums;box-shadow:0 6px 16px -8px rgba(79,227,160,0.9);}
+.odds-max:hover:not(:disabled),.maxodds-btn:hover:not(:disabled){background:linear-gradient(180deg,#7BF2BC,#43D895);border-color:#A9F8D4;}
+.odds-max[hidden],.maxodds-btn[hidden]{display:none;}
+.odds-max{padding:7px 14px;border-radius:9px;font-size:13px;}
+.odds-max small{font-weight:800;font-size:12px;margin-left:5px;background:rgba(3,40,27,0.16);padding:1px 7px;border-radius:99px;opacity:1;}
+.maxodds-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 10px;border-radius:12px;font-size:14px;}
+.maxodds-btn .mo-a{background:rgba(3,40,27,0.16);padding:1px 8px;border-radius:99px;font-size:13px;}
+.odds-max.cta,.maxodds-btn.cta{animation:oddsPulse 1.8s ease-in-out infinite;}
+@keyframes oddsPulse{0%,100%{box-shadow:0 0 0 0 rgba(79,227,160,0),0 6px 16px -8px rgba(79,227,160,0.9);}50%{box-shadow:0 0 0 5px rgba(79,227,160,0.35),0 0 22px 2px rgba(79,227,160,0.3),0 6px 16px -8px rgba(79,227,160,0.9);}}
 
+.line-bets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
 .board{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
 .board .wide{grid-column:1 / -1;}
 .field-nums{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;position:relative;pointer-events:none;}
@@ -393,6 +402,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
   .tray-actions .roll-btn{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;min-width:0;padding:12px 6px;font-size:16px;}
   .roll-btn kbd{margin-left:0;}
   .tray-hint{font-size:10.5px;line-height:1.4;}
+  .maxodds-btn{flex-direction:column;gap:3px;padding:10px 6px;}
 }
 @media(min-width:1000px) and (max-height:759px){ .tray-hint{display:none;} }
 @media (hover:none){ .roll-btn kbd{display:none;} }
@@ -444,7 +454,6 @@ footer{text-align:center;}
   .numbers{grid-template-columns:repeat(3,1fr);}
   .num.is-point{padding-top:24px;}
   .num.is-point::before{content:'POINT';position:absolute;top:7px;left:50%;transform:translateX(-50%);font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:8.5px;letter-spacing:0.8px;color:#20160A;background:var(--brass-bright);padding:2px 6px;border-radius:99px;z-index:2;}
-  .numbers.static .num{min-height:54px;}
   .puck-lane{display:none;}
   .props-grid{grid-template-columns:repeat(2,1fr);}
   .num{min-height:158px;}
@@ -452,11 +461,208 @@ footer{text-align:center;}
 @media(max-width:520px){
   body{padding:20px 12px 48px;}
   .table-felt{padding:12px;}
-  .board{grid-template-columns:1fr;}
+  .board,.line-bets{grid-template-columns:1fr;}
   h1{font-size:26px;}
 }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important;}
+}
+
+/* ================= THE PHONE TABLE =================
+   On a phone the dice, the roll read-out and your balance are pinned along the top of the screen, and the chips and Roll along the
+   bottom. The bets scroll in between, in groups, with a row of jump buttons to reach each group. None of this changes a bet or a roll. */
+body{--gut:16px;}
+@media(max-width:520px){ body{--gut:12px;} }
+.top-block{display:contents;}
+.jump,.grp-h,.bank-mini{display:none;}
+.jump[hidden],.jump button[hidden]{display:none !important;}
+.bets{display:block;}
+
+/* pinned: a phone, a phone on its side, or a tall tablet */
+@media (max-width:999px) and (min-height:760px), (max-width:560px), (max-height:520px) and (max-width:999px){
+  .table-felt{background:none;border:none;box-shadow:none;border-radius:0;padding:0;margin-bottom:0;}
+  .top-block{display:block;position:sticky;top:0;z-index:6;margin:0 calc(var(--gut) * -1) 12px;padding:8px var(--gut) 8px;background:rgba(9,11,13,0.95);background:color-mix(in srgb,var(--felt-dark) 94%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);box-shadow:0 14px 22px -16px rgba(0,0,0,0.8);}
+  .status-bar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-bottom:8px;}
+  .phase-pill{font-size:11px;padding:5px 10px;gap:6px;white-space:nowrap;}
+  .on-table{font-size:11px;text-align:center;white-space:nowrap;}
+  .on-table b{font-size:13px;}
+  .bank-mini{display:inline-flex;align-items:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-muted);white-space:nowrap;}
+  .bank-mini b{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--text);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums;}
+  .bank-mini .pill-stack{height:14px;}
+  .bank-mini .pill-stack i{width:11px;height:11px;margin-left:-5px;}
+  .bank-mini.bump b{animation:bump 520ms var(--ease-out);}
+  .bank-mini.up b{color:var(--sage-bright);} .bank-mini.down b{color:var(--coral);}
+  header .bankroll-pill{display:none;}
+  .jump{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .jump::-webkit-scrollbar{display:none;}
+  .jump button{flex:1 0 auto;padding:7px 11px;font-size:12px;font-weight:600;border-radius:99px;background:rgba(237,238,240,0.06);color:var(--text-muted);white-space:nowrap;min-height:32px;}
+  .jump button[aria-current="true"]{background:rgba(214,169,75,0.16);border-color:rgba(214,169,75,0.45);color:var(--brass-bright);}
+  /* the bets: one column of groups, in the order you want them on a phone (the page order is the table's, for the wide screen) */
+  .bets{display:flex;flex-direction:column;gap:16px;}
+  #grp-lines{order:1;} #grp-board{order:2;} #grp-numbers{order:3;} #props{order:4;} .coach{order:5;margin-top:0;}
+  .grp,.props{scroll-margin-top:calc(var(--top-h,0px) + 8px);}
+  html{scroll-padding-top:calc(var(--top-h,0px) + 8px);scroll-padding-bottom:calc(var(--dock-h,0px) + 8px);}   /* a bet you tab to is never left under the dice or the chips */
+  .grp-h{display:flex;align-items:baseline;gap:8px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin:0 0 7px;}
+  .grp-h small{font-weight:500;text-transform:none;letter-spacing:0;font-size:11px;opacity:0.8;}
+  .numbers-wrap{margin-top:0;}
+  .line-bets,.board{margin-top:0;}
+  .props{margin-top:0;padding-top:0;border-top:0;}
+  .props h3 span{display:none;}
+  /* messages sit just above the chips instead of pushing the table down */
+  .hint-line{pointer-events:none;position:fixed;left:var(--gut);right:var(--gut);bottom:calc(var(--dock-h,0px) + 10px);z-index:20;margin:0;box-shadow:inset 0 0 0 999px rgba(9,11,13,0.93),0 10px 24px -8px rgba(0,0,0,0.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  /* the dock */
+  .tray{position:sticky;bottom:0;z-index:7;margin:14px calc(var(--gut) * -1) 0;border-radius:0;border-width:1px 0 0;padding:8px var(--gut) calc(8px + env(safe-area-inset-bottom,0px));gap:8px;background:rgba(9,11,13,0.95);background:color-mix(in srgb,var(--felt-dark) 94%,transparent);box-shadow:0 -14px 22px -16px rgba(0,0,0,0.8);}
+  .tray-bank{display:none;}
+  .chip-row{flex-wrap:nowrap;gap:5px;justify-content:center;padding-top:4px;}
+  .chip-btn{flex:1 1 0;width:auto;max-width:46px;height:auto;aspect-ratio:1;font-size:12px;}
+  .tray-actions{flex-wrap:nowrap;gap:6px;}
+  .tray-actions button{padding:10px 8px;font-size:12px;min-height:44px;white-space:nowrap;}
+  .tray-actions .roll-btn{flex:1;min-width:0;width:auto;font-size:16px;padding:10px;}
+  .maxodds-btn{padding:8px 10px;font-size:13px;min-height:38px;}
+}
+
+/* a phone: smaller stage, tighter everything */
+@media (max-width:560px), (max-height:520px) and (max-width:999px){
+  body{padding-top:14px;}
+  .back-link{margin-bottom:6px;}
+  header{margin-bottom:8px;gap:8px;}
+  h1{font-size:24px;margin:0;}
+  .tagline{display:none;}
+  .toolbar{gap:8px;margin-bottom:10px;}
+  .toolbar .seg-label{display:none;}
+  .toolbar .seg{order:1;flex:1 1 100%;}
+  .toolbar .seg button{flex:1;padding:9px 6px;}
+  #btn-toggle-settings{order:2;flex:1;}
+  #btn-edge{order:3;flex:1;justify-content:center;}
+  .toolbar > a{order:4;}
+  .dice-stage{height:164px;--s:48px;--h:24px;border-radius:14px;}
+  .readout{top:6px;}
+  .rd-pill{padding:3px 11px 3px 6px;gap:6px;}
+  .readout .d2{--d:22px;}
+  .rd-tot{font-size:20px;}
+  .rd-op{font-size:12px;}
+  .kt-x{display:none;}
+  .callout{margin:6px 0 0;height:50px;min-height:0;overflow:hidden;}
+  .callout .big{font-size:18px;line-height:1.2;}
+  .callout .sub{font-size:11.5px;margin-top:2px;min-height:0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .roll-strip{flex-wrap:nowrap;overflow:hidden;min-height:0;height:24px;margin:4px 0 0;gap:5px;}
+  .roll-strip .rp{width:22px;height:22px;font-size:10.5px;flex:none;}
+  .roll-strip .rp:nth-last-child(n+11){display:none;}
+  .roll-strip:empty::before{content:'Recent rolls show here';font-size:11px;color:var(--text-muted);opacity:0.7;line-height:22px;margin:0 auto;}   /* the strip keeps its height, so the table does not move when the first roll comes in */
+  /* line bets: full-width rows, the name and its cost on the first line */
+  .line-bets,.board{gap:8px;}
+  .spot{flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px 8px;min-height:62px;padding:10px 12px 9px;}
+  .spot .spot-title{order:1;font-size:14px;}
+  .spot .edge{order:2;margin-top:0;align-self:center;}
+  .spot .spot-pay{order:3;flex:0 0 100%;font-size:10.5px;line-height:1.3;}
+  .spot .field-nums{order:4;flex:0 0 100%;}
+  .spot .odds-row{order:5;flex:0 0 100%;}
+  .spot .spot-chips{right:12px;bottom:9px;top:auto;transform:none;}
+  .line-bets .spot.has-bet,.board .spot.has-bet{min-height:78px;padding-right:96px;}
+  .board .spot.has-bet .field-nums{margin-right:-84px;}
+  .spot.has-bet .spot-x.can{top:6px;right:6px;}
+  .odds-row.show{padding-right:0;}
+  .line-bets .spot.off,.board .spot.off{min-height:0;padding:8px 12px;}
+  .line-bets .spot.off .spot-pay,.board .spot.off .spot-pay,.line-bets .spot.off .edge,.board .spot.off .edge{display:none;}
+  .line-bets .spot.off .spot-title::after{content:' \2014 come-out roll only';font-weight:500;font-size:11px;color:var(--text-muted);}
+  .board .spot.off .spot-title::after{content:' \2014 needs a point';font-weight:500;font-size:11px;color:var(--text-muted);}
+  .board{grid-template-columns:1fr 1fr;}
+  .line-bets{grid-template-columns:1fr;}
+  .board .spot[data-key="come"],.board .spot[data-key="dontcome"]{min-height:74px;}
+  .board .spot[data-key="come"] .spot-pay,.board .spot[data-key="dontcome"] .spot-pay{flex-basis:100%;}
+  /* numbers: three across, the number and its bet on the first line */
+  .numbers{gap:8px;}
+  .num{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"lab stk" "sub sub" "sw sw" "edge edge" "tags tags" "press press";align-content:start;justify-items:stretch;min-height:0;padding:9px 8px 8px;text-align:left;}
+  .num .num-label{grid-area:lab;align-self:end;font-size:26px;}
+  .num .num-stack{grid-area:stk;margin:0;min-height:30px;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:flex-end;align-self:end;gap:2px 5px;}
+  .num .num-sub{grid-area:sub;margin-top:3px;font-size:10px;white-space:nowrap;}
+  .num .pb-switch{grid-area:sw;display:flex;margin-top:4px;}
+  .num .pb-switch button{flex:1;padding:4px 0;font-size:11px;min-height:26px;}
+  .num .num-edge{grid-area:edge;justify-content:flex-start;margin-top:4px;min-height:19px;}
+  .num .tags{grid-area:tags;}
+  .num .press-row{grid-area:press;}
+  .num .spot-x{top:auto;bottom:5px;right:5px;}
+  .num.is-point{padding-top:9px;}
+  .num.is-point::before{top:0;border-radius:0 0 7px 7px;padding:1px 7px 2px;font-size:8px;}
+  .props-grid{gap:6px;}
+  .props-grid .spot{flex-direction:column;align-items:flex-start;flex-wrap:nowrap;gap:2px;min-height:78px;padding:7px 7px 6px;}
+  .props-grid .spot .spot-title,.props-grid .spot .edge,.props-grid .spot .spot-pay{order:0;flex:none;}
+  .props-grid .spot .spot-title{font-size:11.5px;}
+  .props-grid .spot .spot-pay{font-size:10.5px;}
+  .props-grid .spot .edge{font-size:9px;padding:2px 5px;align-self:flex-start;margin-top:2px;}
+  .props-grid .prop-art{min-height:24px;gap:4px;}
+  .props-grid .prop-art .d2{--d:22px;}
+  .props-grid .prop-big{font-size:22px;}
+  .props-grid .prop-big.s{font-size:16px;}
+  .props-grid .spot .spot-chips{left:0;right:0;top:auto;bottom:6px;transform:none;justify-content:center;}
+  .props-grid .spot.has-bet .spot-pay,.props-grid .spot.has-bet .edge{visibility:hidden;}
+  .props-grid .spot.has-bet .spot-x.can{top:4px;right:4px;}
+}
+
+/* the grids a phone uses, upright or on its side */
+@media (max-width:560px), (max-height:520px) and (max-width:999px){
+  .props-grid{grid-template-columns:repeat(4,1fr);}
+  #props-grid .spot[data-key="any7"],#props-grid .spot[data-key="anycraps"]{grid-column:span 2;}
+  .numbers{grid-template-columns:repeat(3,1fr);}
+  .puck-lane{display:none;}
+}
+/* less height: give the bets more room */
+@media (max-width:560px) and (max-height:759px), (max-height:520px) and (max-width:999px){
+  .dice-stage{height:148px;}
+  .roll-strip{display:none;}
+  .callout{height:44px;}
+  .callout .big{font-size:17px;}
+}
+@media (max-width:560px) and (max-height:640px){
+  .dice-stage{height:140px;}
+  .callout .sub{-webkit-line-clamp:1;}
+  .callout{height:38px;}
+}
+/* a phone on its side: two columns. The dice, the read-out and the chips stay in the left one, and the bets scroll in the right one
+   (the whole screen's height, since nothing is pinned across it) */
+@media (max-height:520px) and (max-width:999px) and (orientation:landscape){
+  .table-felt{display:grid;grid-template-columns:minmax(280px,38%) minmax(0,1fr);column-gap:14px;align-items:start;}
+  .felt-main{display:contents;}
+  .top-block,.tray{grid-column:1;grid-row:1;margin-left:calc(var(--gut) * -1);margin-right:0;padding-left:var(--gut);padding-right:8px;border-right:1px solid var(--line);}
+  .top-block{align-self:start;margin-bottom:0;padding-top:6px;padding-bottom:6px;border-radius:0 0 12px 0;}
+  .tray{align-self:end;margin-top:0;border-radius:0 12px 0 0;border-top:1px solid var(--line);gap:6px;padding-top:6px;}
+  .bets{grid-column:2;grid-row:1;min-height:100vh;padding-top:8px;}
+  .jump{display:none;}
+  .status-bar{gap:6px;margin-bottom:6px;}
+  .phase-pill{font-size:10px;padding:4px 8px;}
+  .on-table .ot-x,.bank-mini .bm-l,.bank-mini .pill-stack{display:none;}
+  .dice-stage{height:132px;}
+  .callout{height:40px;margin-top:4px;}
+  .callout .big{font-size:16px;}
+  .callout .sub{-webkit-line-clamp:2;font-size:11px;}
+  .chip-btn{max-width:40px;}
+  .tray-actions{gap:5px;}
+  .tray-actions button{padding:8px 6px;font-size:11px;min-height:38px;}
+  .tray-actions .roll-btn{font-size:15px;padding:8px 6px;}
+  .maxodds-btn{min-height:32px;padding:5px 8px;font-size:12px;}
+  .hint-line{left:calc(38% + 20px);bottom:10px;}
+  .work-toggle .wt-w{display:none;}
+  .work-toggle #work-state{text-transform:capitalize;}
+  .work-toggle{padding:5px 9px 5px 7px;gap:6px;}
+}
+@media (max-width:360px){
+  .bank-mini .bm-l,.bank-mini .pill-stack,.on-table .ot-x{display:none;}
+  .jump button{padding:7px 9px;font-size:11.5px;}
+}
+/* a short phone (a small iPhone with the browser's bars showing): squeeze the pinned parts, not the bets */
+@media (max-width:560px) and (max-height:600px){
+  .dice-stage{height:128px;}
+  .callout{height:34px;margin-top:4px;}
+  .callout .big{font-size:16px;}
+  .callout .sub{font-size:11px;}
+  .top-block{padding-top:6px;padding-bottom:6px;}
+  .status-bar{margin-bottom:6px;}
+  .jump{margin-top:6px;}
+  .jump button{min-height:30px;padding-top:5px;padding-bottom:5px;}
+  .tray{padding-top:6px;gap:6px;}
+  .chip-btn{max-width:40px;}
+  .tray-actions button{min-height:40px;padding-top:8px;padding-bottom:8px;}
+  .maxodds-btn{min-height:34px;padding-top:6px;padding-bottom:6px;}
 }
 
 </style>
@@ -482,9 +688,9 @@ footer{text-align:center;}
   <button id="btn-toggle-settings" aria-expanded="false" aria-controls="settings-panel">Table settings</button>
   <span class="seg-label" id="level-label">Bets on the table</span>
   <div class="seg" id="level-seg" role="group" aria-labelledby="level-label">
-    <button type="button" data-level="starter" aria-pressed="true">Starter</button>
-    <button type="button" data-level="standard" aria-pressed="false">Standard</button>
-    <button type="button" data-level="full" aria-pressed="false">Full table</button>
+    <button type="button" data-level="starter" aria-pressed="true" title="Pass Line, Don't Pass and the numbers">Starter</button>
+    <button type="button" data-level="standard" aria-pressed="false" title="Adds Come, Don't Come and Field">Standard</button>
+    <button type="button" data-level="full" aria-pressed="false" title="Adds the one-roll bets: hardways, Any Seven, Any Craps, Yo and the rest">Full table</button>
   </div>
   <button type="button" id="btn-edge" class="toggle-btn" aria-pressed="true" title="Show or hide the house edge on every bet"><span class="dot"></span>House edge</button>
   <a href="/learn/glossary/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
@@ -507,10 +713,11 @@ footer{text-align:center;}
     <option value="5x">5x</option>
     <option value="10x">10x</option>
   </select>
+  <div class="check-row" style="margin-top:10px;"><input type="checkbox" id="set-maxodds"><label for="set-maxodds">Max odds on the Pass Line — when a point is set, take the most free odds the table allows behind it</label></div>
   <label for="set-theme" style="display:block;font-size:13px;margin:10px 0 6px;">Theme</label>
   <select id="set-theme">
-    <option value="graphite">Graphite</option>
-    <option value="emerald" selected>Emerald Felt</option>
+    <option value="graphite" selected>Graphite</option>
+    <option value="emerald">Emerald Felt</option>
     <option value="midnight">Midnight</option>
     <option value="crimson">Crimson</option>
   </select>
@@ -531,9 +738,11 @@ footer{text-align:center;}
   <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
   <p class="hint-line" id="table-msg" role="status" style="display:none;"></p>
 
+  <div class="top-block" id="top-block">
   <div class="status-bar">
     <span class="phase-pill" id="phase-pill"><span class="dot"></span><span id="phase-text">Come-out roll</span></span>
-    <span class="on-table">On the table <b id="on-table">$0</b></span>
+    <span class="on-table">On <span class="ot-x">the </span>table <b id="on-table">$0</b></span>
+    <span class="bank-mini" aria-hidden="true"><span class="bm-l">Bank</span><span class="pill-stack" id="mini-bank-stack"></span><b id="mini-bank-amount">$1,000</b></span>
   </div>
 
   <div class="stage-wrap">
@@ -564,7 +773,7 @@ footer{text-align:center;}
     </div>
     <div class="readout" id="stage-total" aria-hidden="true"></div>
     <button type="button" class="dice-pick" id="btn-dice" title="Change the dice color" aria-label="Dice color: Ivory. Tap to change."></button>
-    <button type="button" class="keep-toggle" id="btn-keep" role="switch" aria-checked="true" title="After each roll, put the bets that came down back out"><span class="sw"><i></i></span>Keep same bets out</button>
+    <button type="button" class="keep-toggle" id="btn-keep" role="switch" aria-checked="true" title="After each roll, put the bets that came down back out"><span class="sw"><i></i></span><span class="kt">Keep <span class="kt-x">same </span>bets<span class="kt-x"> out</span></span></button>
     <button type="button" class="work-toggle" id="btn-work" role="switch" aria-checked="false" title="Place, Buy and hardway bets, and odds on Come bets, are off on a come-out roll. Turn this on to have them work."><span class="sw"><i></i></span><span id="work-text"><span class="wt-w">Bets </span><span id="work-state">off</span></span></button>
   </div>
 
@@ -573,8 +782,17 @@ footer{text-align:center;}
     <div class="sub" id="callout-sub">Start with a Pass Line bet.</div>
   </div>
   <div class="roll-strip" id="roll-strip" aria-label="Recent rolls"></div>
+  <nav class="jump" id="jump" aria-label="Jump to a kind of bet">
+    <button type="button" data-target="grp-lines">Line</button>
+    <button type="button" data-target="grp-board">Come &amp; Field</button>
+    <button type="button" data-target="grp-numbers">Numbers</button>
+    <button type="button" data-target="props">Hard Ways</button>
+  </nav>
+  </div>
 
-  <div class="numbers-wrap">
+  <div class="bets" id="bets">
+  <div class="numbers-wrap grp" id="grp-numbers">
+    <h3 class="grp-h">Numbers <small>Place or Buy</small></h3>
     <div class="puck-lane" id="puck-lane">
       <span class="lane-label" id="lane-label">Come-out roll</span>
       <div class="puck" id="puck" aria-hidden="true">OFF</div>
@@ -582,10 +800,18 @@ footer{text-align:center;}
     <div class="numbers" id="numbers"></div>
   </div>
 
-  <div class="board" id="board"></div>
+  <div class="grp" id="grp-lines">
+    <h3 class="grp-h">Line bets <small>Pass or Don't Pass</small></h3>
+    <div class="line-bets" id="lines"></div>
+  </div>
+
+  <div class="grp" id="grp-board">
+    <h3 class="grp-h">Come &amp; Field</h3>
+    <div class="board" id="board"></div>
+  </div>
 
   <div class="props" id="props">
-    <h3>Hardways and one-roll bets <span style="font-weight:500;text-transform:none;letter-spacing:0;">— the expensive corner of the table</span></h3>
+    <h3>Hard Ways and one-roll bets <span style="font-weight:500;text-transform:none;letter-spacing:0;">— the expensive corner of the table</span></h3>
     <div class="props-grid" id="props-grid"></div>
   </div>
 
@@ -593,6 +819,7 @@ footer{text-align:center;}
     <span class="label">Coach</span>
     <p id="coach-lesson"></p>
     <p class="next" id="coach-next"></p>
+  </div>
   </div>
 
 </div>
@@ -605,6 +832,7 @@ footer{text-align:center;}
       <span class="amount" id="tray-bank-amount">$1,000</span>
     </div>
     <div class="chip-row" id="chip-row" role="group" aria-label="Chip value"></div>
+    <button type="button" class="maxodds-btn" id="btn-maxodds" hidden><span class="mo-t">Max odds</span><span class="mo-a" id="maxodds-amt"></span></button>
     <div class="tray-actions">
       <button type="button" id="btn-undo">Undo</button>
       <button type="button" id="btn-clear">Take down</button>
@@ -650,7 +878,10 @@ footer{text-align:center;}
       <li><b>Press</b> adds what a Place or Buy bet just won back onto the same bet. It raises what you can win next time and what you lose on a 7. The house edge stays the same.</li>
       <li><b>The stickman</b> is the casino worker with the long hooked stick. He calls each roll and gathers the dice with it for the next shooter. Here he comes out after every 7: the dice stay where they land for the roll, then he draws them over and sets them back in the middle.</li>
       <li><b>Setting the dice</b> is the little ritual players do before they throw. Drag either die to move it, and tap it to turn it to the next number (Shift-click or right-click turns it back). Push the two dice into each other to pick them both up: a wall slides in on the right, and a flick toward it throws them (let go gently to set them down instead). It is all for show: the roll is always two fresh random dice, whatever you set or however you throw.</li>
+      <li><b>Taking a bet down:</b> right-click it (Control-click on a Mac), or tap the little &times; that appears on it. A bet that is locked in, like the Pass Line once a point is set, can't come down, but right-clicking it takes its odds down. Right-click the odds themselves to take down just those.</li>
       <li><b>Bets on / off</b> (top right of the dice) is for the come-out roll. Place, Buy and hardway bets, and the odds on Come bets, are normally <b>off</b> then: they cannot win or lose that roll, and a small OFF marker shows on them. Switch it <b>on</b> to have them work on the come-out too, which means a 7 takes them. Once a point is set, they all work either way.</li>
+      <li><b>The green Max odds button</b> shows up once a point is set and a bet can take odds. It is on the Pass Line itself and in the column on the left, so it is always in reach. One tap puts the most the table allows behind the bet, as far as your bankroll goes. Undo takes it back.</li>
+      <li><b>Max odds</b> in Table settings puts the most free odds the table allows behind your Pass Line bet the moment a point is set, as far as your bankroll reaches. Right-click the odds to take them down and they stay down until the next point. It covers the Pass Line only, not Don't Pass or Come bets.</li>
       <li><b>Keep same bets out</b> puts back the bets that came down on the last roll (a Pass Line win, a Field loss). Switch it off to rebuild the table yourself each roll.</li>
     </ul>
   </div>
@@ -1130,7 +1361,7 @@ var THEMES={
   midnight:{label:'Midnight', felt:'#0B0F1A','felt-dark':'#060810',panel:'#131826','panel-2':'#1B2233','card-face':'#F2F4F8',ink:'#12141C',brass:'#4FB8E0','brass-bright':'#7ED0F0',coral:'#E1596B',sage:'#3FA484','sage-bright':'#65C7A3','dusty-blue':'#6C7CE0',violet:'#9C82E0',text:'#EAEEF5','text-muted':'#8790A3',line:'rgba(234,238,245,0.09)'},
   crimson:{label:'Crimson', felt:'#1A0E10','felt-dark':'#120A0B',panel:'#241318','panel-2':'#2E1920','card-face':'#F6F0F0',ink:'#1A0E10',brass:'#D6935A','brass-bright':'#EBAF7C',coral:'#FF6B52',sage:'#4FA484','sage-bright':'#72C4A5','dusty-blue':'#5B8DE0',violet:'#C08CDD',text:'#F3ECEA','text-muted':'#A6949B',line:'rgba(243,236,234,0.09)'}
 };
-var G_theme='emerald';
+var G_theme='graphite', G_themePicked=false;   // Graphite is the default; a saved Emerald that nobody picked (it used to be the default) is not kept
 function applyTheme(name){
   var t=THEMES[name]; if(!t) return;
   G_theme=name;
@@ -1185,7 +1416,7 @@ var G={
   chip:25,
   undo:[], rebet:[], last:null,
   lastAmt:{},
-  settings:{level:'starter', levelSource:null, sharedLevel:null, oddsRule:'345', sound:true, turbo:false, coach:true, keep:true, autopress:false, work:false, showEdge:true, dice:'ivory', pbv:2, pb:{4:'buy',5:'buy',6:'place',8:'place',9:'buy',10:'buy'}},   // pb: Buy the outside numbers (4 5 9 10), Place the 6 and 8. pbv: which default the saved choice goes with
+  settings:{level:'starter', levelSource:null, sharedLevel:null, oddsRule:'345', sound:true, turbo:false, coach:true, keep:true, autopress:false, work:false, maxodds:false, showEdge:true, dice:'ivory', pbv:2, pb:{4:'buy',5:'buy',6:'place',8:'place',9:'buy',10:'buy'}},   // pb: Buy the outside numbers (4 5 9 10), Place the 6 and 8. pbv: which default the saved choice goes with
   session:freshSession()
 };
 function viewTable(){ return (G.phase==='rolling' && G.pre) ? G.pre.table : G.table; }
@@ -1212,7 +1443,7 @@ function saveTable(){
 }
 function saveSession(){
   if(!hasStorage()) return;
-  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({session:G.session, settings:G.settings, theme:G_theme, chip:G.chip})); }catch(e){}
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({session:G.session, settings:G.settings, theme:G_theme, themePicked:G_themePicked, chip:G.chip})); }catch(e){}
 }
 function persistAll(){ saveTable(); saveShared(); saveSession(); }
 function validSession(s){
@@ -1344,8 +1575,8 @@ function propArtHTML(def){
   return h+'</div>';
 }
 var SPOT_DEFS=[
-  {key:'pass',      type:'pass',     title:'Pass Line',  pay:'Pays 1:1. Add odds once a point is set.', where:'board', level:'starter', edge:'pass', odds:true},
-  {key:'dontpass',  type:'dontpass', title:"Don't Pass", pay:'Pays 1:1. A 12 on the come-out is a push.', where:'board', level:'starter', edge:'dontpass', odds:true},
+  {key:'pass',      type:'pass',     title:'Pass Line',  pay:'Pays 1:1. Add odds once a point is set.', where:'lines', level:'starter', edge:'pass', odds:true, how:true},
+  {key:'dontpass',  type:'dontpass', title:"Don't Pass", pay:'Pays 1:1. A 12 on the come-out is a push.', where:'lines', level:'starter', edge:'dontpass', odds:true, how:true},
   {key:'come',     type:'come',     title:'Come',       pay:'Pays 1:1. Moves to its own number.', where:'board', level:'standard', edge:'pass'},
   {key:'dontcome',  type:'dontcome', title:"Don't Come", pay:'Pays 1:1. A 12 is a push.',          where:'board', level:'standard', edge:'dontpass'},
   {key:'field',     type:'field',    title:'Field',      pay:'One roll. 2 pays 2:1, 12 pays 3:1.', where:'board', level:'standard', edge:'field', wide:true, fieldNums:true},
@@ -1361,6 +1592,19 @@ var SPOT_DEFS=[
   {key:'acedeuce',  type:'acedeuce', title:'Ace-Deuce (3)', pay:'Pays 15:1', where:'props', level:'full', edge:'acedeuce'}
 ];
 var SPOT_BY_KEY={}; SPOT_DEFS.forEach(function(d){ SPOT_BY_KEY[d.key]=d; });
+// The Pass Line and Don't Pass say in plain words (on hover) what they are, and what the point has made of them.
+function howText(type, point){
+  if(type==='pass') return point===null ? 'Bet with the shooter. A 7 or 11 wins, a 2, 3 or 12 loses, and any other number becomes the point.'
+                                        : 'The point is '+point+'. You win if the shooter rolls a '+point+' again before a 7.';
+  if(type==='dontpass') return point===null ? 'Bet against the shooter. A 2 or 3 wins and a 7 or 11 loses.'
+                                            : 'The point is '+point+'. You win if a 7 comes before the '+point+'.';
+  return '';
+}
+// The line under the Pass Line / Don't Pass title: what it pays, and (once a point is set) what the odds behind it are.
+function payText(def, point){
+  if(point===null || (def.type!=='pass' && def.type!=='dontpass')) return def.pay;
+  return def.type==='pass' ? 'Pays 1:1. Odds behind it pay true odds, with no house edge.' : 'Pays 1:1. Odds you lay behind it pay true odds, with no house edge.';
+}
 function edgeClass(e){ return e<=0.0155?'e-good': e<=0.04?'e-ok' : e<=0.07?'e-meh' : 'e-bad'; }
 function edgePct(e){ return (Math.round(e*10000)/100).toFixed(2).replace(/\.?0+$/,'')+'%'; }
 function edgeBadge(key, extraClass){ var e=E.LEDGER_BY_KEY[key].edge; return '<span class="edge '+edgeClass(e)+(extraClass?' '+extraClass:'')+'">'+edgePct(e)+' edge</span>'; }
@@ -1398,13 +1642,13 @@ function buildSpotEl(def){
   if(def.key==='pass') title='<span class="spot-title has-egg" aria-hidden="true"><span class="egg-p" data-act="egg"><b class="egg-l">P</b><i class="egg-chip"></i></span><span class="egg-a">a</span>ss Line</span>';
   else title='<span class="spot-title'+(art && art.hideTitle?' sr-only':'')+'">'+esc(def.title)+'</span>';
   if(art && art.hideTitle) d.title=def.title;
-  var html='<button type="button" class="spot-hit" data-act="place" aria-label="'+esc(def.title)+'"></button>'+
+  var html='<button type="button" class="spot-hit" data-act="place" aria-label="'+esc(def.title)+'"'+(def.how?' title="'+esc(howText(def.type, null))+'"':'')+'></button>'+
     propArtHTML(def)+title+'<span class="spot-pay">'+esc(def.pay)+'</span>'+edgeBadge(def.edge);
   if(def.fieldNums){ html+='<div class="field-nums"><span>2</span><span>3</span><span>4</span><span>9</span><span>10</span><span>11</span><span>12</span></div>'; }
   html+='<div class="spot-chips"></div>'+
     '<button type="button" class="spot-x" data-act="take-down" aria-label="Take down '+esc(def.title)+' bet">&times;</button>';
   if(def.odds){
-    html+='<div class="odds-row"><span class="odds-stack"></span><button type="button" class="odds-btn" data-act="odds"></button>'+
+    html+='<div class="odds-row"><span class="odds-stack"></span><button type="button" class="odds-max" data-act="odds-max" hidden></button><button type="button" class="odds-btn" data-act="odds"></button>'+
       '<button type="button" class="odds-x" data-act="odds-down" aria-label="Take down odds">&times;</button></div>';
   }
   d.innerHTML=html;
@@ -1412,12 +1656,12 @@ function buildSpotEl(def){
   return d;
 }
 function buildTable(){
-  var board=$('board'), props=$('props-grid'), numbers=$('numbers');
-  board.innerHTML=''; props.innerHTML=''; numbers.innerHTML='';
+  var board=$('board'), lines=$('lines'), props=$('props-grid'), numbers=$('numbers');
+  board.innerHTML=''; lines.innerHTML=''; props.innerHTML=''; numbers.innerHTML='';
   SPOT_DEFS.forEach(function(def){
     var el=buildSpotEl(def);
     if(def.wide) el.className+=' wide';
-    (def.where==='props'?props:board).appendChild(el);
+    (def.where==='props'?props:def.where==='lines'?lines:board).appendChild(el);
   });
   E.POINTS.forEach(function(n){
     var el=document.createElement('div');
@@ -1483,14 +1727,15 @@ function shake(key){
 }
 var countTok=0;                    // bumped whenever the pill is redrawn directly, which cancels a count-up in flight
 /* The balance is drawn twice: the pill in the page header, and the copy in the betting rail that follows you down the page. Both always show the same figure. */
-function bankAmounts(){ return [$('bankroll-amount'), $('tray-bank-amount')].filter(Boolean); }
-function bankBoxes(){ return [$('bankroll-pill'), $('tray-bank')].filter(Boolean); }
+function bankAmounts(){ return [$('bankroll-amount'), $('tray-bank-amount'), $('mini-bank-amount')].filter(Boolean); }
+function bankBoxes(){ return [$('bankroll-pill'), $('tray-bank'), document.querySelector('.bank-mini')].filter(Boolean); }
 function renderPill(){
   countTok++;
   var txt=formatMoney(G.shown), stack=pillStackHTML(G.shown);
   bankAmounts().forEach(function(el){ el.textContent=txt; });
   setHTML($('bankroll-chip-stack'), stack);
   if($('tray-bank-stack')) setHTML($('tray-bank-stack'), stack);
+  if($('mini-bank-stack')) setHTML($('mini-bank-stack'), stack);
 }
 function setShown(target, animate){
   var els=bankAmounts(), boxes=bankBoxes(), from=G.shown;
@@ -1534,6 +1779,8 @@ function renderSpots(){
   var t=viewTable(), betting=G.phase==='betting';
   Array.prototype.forEach.call(document.querySelectorAll('.spot'), function(el){
     var key=el.getAttribute('data-key'), def=SPOT_BY_KEY[key], bet=betForKey(t, key);
+    if(def.how){ var hb=el.querySelector('.spot-hit'), ht=howText(def.type, t.point); if(hb.title!==ht) hb.title=ht; }   // the plain words, on hover
+    if(def.how){ var pay=el.querySelector('.spot-pay'), pt=payText(def, t.point); if(pay.textContent!==pt) pay.textContent=pt; }
     var visible=levelAllows(def) || !!bet;
     el.hidden=!visible;
     el.classList.toggle('has-bet', !!bet);
@@ -1550,7 +1797,7 @@ function renderSpots(){
     G.lastAmt[key]=amt;
     var x=el.querySelector('.spot-x'); x.classList.toggle('can', canRemoveBet(t, bet));
     if(def.odds){
-      var row=el.querySelector('.odds-row'), btn=el.querySelector('.odds-btn'), ox=el.querySelector('.odds-x'), os=el.querySelector('.odds-stack');
+      var row=el.querySelector('.odds-row'), btn=el.querySelector('.odds-btn'), ox=el.querySelector('.odds-x'), os=el.querySelector('.odds-stack'), mb=el.querySelector('.odds-max');
       var show=!!bet && t.point!==null, okey=key+':odds';
       row.classList.toggle('show', show);
       if(show){
@@ -1559,9 +1806,14 @@ function renderSpots(){
         G.lastAmt[okey]=bet.odds;
         btn.innerHTML=(bet.odds>0?'More odds':'Add odds')+' <small>'+(room>0?'up to '+formatMoney(mx):'at the limit')+'</small>';
         btn.disabled=!betting || room<=0;
+        var can=Math.min(room, Math.max(0, Math.floor(G.bankroll)));
+        mb.hidden=!(betting && can>=1);
+        mb.classList.toggle('cta', bet.odds===0);
+        setHTML(mb, 'Max odds <small>'+formatMoney(can)+'</small>');
+        mb.setAttribute('aria-label', 'Max odds: put '+formatMoney(can)+' behind your '+def.title+' bet.');
         btn.setAttribute('aria-label', 'Add odds to your '+def.title+' bet. '+formatMoney(bet.odds)+' on odds, limit '+formatMoney(mx)+'.');
         ox.style.display=bet.odds>0 && betting ? '' : 'none';
-      } else { setHTML(os, ''); G.lastAmt[okey]=0; }
+      } else { setHTML(os, ''); G.lastAmt[okey]=0; mb.hidden=true; }
     }
   });
   var anyProp=false;
@@ -1570,27 +1822,27 @@ function renderSpots(){
   var boardVisible=false;
   Array.prototype.forEach.call(document.querySelectorAll('#board .spot'), function(el){ if(!el.hidden) boardVisible=true; });
   $('board').style.display=boardVisible?'':'none';
+  if($('grp-board')) $('grp-board').style.display=boardVisible?'':'none';
 }
 function pressAmount(n){
   var p=G.last && G.last.press && G.last.press[n];
   return (typeof p==='number' && p>0) ? p : 0;
 }
 function renderNumbers(){
-  var t=viewTable(), betting=G.phase==='betting', interactive=levelRank(G.settings.level)>=1, anyBet=false;
+  var t=viewTable(), betting=G.phase==='betting';
   E.POINTS.forEach(function(n){
     var el=document.querySelector('.num[data-number="'+n+'"]');
     var nb=numBet(t,n), come=lineBetAt(t,'come',n), dc=lineBetAt(t,'dontcome',n);
     var mode=nb?nb.type:(G.settings.pb[n]==='buy'?'buy':'place'), key=mode+n, word=mode==='buy'?'Buy':'Place';
-    if(nb) anyBet=true;
     var ek=E.ledgerKey(mode,n);
     el.classList.toggle('is-point', t.point===n);
     var hit=el.querySelector('.spot-hit');
-    hit.disabled=!betting || !interactive;
-    hit.style.display=interactive?'':'none';
+    hit.disabled=!betting;
     hit.setAttribute('data-key', key);
     hit.setAttribute('aria-label', word+' '+n+(nb?', $'+nb.amount+' on it':'')+'. Pays '+(mode==='buy'?BUY_TXT[n]+' minus a 5% fee on wins':PLACE_TXT[n])+'. House edge '+edgePct(E.LEDGER_BY_KEY[ek].edge)+'.');
     el.classList.toggle('has-bet', !!nb);
-    el.querySelector('.num-sub').textContent = mode==='buy' ? 'Buy pays '+BUY_TXT[n]+', 5% fee on wins' : 'Place pays '+PLACE_TXT[n];
+    el.querySelector('.num-sub').textContent = isPhone() ? (mode==='buy' ? 'Pays '+BUY_TXT[n]+', 5% fee' : 'Pays '+PLACE_TXT[n])      // the box is narrow: the Place / Buy switch below says which
+                                                         : (mode==='buy' ? 'Buy pays '+BUY_TXT[n]+', 5% fee on wins' : 'Place pays '+PLACE_TXT[n]);
     setHTML(el.querySelector('.num-edge'), edgeBadge(ek,'ctr'));
     Array.prototype.forEach.call(el.querySelectorAll('.pb-switch button'), function(b){
       var m=b.getAttribute('data-mode'), locked=!!nb && nb.type!==m;
@@ -1620,7 +1872,6 @@ function renderNumbers(){
     setHTML(pr, (pa>0 && nb && betting) ? '<button type="button" class="tag press" data-act="press" data-n="'+n+'" aria-label="Press the '+n+': add the '+formatMoney(pa)+' you just won to this bet">Press +'+formatMoney(pa)+'</button>' : '');
     el.setAttribute('data-point', t.point===n?'1':'0');
   });
-  $('numbers').classList.toggle('static', !interactive && !anyBet);
 }
 function renderTray(){
   var betting=G.phase==='betting', t=viewTable();
@@ -1637,10 +1888,11 @@ function renderTray(){
   $('btn-rebet').textContent = rb.items.length ? 'Rebet '+formatMoney(rb.total) : 'Rebet';
   $('btn-roll').disabled=!betting;
   renderWork();
+  renderMaxOdds();
   var hint='Pick a chip, then tap a bet to place it.';
   if(!betting) hint='Dice are rolling...';
   else if(t.bets.length===0 && t.point===null) hint='Start with a Pass Line bet, then roll.';
-  else if(t.bets.length===0) hint='No bets down. You can roll to watch, or place a Come or Place bet.';
+  else if(t.bets.length===0) hint=levelRank(G.settings.level)>=1 ? 'No bets down. You can roll to watch, or place a Come or Place bet.' : 'No bets down. You can roll to watch, or tap a number to bet on it.';
   $('tray-hint').textContent=hint;
   $('btn-reset-bankroll-settings').disabled=!betting || t.bets.length>0 || G.table.bets.length>0;
   $('reset-note').style.display=(t.bets.length>0)?'':'none';
@@ -1655,7 +1907,7 @@ function renderToggles(){
   $('felt').classList.toggle('no-edge', !S.showEdge);
   $('btn-edge').setAttribute('aria-pressed', S.showEdge?'true':'false');
   $('btn-keep').setAttribute('aria-checked', S.keep?'true':'false');
-  $('set-edge').checked=!!S.showEdge; $('set-keep').checked=!!S.keep; $('set-autopress').checked=!!S.autopress;
+  $('set-edge').checked=!!S.showEdge; $('set-keep').checked=!!S.keep; $('set-autopress').checked=!!S.autopress; $('set-maxodds').checked=!!S.maxodds;
   renderWork();
 }
 /* ---- dice colors ---- */
@@ -1707,7 +1959,7 @@ function nextDiceTheme(){
   setDiceTheme(DICE_THEMES[(i+1)%DICE_THEMES.length].key, true);
 }
 function renderAll(){
-  renderPill(); renderPhase(); renderSpots(); renderNumbers(); renderPuck(); renderTray(); renderLevel(); renderCoach(); renderToggles();
+  renderPill(); renderPhase(); renderSpots(); renderNumbers(); renderPuck(); renderTray(); renderLevel(); renderCoach(); renderToggles(); renderJump(); syncPins();
 }
 
 /* ============ PLACING, TAKING DOWN, UNDO, REBET ============ */
@@ -1781,6 +2033,67 @@ function addOddsToBet(betId){
   G.undo.push({kind:'odds', betId:betId, amount:amt});
   persistAll(); sfxChip(); renderAll();
 }
+/* ---- The green Max odds button (on the Pass Line / Don't Pass band and in the rail). One tap puts the most the table allows behind a bet, as far as the bankroll reaches. ---- */
+function oddsLabel(b){ return b.type==='pass' ? 'Pass Line' : b.type==='dontpass' ? "Don't Pass" : (b.type==='come' ? 'Come ' : "Don't Come ")+b.number; }
+// The bets that can take odds right now (a point is set, and they are not at the limit): line bets first, then Come bets by number.
+function oddsBets(t){
+  var rank={pass:0, dontpass:1, come:2, dontcome:3};
+  return t.bets.filter(function(b){ return E.oddsRoom(t,b)>0; }).sort(function(a,b){ return (rank[a.type]-rank[b.type]) || ((a.number||0)-(b.number||0)); });
+}
+function putMaxOdds(list){
+  if(G.phase!=='betting') return false;
+  var done=[], short=false;
+  list.forEach(function(b){
+    var cur=E.findBet(G.table, b.id); if(!cur) return;
+    var room=E.oddsRoom(G.table, cur); if(room<=0) return;
+    var amt=Math.min(room, Math.max(0, Math.floor(G.bankroll)));
+    if(amt<1){ short=true; return; }
+    var r=E.addOdds(G.table, cur.id, amt); if(!r.ok) return;
+    G.table=r.state; G.bankroll-=amt;
+    G.undo.push({kind:'odds', betId:cur.id, amount:amt});
+    done.push({bet:cur, amt:amt}); if(amt<room) short=true;
+  });
+  if(!done.length){ toast(short ? 'Not enough bankroll for odds.' : 'The odds are already at the limit for this table ('+E.ODDS_RULES[G.table.opts.oddsRule].label+').'); return false; }
+  G.shown=G.bankroll; persistAll(); sfxChip(); renderAll();
+  toast('Max odds: '+done.map(function(d){ return formatMoney(d.amt)+' behind your '+oddsLabel(d.bet); }).join(', ')+'.'+(short?' That is all your bankroll allowed.':''));
+  return true;
+}
+function renderMaxOdds(){
+  var b=$('btn-maxodds'); if(!b) return;
+  var list=G.phase==='betting' ? oddsBets(G.table) : [], rem=Math.max(0, Math.floor(G.bankroll)), tot=0, parts=[], fresh=false;
+  list.forEach(function(x){
+    var a=Math.min(E.oddsRoom(G.table, x), rem); if(a<1) return;
+    rem-=a; tot+=a; parts.push(formatMoney(a)+' behind your '+oddsLabel(x)); if(!x.odds) fresh=true;
+  });
+  b.hidden=tot<1;
+  b.classList.toggle('cta', fresh);
+  $('maxodds-amt').textContent=formatMoney(tot);
+  b.setAttribute('aria-label', 'Max odds: '+parts.join(', ')+'.');
+  b.title='One tap puts the most the table allows behind every bet that can take odds: '+parts.join(', ')+'.';
+}
+/* ---- Max odds on the Pass Line (Table settings). Once a point is set, the most free odds the table allows go behind the Pass Line bet, as far as the bankroll reaches.
+   It runs when the point is set, when the setting is switched on with a point already up, and when the odds limit is changed. Odds you take down yourself stay down until the next point. ---- */
+function autoMaxOdds(){
+  var t=G.table, pass=lineBetAt(t,'pass',null);
+  if(!G.settings.maxodds || G.phase!=='betting' || t.point===null || !pass) return null;
+  var room=E.oddsRoom(t, pass); if(room<=0) return null;
+  var amt=Math.min(room, Math.max(0, Math.floor(G.bankroll)));
+  if(amt<1) return {amount:0, text:'Max odds is on, but there is no bankroll left for the '+formatMoney(room)+' of odds.'};
+  var r=E.addOdds(t, pass.id, amt);
+  if(!r.ok) return null;
+  G.table=r.state; G.bankroll-=amt;
+  G.undo.push({kind:'odds', betId:pass.id, amount:amt});
+  var total=E.findBet(G.table, pass.id).odds, mx=E.maxOdds(G.table, E.findBet(G.table, pass.id));
+  return {amount:amt, text: amt<room ? 'Max odds: only '+formatMoney(total)+' of the '+formatMoney(mx)+' fits your bankroll, so that is what went behind your Pass Line.'
+                                      : 'Max odds: '+formatMoney(total)+' behind your Pass Line on the '+t.point+'.'};
+}
+function setMaxOdds(v){
+  v=!!v; G.settings.maxodds=v;
+  var mo=(v && G.phase==='betting') ? autoMaxOdds() : null;
+  if(mo){ G.shown=G.bankroll; persistAll(); sfxChip(); renderAll(); toast(mo.text); return; }
+  saveSession(); renderToggles(); renderCoach();
+  say(v ? 'Max odds on. The most the table allows goes behind your Pass Line when a point is set.' : 'Max odds off.');
+}
 function takeDown(key){
   if(G.phase!=='betting') return;
   var bet=betForKey(G.table, key); if(!bet) return;
@@ -1797,6 +2110,38 @@ function takeDownOdds(key){
   if(!r.ok){ toast(r.reason); return; }
   G.table=r.state; G.bankroll+=r.refund; G.shown=G.bankroll;
   G.undo=G.undo.filter(function(u){ return !(u.kind==='odds' && u.betId===bet.id); });
+  persistAll(); sfxChip(); renderAll();
+}
+/* ---- Right-click a bet to take it down ---- */
+// What is under the pointer: the bet there, and whether only its odds are meant (the pointer is on the odds).
+function pointerBet(target){
+  var node=(target && target.closest) ? target.closest('.tag, .odds-row, .spot, .num') : null;
+  if(!node) return {over:false, bet:null, oddsOnly:false};
+  var t=G.table, bet=null, oddsOnly=false;
+  if(node.classList.contains('tag') && !node.classList.contains('press') && node.hasAttribute('data-id')){
+    bet=E.findBet(t, parseInt(node.getAttribute('data-id'),10)) || null;               // a Come / Don't Come bet that has gone to its number
+  } else {
+    var host=node.closest('.spot, .num');
+    if(!host) return {over:false, bet:null, oddsOnly:false};
+    if(host.classList.contains('num')) bet=numBet(t, parseInt(host.getAttribute('data-number'),10));
+    else {
+      bet=betForKey(t, host.getAttribute('data-key'));
+      if(bet && bet.odds>0 && node.classList.contains('odds-row')) oddsOnly=true;
+    }
+  }
+  return {over:true, bet:bet, oddsOnly:oddsOnly};
+}
+// Takes the whole bet down and gives the chips back. A bet that is locked in (the Pass Line once a point is set, a Come bet on its number) gives up its odds instead.
+function takeDownBet(bet, oddsOnly){
+  if(G.phase!=='betting' || !bet) return;
+  var odds=!!oddsOnly || (!E.canRemove(G.table, bet) && bet.odds>0);
+  var r=odds ? E.removeOdds(G.table, bet.id) : E.removeBet(G.table, bet.id);
+  if(!r.ok){ toast(r.reason); return; }
+  G.table=r.state; G.bankroll+=r.refund; G.shown=G.bankroll;
+  G.undo=G.undo.filter(function(u){
+    if(odds) return !(u.kind==='odds' && u.betId===bet.id);
+    return u.kind==='odds' ? u.betId!==bet.id : !(u.type===bet.type && u.number===bet.number);
+  });
   persistAll(); sfxChip(); renderAll();
 }
 function undoLast(){
@@ -1876,7 +2221,9 @@ function buildDiceFaces(){
 }
 function rotStr(a){ return 'rotateX('+a[0]+'deg) rotateY('+a[1]+'deg) rotateZ('+a[2]+'deg)'; }
 // Where a die sits on the felt: a little apart, and the same for every roll (a seven lands exactly like any other total).
-function diceX(i){ var w=(window.innerWidth||1000)<=560?36:46; return i===0?-w:w; }
+// A phone: a narrow screen, or a phone turned on its side (wide, but not tall). The stage is smaller and the dice a little smaller with it.
+function isPhone(){ var w=window.innerWidth||1000, h=window.innerHeight||1000; return w<=560 || (h<=520 && w<=999); }
+function diceX(i){ var w=isPhone()?36:46; return i===0?-w:w; }
 function dieEls(i){
   var pos=$('die-pos-'+i);
   return {pos:pos, shadow:pos.querySelector('.die-shadow'), hop:pos.querySelector('.die-hop'), die:$('die-'+i)};
@@ -1923,7 +2270,7 @@ function hasSet(){ return !!(setup.pos[0] || setup.pos[1] || setup.hand); }
 function hasHand(){ return !!setup.hand; }
 function syncSet(){ var st=$('dice-stage'); if(st) st.classList.toggle('locked', !canSet()); }
 function setMetrics(){
-  var st=$('dice-stage'), phone=(window.innerWidth||1000)<=560, s=phone?48:60;
+  var st=$('dice-stage'), phone=isPhone(), s=phone?48:60;
   var W=(st && st.clientWidth) || (phone?336:860), H=(st && st.clientHeight) || (phone?196:214);
   var R=Math.round(s*0.68), ground=phone?48:44, cube=Math.round(s*1.42), xm=Math.max(0, W/2-R-8);
   var obst=[];                                              // the buttons that sit on the tray: dice are kept clear of them
@@ -2374,7 +2721,7 @@ function refitSet(){
 /* ---- the stickman: after a 7 he reaches around the dice with his hooked stick, draws them to him, then pushes them back to the middle ---- */
 var sweep=null;
 function sweepGeom(){
-  var st=$('dice-stage'), phone=(window.innerWidth||1000)<=560, s=phone?48:60;
+  var st=$('dice-stage'), phone=isPhone(), s=phone?48:60;
   var hw=((st && st.clientWidth) || (phone?336:860))/2;
   var R=Math.round(s*0.68), gap=4;                       // R: how far a die reaches sideways on screen
   var w=Math.abs(diceX(1)), sp=2*w;                      // where the dice rest, and how far apart
@@ -2663,11 +3010,12 @@ function nextStep(){
     if(!pass && !dp) return 'New shooter. Make a Pass Line bet (1.41% edge) to bet with the shooter, or Don\'t Pass (1.36%) to bet against.';
     return 'Come-out roll. A 7 or 11 wins the Pass Line, a 2, 3 or 12 loses it, and any other number becomes the point. Press Roll.';
   }
-  if(pass && pass.odds===0 && E.oddsRoom(t,pass)>0) return 'Point is '+t.point+'. Take odds behind your Pass Line (up to '+formatMoney(E.maxOdds(t,pass))+'). Odds pay true odds, so they cost you nothing in house edge.';
-  if(dp && dp.odds===0 && E.oddsRoom(t,dp)>0) return 'Point is '+t.point+'. You can lay odds behind your Don\'t Pass (up to '+formatMoney(E.maxOdds(t,dp))+'). They also pay true odds, with no house edge.';
+  if(pass && G.settings.maxodds && pass.odds>0 && E.oddsRoom(t,pass)<=0) return 'Max odds are on: '+formatMoney(pass.odds)+' sits behind your Pass Line, the most this table allows. It rides until the shooter rolls the '+t.point+' or a 7. Press Roll.';
+  if(pass && pass.odds===0 && E.oddsRoom(t,pass)>0) return 'Point is '+t.point+'. Take odds behind your Pass Line (up to '+formatMoney(E.maxOdds(t,pass))+'): tap the green Max odds button. Odds pay true odds, so they cost you nothing in house edge.';
+  if(dp && dp.odds===0 && E.oddsRoom(t,dp)>0) return 'Point is '+t.point+'. You can lay odds behind your Don\'t Pass (up to '+formatMoney(E.maxOdds(t,dp))+'): tap the green Max odds button. They also pay true odds, with no house edge.';
   if(pass || dp) return 'Your line bet rides until the shooter rolls the '+t.point+' or a 7. Press Roll.';
   if(lvl>=1) return 'Point is '+t.point+', and you have no line bet. A Come bet works like a Pass Line bet that starts on the next roll.';
-  return 'Point is '+t.point+'. Pass Line bets can only be made on a come-out roll, so you can roll to watch this one play out.';
+  return 'Point is '+t.point+'. Pass Line bets can only be made on a come-out roll. Tap a number to bet on it, or roll to watch this one play out.';
 }
 function renderCoach(){
   var c=$('coach'); c.style.display=G.settings.coach?'':'none';
@@ -2825,13 +3173,17 @@ function finishRoll(res){
   G.phase='betting'; G.pre=null; syncSet();
   var ap=G.settings.autopress ? autoPress() : [];
   var kept=G.settings.keep ? placeRebets() : {items:[]};
-  if(ap.length || kept.items.length) persistAll();
+  var mo=res.pointEstablished ? autoMaxOdds() : null;
+  if(ap.length || kept.items.length || mo) persistAll();
   var target=G.bankroll;
   renderAll();
   // roll history strip, stats panels
   renderStrip(); renderPanels();
   setShown(target, true);
-  if(ap.length) toast('Auto-press: '+ap.map(function(x){ return 'the '+x.n+' +'+formatMoney(x.amt); }).join(', ')+'.');
+  var msgs=[];
+  if(ap.length) msgs.push('Auto-press: '+ap.map(function(x){ return 'the '+x.n+' +'+formatMoney(x.amt); }).join(', ')+'.');
+  if(mo) msgs.push(mo.text);
+  if(msgs.length) toast(msgs.join(' '));
   else if(kept.items.length) say('Kept '+kept.items.length+(kept.items.length>1?' bets':' bet')+' out, '+formatMoney(kept.total)+'.');
   checkBankruptcy();
   saveSession();
@@ -2942,14 +3294,15 @@ function applyLoaded(){
       if(s.sharedLevel==='new' || s.sharedLevel==='rules' || s.sharedLevel==='pro') G.settings.sharedLevel=s.sharedLevel;
       if(E.ODDS_RULES[s.oddsRule]) G.settings.oddsRule=s.oddsRule;
       if(diceTheme(s.dice)) G.settings.dice=s.dice;
-      ['sound','turbo','coach','keep','autopress','work','showEdge'].forEach(function(k){ if(typeof s[k]==='boolean') G.settings[k]=s[k]; });
+      ['sound','turbo','coach','keep','autopress','work','maxodds','showEdge'].forEach(function(k){ if(typeof s[k]==='boolean') G.settings[k]=s[k]; });
       if(s.pb && typeof s.pb==='object'){
         // a save from before the Buy 4/5/9/10 default that never switched anything (all Place) moves to the new default; anything the player chose stays
         var oldDefault=s.pbv!==2 && E.POINTS.every(function(n){ return s.pb[n]!=='buy'; });
         if(!oldDefault) E.POINTS.forEach(function(n){ if(s.pb[n]==='buy' || s.pb[n]==='place') G.settings.pb[n]=s.pb[n]; });
       }
     }
-    if(data.theme && THEMES[data.theme]) applyTheme(data.theme);
+    /* Emerald used to be the default, so older saves say 'emerald' even when nobody chose it: only a theme that was picked (or any non-Emerald one) is kept */
+    if(data.theme && THEMES[data.theme] && (data.theme!=='emerald' || data.themePicked===true)){ G_themePicked=true; applyTheme(data.theme); }
     if(CHIPS.indexOf(data.chip)>=0) G.chip=data.chip;
   }
   applySharedLevel();
@@ -2992,12 +3345,25 @@ function wire(){
     if(act==='odds'){
       var k=t.closest('.spot').getAttribute('data-key'), bet=betForKey(G.table,k); if(bet) addOddsToBet(bet.id); return;
     }
+    if(act==='odds-max'){
+      var mk=t.closest('.spot').getAttribute('data-key'), mbet=betForKey(G.table,mk); if(mbet) putMaxOdds([mbet]); return;
+    }
     if(act==='odds-down'){ takeDownOdds(t.closest('.spot').getAttribute('data-key')); return; }
     if(act==='mode'){ setMode(parseInt(t.closest('.num').getAttribute('data-number'),10), t.getAttribute('data-mode')); return; }
     if(act==='press'){ doPress(parseInt(t.getAttribute('data-n'),10)); return; }
     if(act==='egg'){ toggleEgg(t); return; }
     if(act==='tag-odds'){ addOddsToBet(parseInt(t.getAttribute('data-id'),10)); return; }
   });
+  // A right-click (or Control-click on a Mac) on a bet takes it down. A long press on a touch screen or the keyboard's menu key does nothing special.
+  $('felt').addEventListener('contextmenu', function(ev){
+    var asRight=(ev.button===2 || (ev.button===0 && ev.ctrlKey)) && ev.pointerType!=='touch';
+    if(!asRight) return;
+    var p=pointerBet(ev.target);
+    if(!p.over) return;
+    ev.preventDefault();                 // no browser menu over the betting spots
+    if(p.bet) takeDownBet(p.bet, p.oddsOnly);
+  });
+  $('btn-maxodds').addEventListener('click', function(){ putMaxOdds(oddsBets(G.table)); });
   $('btn-undo').addEventListener('click', undoLast);
   $('btn-clear').addEventListener('click', clearBets);
   $('btn-rebet').addEventListener('click', doRebet);
@@ -3053,6 +3419,7 @@ function wire(){
   $('set-edge').addEventListener('change', function(){ setEdge(this.checked); });
   $('set-keep').addEventListener('change', function(){ setKeep(this.checked); });
   $('set-autopress').addEventListener('change', function(){ G.settings.autopress=this.checked; saveSession(); renderToggles(); });
+  $('set-maxodds').addEventListener('change', function(){ setMaxOdds(this.checked); });
   $('btn-edge').addEventListener('click', function(){ setEdge(!G.settings.showEdge); });
   $('btn-keep').addEventListener('click', function(){ setKeep(!G.settings.keep); });
   $('btn-work').addEventListener('click', function(){ setWork(!G.settings.work); });
@@ -3070,8 +3437,13 @@ function wire(){
     setDiceTheme(DICE_THEMES[n].key, false);
     var el=document.querySelector('#dice-swatches .dice-swatch[data-dice="'+DICE_THEMES[n].key+'"]'); if(el && el.focus) el.focus();
   });
-  $('set-odds').addEventListener('change', function(){ G.settings.oddsRule=this.value; G.table.opts.oddsRule=this.value; saveSession(); saveTable(); renderAll(); });
-  $('set-theme').addEventListener('change', function(){ applyTheme(this.value); saveSession(); });
+  $('set-odds').addEventListener('change', function(){
+    G.settings.oddsRule=this.value; G.table.opts.oddsRule=this.value;
+    var mo=autoMaxOdds(); if(mo) G.shown=G.bankroll;           // a higher limit with max odds on: top the odds up to it
+    persistAll(); renderAll();
+    if(mo){ sfxChip(); toast(mo.text); }
+  });
+  $('set-theme').addEventListener('change', function(){ G_themePicked=true; applyTheme(this.value); saveSession(); });
   $('btn-reset-bankroll-settings').addEventListener('click', resetBankroll);
   $('btn-reset-session').addEventListener('click', resetSession);
   window.addEventListener('resize', function(){ renderPuck(); showLastDice(); });
@@ -3127,9 +3499,63 @@ function showLastDice(){
   if(G.last) showDice(G.last.d1, G.last.d2, false); else { setDiceRest(0,4); setDiceRest(1,3); renderReadout(0,0,false); }
 }
 
+
+/* ============ THE PHONE TABLE ============
+   On a phone the dice, the roll read-out and the balance are pinned at the top of the screen and the chips and Roll at the bottom,
+   so the bets scroll between them and you never lose sight of the dice. The jump bar is a row of buttons, one for each group
+   of bets, that takes you straight to it. Everything here is only layout: no bet or roll reads any of it. */
+var JUMP=['grp-lines','grp-board','grp-numbers','props'];
+function pinned(){ var tb=$('top-block'); try{ return !!tb && window.getComputedStyle(tb).position==='sticky'; }catch(e){ return false; } }
+function groupShown(id){ var el=$(id); return !!el && el.style.display!=='none' && !el.hidden; }
+// How tall the pinned parts are, so a jump lands just below them and a message sits just above the chips.
+function syncPins(){
+  var root=document.documentElement, tb=$('top-block'), tr=$('tray'); if(!root || !tb || !tr) return;
+  var on=pinned();
+  root.style.setProperty('--top-h', (on?tb.offsetHeight:0)+'px');
+  root.style.setProperty('--dock-h', (on?tr.offsetHeight:0)+'px');
+}
+function renderJump(){
+  var nav=$('jump'); if(!nav) return;
+  var n=0;
+  Array.prototype.forEach.call(nav.querySelectorAll('button'), function(b){
+    var show=groupShown(b.getAttribute('data-target')); b.hidden=!show; if(show) n++;
+  });
+  nav.hidden=n<3;                                       // on the Starter table there are only two groups, and they fit on the screen
+  spyJump();
+}
+// The button for the group you are looking at is marked.
+function spyJump(){
+  var nav=$('jump'), tb=$('top-block'); if(!nav || nav.hidden || !tb || !pinned()) return;
+  var line=tb.getBoundingClientRect().bottom+12, cur=null, last=null;
+  JUMP.forEach(function(id){ if(!groupShown(id)) return; last=id; if($(id).getBoundingClientRect().top<=line) cur=id; });
+  var bets=$('bets'), tr=$('tray');
+  if(last && bets && tr && bets.getBoundingClientRect().bottom<=tr.getBoundingClientRect().top+24) cur=last;   // scrolled to the end: the last group
+  if(!cur) cur=JUMP.filter(groupShown)[0];
+  Array.prototype.forEach.call(nav.querySelectorAll('button'), function(b){ b.setAttribute('aria-current', b.getAttribute('data-target')===cur?'true':'false'); });
+}
+function jumpTo(id){
+  var el=$(id), tb=$('top-block'); if(!el || !tb) return;
+  var y=(window.pageYOffset||0)+el.getBoundingClientRect().top-tb.offsetHeight-8;
+  try{ window.scrollTo({top:Math.max(0,y), behavior:(reducedMotion||G.settings.turbo)?'auto':'smooth'}); }catch(e){ try{ window.scrollTo(0, Math.max(0,y)); }catch(e2){} }
+}
+function wirePhone(){
+  var nav=$('jump');
+  if(nav) nav.addEventListener('click', function(ev){ var b=ev.target.closest ? ev.target.closest('button') : null; if(b) jumpTo(b.getAttribute('data-target')); });
+  var raf=0;
+  window.addEventListener('scroll', function(){ if(raf || typeof requestAnimationFrame!=='function') return; raf=requestAnimationFrame(function(){ raf=0; spyJump(); }); }, {passive:true});
+  var wasPhone=isPhone();
+  window.addEventListener('resize', function(){ if(wasPhone!==isPhone()){ wasPhone=isPhone(); renderNumbers(); } syncPins(); renderJump(); });
+  if(typeof ResizeObserver==='function'){
+    var ro=new ResizeObserver(function(){ syncPins(); });
+    if($('top-block')) ro.observe($('top-block'));
+    if($('tray')) ro.observe($('tray'));
+  }
+  syncPins(); renderJump();
+}
+
 /* ============ START ============ */
 (function init(){
-  applyTheme('emerald');
+  applyTheme('graphite');
   buildDiceSwatches();
   buildTable();
   var restored=applyLoaded();
@@ -3147,7 +3573,7 @@ function showLastDice(){
   checkBankruptcy();
   // the puck needs layout; place it once the page has been laid out
   if(typeof requestAnimationFrame==='function') requestAnimationFrame(renderPuck);
-  wire();
+  wire(); wirePhone();
 })();
 
 </script>
