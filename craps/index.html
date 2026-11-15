@@ -37,6 +37,11 @@ body{margin:0;background:var(--felt-dark);color:var(--text);font-family:'Inter',
 a{color:inherit;}
 :focus-visible{outline:2px solid var(--brass-bright);outline-offset:2px;border-radius:6px;}
 .wrap{max-width:900px;margin:0 auto;transition:max-width 200ms ease;}
+details.fold>summary{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+details.fold>summary::-webkit-details-marker{display:none;}
+details.fold>summary::after{content:"\25BE";font-size:12px;color:var(--text-muted);transition:transform 160ms ease;}
+details.fold:not([open])>summary::after{transform:rotate(-90deg);}
+details.fold[open]>summary{margin-bottom:12px;}
 .layout-grid{display:block;}
 .side-panels{display:block;}
 .side-panels .panel{margin-bottom:16px;}
@@ -666,6 +671,422 @@ body{--gut:16px;}
 }
 
 </style>
+<script id="tr-sound">
+/*tr-sound:start*/
+/* Table Ready sound: everything is synthesised with WebAudio (no audio files). One switch for the whole site. */
+(function(W){
+  'use strict';
+  var D = W.document, KEY = 'house_edge_sound_v1';
+  var AC = W.AudioContext || W.webkitAudioContext;
+  var S = { ctx:null, master:null, bus:null, enabled:true, unlocked:false, active:0, listeners:[], hiddenSuspended:false };
+  try{ var v = W.localStorage.getItem(KEY); if(v === '0') S.enabled = false; S.stored = (v === '0' || v === '1'); }catch(e){ S.stored = false; }
+
+  /* ---------- small helpers ---------- */
+  function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function noiseBuffer(c){
+    if(c.__trNoise) return c.__trNoise;
+    var n = (c.sampleRate * 2) | 0, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), s = 20240607;
+    for(var i = 0; i < n; i++){ s = (Math.imul(s, 1664525) + 1013904223) >>> 0; d[i] = s / 2147483648 - 1; }
+    c.__trNoise = b; return b;
+  }
+  function track(node){ S.active++; node.onended = function(){ S.active = Math.max(0, S.active - 1); try{ node.disconnect(); }catch(e){} }; }
+  /* a short burst of filtered noise with a fast attack and an exponential decay */
+  function burst(c, out, t, p, R){
+    var src = c.createBufferSource(); src.buffer = noiseBuffer(c);
+    var f = c.createBiquadFilter(); f.type = p.type || 'bandpass'; f.frequency.setValueAtTime(p.f, t); if(p.to) f.frequency.exponentialRampToValueAtTime(p.to, t + p.dur); f.Q.value = p.q == null ? 0.9 : p.q;
+    var g = c.createGain(), a = p.a == null ? 0.002 : p.a;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(p.g, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + p.dur);
+    src.connect(f); f.connect(g); g.connect(out);
+    src.start(t, R() * 1.5); src.stop(t + p.dur + 0.03); track(src);
+  }
+  /* a decaying tone, optionally gliding from f to p.to */
+  function ping(c, out, t, p){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = p.type || 'sine'; o.frequency.setValueAtTime(p.f, t); if(p.to) o.frequency.exponentialRampToValueAtTime(p.to, t + p.dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(p.g, t + (p.a || 0.001)); g.gain.exponentialRampToValueAtTime(0.0001, t + p.dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + p.dur + 0.03); track(o);
+  }
+
+  /* ---------- the sounds ---------- */
+  var RECIPES = {};
+  /* one clay chip on another: a tick of noise, a few inharmonic partials, a little body */
+  function clack(c, out, t, R, v, pitch){
+    var b = pitch || (2050 + R() * 500);
+    burst(c, out, t, { f:4300 + R() * 600, q:1.4, dur:0.012, g:0.2 * v, a:0.0005 }, R);
+    ping(c, out, t, { f:b, g:0.10 * v, dur:0.05 });
+    ping(c, out, t, { f:b * 1.59, g:0.055 * v, dur:0.034 });
+    ping(c, out, t, { f:b * 2.33, g:0.03 * v, dur:0.024 });
+    ping(c, out, t, { f:900, to:600, g:0.06 * v, dur:0.022 });
+  }
+  RECIPES.chip = function(c, o, t, R, v){ clack(c, o, t, R, v == null ? 1 : v); };
+  RECIPES.chipLight = function(c, o, t, R, v){ clack(c, o, t, R, 0.55 * (v == null ? 1 : v), 2500 + R() * 600); };
+  /* several chips set down or stacked: n clacks, a little uneven, tapering off */
+  RECIPES.chips = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 3, at = t;
+    for(var i = 0; i < n; i++){ clack(c, o, at, R, (0.95 - i * 0.1 / Math.max(1, n - 1) * 3) * v, 1900 + R() * 900); at += 0.032 + R() * 0.03; }
+  };
+  /* a payout or a rake: a run of chips falling over one another */
+  RECIPES.cascade = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 7, at = t;
+    for(var i = 0; i < n; i++){ clack(c, o, at, R, (0.55 + R() * 0.45) * v * (1 - i / (n * 1.6)), 1700 + R() * 1400); at += 0.026 + R() * 0.034; }
+  };
+  /* a card sliding off the shoe and landing: a swish, then a slap and a soft thump */
+  RECIPES.card = function(c, o, t, R, v){
+    burst(c, o, t, { f:3600 * (0.92 + R() * 0.2), to:1500, q:0.7, dur:0.075, g:0.15 * v, a:0.006 }, R);
+    burst(c, o, t + 0.052, { f:1500, q:1.1, dur:0.028, g:0.2 * v, a:0.001 }, R);
+    ping(c, o, t + 0.052, { f:150, to:92, g:0.12 * v, dur:0.07 });
+  };
+  RECIPES.land = function(c, o, t, R, v){
+    burst(c, o, t, { f:1400, q:1.1, dur:0.03, g:0.2 * v, a:0.001 }, R);
+    burst(c, o, t, { f:520, q:0.9, dur:0.055, g:0.11 * v, a:0.001 }, R);
+    ping(c, o, t, { f:140, to:90, g:0.1 * v, dur:0.07 });
+  };
+  /* a card turned over: a dry papery flick */
+  RECIPES.flip = function(c, o, t, R, v){
+    burst(c, o, t, { f:4200, type:'highpass', q:0.5, dur:0.03, g:0.11 * v, a:0.001 }, R);
+    burst(c, o, t + 0.012, { f:2600 * (0.9 + R() * 0.2), to:1300, q:0.8, dur:0.06, g:0.12 * v, a:0.003 }, R);
+  };
+  RECIPES.slide = function(c, o, t, R, v){ burst(c, o, t, { f:2600, to:1700, q:0.7, dur:0.1, g:0.07 * v, a:0.01 }, R); };
+  /* a deck being riffled: fast flicks that speed up and slow down, and a thump when the halves are bridged and squared */
+  RECIPES.riffle = function(c, o, t, R, v, op){
+    var at = t, gap = 0.055, N = (op && op.n) || 22;
+    for(var i = 0; i < N; i++){
+      burst(c, o, at, { f:2400 + R() * 1800, q:1.2, dur:0.016, g:(0.07 + R() * 0.04) * v, a:0.0008 }, R);
+      gap = i < 9 ? gap * 0.93 : gap * 1.07; at += gap * (0.8 + R() * 0.4);
+    }
+    burst(c, o, at + 0.04, { f:900, type:'lowpass', q:0.7, dur:0.09, g:0.14 * v, a:0.002 }, R);
+    ping(c, o, at + 0.04, { f:130, to:80, g:0.1 * v, dur:0.09 });
+    return at - t + 0.2;
+  };
+  /* a fingertip tapping the felt (hit), and a hand waved flat over it (stand) */
+  RECIPES.tap = function(c, o, t, R, v){
+    burst(c, o, t, { f:1100, type:'lowpass', q:0.7, dur:0.04, g:0.2 * v, a:0.001 }, R);
+    ping(c, o, t, { f:190, to:130, g:0.13 * v, dur:0.05 });
+  };
+  RECIPES.knock = function(c, o, t, R, v){ RECIPES.tap(c, o, t, R, v); RECIPES.tap(c, o, t + 0.1, R, v * 0.8); };
+  RECIPES.swish = function(c, o, t, R, v){ burst(c, o, t, { f:2800, to:700, q:0.6, dur:0.22, g:0.07 * v, a:0.02 }, R); };
+  /* a heavy, dull thump: a bust */
+  RECIPES.thud = function(c, o, t, R, v){ burst(c, o, t, { f:230, to:90, q:0.8, dur:0.16, g:0.2 * v, a:0.004 }, R); burst(c, o, t, { f:700, type:'lowpass', q:0.7, dur:0.05, g:0.1 * v, a:0.002 }, R); ping(c, o, t, { f:78, to:55, g:0.14 * v, dur:0.18 }); };   // the little mid knock is for phone speakers, which cannot play the low end
+  RECIPES.pat = function(c, o, t, R, v){ burst(c, o, t, { f:700, type:'lowpass', q:0.7, dur:0.06, g:0.14 * v, a:0.002 }, R); ping(c, o, t, { f:120, to:85, g:0.12 * v, dur:0.08 }); };
+  /* the dealer clearing a losing bet: a rake across the felt, a thump and a couple of loose chips */
+  RECIPES.sweep = function(c, o, t, R, v){
+    burst(c, o, t, { f:2200, to:600, q:0.6, dur:0.24, g:0.11 * v, a:0.03 }, R);
+    clack(c, o, t + 0.2, R, 0.5 * v, 2000);
+    clack(c, o, t + 0.25, R, 0.35 * v, 2300);
+    ping(c, o, t + 0.05, { f:95, to:70, g:0.08 * v, dur:0.16 });
+  };
+  RECIPES.lose = function(c, o, t, R, v){ RECIPES.sweep(c, o, t, R, v); };
+  RECIPES.win = function(c, o, t, R, v){
+    RECIPES.cascade(c, o, t, R, 0.8 * v, { n:6 });
+    bell(c, o, t + 0.12, 1568, 0.032 * v, 0.55); bell(c, o, t + 0.2, 2093, 0.02 * v, 0.45);
+  };
+  RECIPES.bigwin = function(c, o, t, R, v){
+    RECIPES.cascade(c, o, t, R, v, { n:12 });
+    [1175, 1568, 1976, 2349].forEach(function(f, i){ bell(c, o, t + 0.1 + i * 0.09, f, 0.04 * v, 0.7); });
+  };
+  RECIPES.push = function(c, o, t, R, v){ clack(c, o, t, R, 0.7 * v, 2300); clack(c, o, t + 0.07, R, 0.5 * v, 2100); };
+  function bell(c, out, t, f, g, dur){
+    ping(c, out, t, { f:f, g:g, dur:dur });
+    ping(c, out, t, { f:f * 2.76, g:g * 0.4, dur:dur * 0.45 });
+    ping(c, out, t, { f:f * 5.4, g:g * 0.15, dur:dur * 0.2 });
+  }
+  RECIPES.chime = function(c, o, t, R, v){ [784, 988, 1175, 1568].forEach(function(f, i){ bell(c, o, t + i * 0.085, f, 0.04 * v, 0.45); }); };
+  RECIPES.ding = function(c, o, t, R, v){ bell(c, o, t, 1175, 0.045 * v, 0.5); bell(c, o, t + 0.09, 1568, 0.036 * v, 0.6); };
+  RECIPES.point = function(c, o, t, R, v){ bell(c, o, t, 880, 0.04 * v, 0.4); bell(c, o, t + 0.08, 1175, 0.04 * v, 0.5); };
+  /* the pitboss: a few unhurried footfalls on carpet, and a low "hm" or sigh */
+  RECIPES.step = function(c, o, t, R, v){
+    for(var i = 0; i < 3; i++){
+      var at = t + i * 0.27, g = (0.55 + i * 0.2) * v;
+      burst(c, o, at, { f:260, type:'lowpass', q:0.6, dur:0.075, g:0.2 * g, a:0.004 }, R);
+      ping(c, o, at, { f:78 - i * 4, to:55, g:0.14 * g, dur:0.11 });
+    }
+  };
+  function voiced(c, out, t, f0, f1, dur, g, f1a, f2a){
+    var f = c.createBiquadFilter(), f2 = c.createBiquadFilter(), gn = c.createGain(), lp = c.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = f1a; f.Q.value = 5; f2.type = 'bandpass'; f2.frequency.value = f2a; f2.Q.value = 7;
+    lp.type = 'lowpass'; lp.frequency.value = 1500;
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(g, t + dur * 0.25); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    [0, 1].forEach(function(k){
+      var o = c.createOscillator(); o.type = 'sawtooth'; o.detune.value = k ? 9 : -9;
+      o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f1, t + dur);
+      o.connect(f); o.connect(f2); o.start(t); o.stop(t + dur + 0.03); track(o);
+    });
+    f.connect(lp); f2.connect(lp); lp.connect(gn); gn.connect(out);
+  }
+  RECIPES.hm = function(c, o, t, R, v){ voiced(c, o, t, 118, 104, 0.26, 0.11 * v, 480, 1000); voiced(c, o, t + 0.2, 104, 92, 0.3, 0.1 * v, 440, 950); };
+  RECIPES.sigh = function(c, o, t, R, v){
+    voiced(c, o, t, 150, 92, 0.46, 0.09 * v, 700, 1150);
+    burst(c, o, t, { f:900, to:500, q:0.5, dur:0.5, g:0.06 * v, a:0.12 }, R);
+  };
+  /* dice: shaken in the hand, thrown, then bouncing off the felt and the back wall */
+  RECIPES.rattle = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 0.38, n = Math.max(6, Math.round(dur * 55)), at = t;
+    for(var i = 0; i < n; i++){
+      burst(c, o, at, { f:1100 + R() * 1900, q:1.5, dur:0.013 + R() * 0.01, g:(0.09 + R() * 0.12) * v, a:0.0006 }, R);
+      if(R() < 0.45) ping(c, o, at, { f:360 + R() * 300, g:0.05 * v, dur:0.018 });
+      at += dur / n * (0.5 + R());
+    }
+    return dur;
+  };
+  RECIPES.bounce = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 5, at = t, gap = 0.12, g = 1;
+    for(var i = 0; i < n; i++){
+      burst(c, o, at, { f:1300 + R() * 500, q:1, dur:0.026, g:0.16 * g * v, a:0.0008 }, R);
+      ping(c, o, at, { f:230 + R() * 40, to:120, g:0.16 * g * v, dur:0.05 });
+      at += gap; gap *= 0.7; g *= 0.68;
+    }
+    return at - t;
+  };
+  RECIPES.wall = function(c, o, t, R, v){
+    burst(c, o, t, { f:900, type:'lowpass', q:0.6, dur:0.05, g:0.2 * v, a:0.001 }, R);
+    burst(c, o, t, { f:3200, q:1.2, dur:0.016, g:0.1 * v, a:0.0006 }, R);
+    ping(c, o, t, { f:420, to:260, g:0.12 * v, dur:0.06 });
+  };
+  RECIPES.dice = function(c, o, t, R, v){
+    RECIPES.rattle(c, o, t, R, 0.8 * v, { dur:0.28 });
+    burst(c, o, t + 0.26, { f:2000, to:900, q:0.6, dur:0.12, g:0.05 * v, a:0.02 }, R);
+    RECIPES.wall(c, o, t + 0.42, R, v);
+    RECIPES.bounce(c, o, t + 0.5, R, v, { n:5 });
+  };
+  RECIPES.lift = function(c, o, t, R, v){ RECIPES.rattle(c, o, t, R, 0.5 * v, { dur:0.09 }); };
+  /* the logo coin: a bright ring that dies away; a toss is a ring with a flutter, then a few coin-on-coin settling clinks */
+  function ring(c, out, t, g, dur, f){
+    [1, 1.47, 2.12, 2.89].forEach(function(m, i){ ping(c, out, t, { f:f * m, g:g / (1 + i * 0.9), dur:dur / (1 + i * 0.5) }); });
+  }
+  RECIPES.coin = function(c, o, t, R, v){
+    burst(c, o, t, { f:5200, q:1.2, dur:0.012, g:0.1 * v, a:0.0005 }, R);
+    ring(c, o, t, 0.07 * v, 0.55, 3300 + R() * 150);
+  };
+  RECIPES.toss = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 1.5;
+    burst(c, o, t, { f:5200, q:1.2, dur:0.014, g:0.12 * v, a:0.0005 }, R);
+    var lfo = c.createOscillator(), depth = c.createGain(), amp = c.createGain();
+    amp.gain.setValueAtTime(0.0001, t); amp.gain.linearRampToValueAtTime(0.05 * v, t + 0.01); amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    lfo.frequency.value = 17; depth.gain.value = 0.028 * v; lfo.connect(depth); depth.connect(amp.gain);
+    [3300, 4850, 7000].forEach(function(f, i){
+      var os = c.createOscillator(), gg = c.createGain();
+      os.type = 'sine'; os.frequency.setValueAtTime(f * 0.97, t); os.frequency.linearRampToValueAtTime(f * 1.03, t + dur * 0.5); os.frequency.linearRampToValueAtTime(f * 0.98, t + dur);
+      gg.gain.value = 1 / (1 + i * 1.2); os.connect(gg); gg.connect(amp); os.start(t); os.stop(t + dur + 0.05); track(os);
+    });
+    amp.connect(o); lfo.start(t); lfo.stop(t + dur + 0.05); track(lfo);
+    return dur;
+  };
+  RECIPES.coinLand = function(c, o, t, R, v){
+    var at = t, gap = 0.1, g = 1;
+    for(var i = 0; i < 4; i++){ ring(c, o, at, 0.07 * g * v, 0.35 * g, 3300 + i * 120); burst(c, o, at, { f:5000, q:1.2, dur:0.012, g:0.08 * g * v, a:0.0005 }, R); at += gap; gap *= 0.62; g *= 0.62; }
+  };
+  RECIPES.charge = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 0.5, os = c.createOscillator(), g = c.createGain();
+    os.type = 'triangle'; os.frequency.setValueAtTime(260, t); os.frequency.exponentialRampToValueAtTime(980, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.035 * v, t + dur * 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.04);
+    os.connect(g); g.connect(o); os.start(t); os.stop(t + dur + 0.08); track(os); return dur;
+  };
+  RECIPES.ui = function(c, o, t, R, v){ ping(c, o, t, { f:1320, g:0.05 * v, dur:0.035 }); ping(c, o, t + 0.04, { f:1760, g:0.04 * v, dur:0.04 }); };
+
+  /* ---------- the context, the switch and the page wiring ---------- */
+  function makeContext(){
+    if(!AC) return null;
+    var c = new AC();
+    var master = c.createGain(); master.gain.value = S.enabled ? 0.9 : 0;
+    var comp = c.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 12; comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.2;
+    master.connect(comp); comp.connect(c.destination);
+    S.ctx = c; S.master = master; return c;
+  }
+  function ready(){
+    if(!AC) return null;
+    if(!S.ctx){ if(!S.unlocked) return null; makeContext(); }
+    var c = S.ctx;
+    if(c.state === 'suspended'){ try{ c.resume(); }catch(e){} return null; }
+    return c.state === 'running' ? c : null;
+  }
+  function unlock(){
+    if(!AC) return;
+    S.unlocked = true;
+    if(!S.ctx) makeContext();
+    try{ if(S.ctx.state !== 'running') S.ctx.resume(); }catch(e){}
+  }
+  function play(name, o){
+    if(!S.enabled) return false;
+    var r = RECIPES[name]; if(!r) return false;
+    var c = ready(); if(!c || S.active > 90) return false;
+    try{ r(c, S.master, c.currentTime + 0.004, Math.random, (o && o.v != null) ? o.v : 1, o || {}); return true; }catch(e){ return false; }
+  }
+  function setEnabled(on, quiet){
+    on = !!on; var was = S.enabled; S.enabled = on; S.stored = true;
+    try{ W.localStorage.setItem(KEY, on ? '1' : '0'); }catch(e){}
+    if(S.master){ try{ var n = S.ctx.currentTime; S.master.gain.cancelScheduledValues(n); S.master.gain.setValueAtTime(S.master.gain.value, n); S.master.gain.linearRampToValueAtTime(on ? 0.9 : 0, n + 0.04); }catch(e){} }
+    if(on && !was && !quiet) play('ui');
+    if(on !== was) S.listeners.slice().forEach(function(fn){ try{ fn(on); }catch(e){} });
+  }
+  function onChange(fn){ S.listeners.push(fn); }
+  /* legacy code that makes its own nodes can still send them through the master (so the switch and the limiter apply) */
+  function dest(c){ return (S.ctx && c === S.ctx && S.master) ? S.master : c.destination; }
+  /* a settings checkbox that mirrors the switch (first run: keep the choice the player made in an older version) */
+  function adopt(box, apply){
+    if(!box) return;
+    if(!S.stored && box.checked === false) setEnabled(false, true);
+    box.checked = S.enabled;
+    box.addEventListener('change', function(){ setEnabled(box.checked); });
+    onChange(function(on){ box.checked = on; if(apply) apply(on); });
+    if(apply) apply(S.enabled);
+  }
+  var ICON_ON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z" fill="currentColor"/><path d="M15.2 8.6a4.6 4.6 0 0 1 0 6.8M17.6 6.2a8 8 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z" fill="currentColor"/><path d="M15.6 9.4l5 5.2M20.6 9.4l-5 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  function paint(btn){
+    btn.setAttribute('aria-pressed', S.enabled ? 'true' : 'false');
+    btn.setAttribute('aria-label', S.enabled ? 'Sound on. Press to mute' : 'Sound off. Press to turn on');
+    btn.setAttribute('title', S.enabled ? 'Sound on' : 'Sound off');
+    btn.innerHTML = S.enabled ? ICON_ON : ICON_OFF;
+  }
+  function mountButton(btn){
+    if(!btn) return;
+    if(!D.getElementById('tr-snd-css')){
+      var st = D.createElement('style'); st.id = 'tr-snd-css';
+      st.textContent = '.snd-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.18));background:transparent;color:var(--text-muted,var(--muted,#9aa0a8));cursor:pointer;flex:0 0 auto;transition:color .15s,border-color .15s,background .15s}.snd-btn:hover{color:var(--text,#fff);border-color:currentColor}.snd-btn:focus-visible{outline:2px solid var(--accent,var(--brass-bright,#d8b24a));outline-offset:2px}.snd-btn[aria-pressed="true"]{color:var(--text,#fff)}@media (pointer:coarse){.snd-btn{width:44px;height:44px}}';
+      (D.head || D.documentElement).appendChild(st);
+    }
+    btn.classList.add('snd-btn'); btn.type = 'button'; paint(btn);
+    btn.addEventListener('click', function(){ unlock(); setEnabled(!S.enabled); });
+    onChange(function(){ paint(btn); });
+  }
+  function context(){ return ready(); }
+  function render(name, seed, dur, opts){
+    var OAC = W.OfflineAudioContext || W.webkitOfflineAudioContext;
+    if(!OAC) return Promise.reject(new Error('no OfflineAudioContext'));
+    var sr = 44100, c = new OAC(1, Math.max(1, Math.round(dur * sr)), sr), R = mulberry(seed || 1);
+    RECIPES[name](c, c.destination, 0.01, R, 1, opts || {});
+    return c.startRendering().then(function(b){ return b.getChannelData(0); });
+  }
+  /* sleeping tabs make no noise */
+  if(D && D.addEventListener) D.addEventListener('visibilitychange', function(){
+    if(!S.ctx) return;
+    try{ if(D.hidden){ if(S.ctx.state === 'running'){ S.hiddenSuspended = true; S.ctx.suspend(); } } else if(S.hiddenSuspended){ S.hiddenSuspended = false; S.ctx.resume(); } }catch(e){}
+  });
+  /* the first touch, key or click on the page is what lets the browser start the audio */
+  function firstGesture(){ unlock(); if(S.ctx && S.ctx.state === 'running'){ ['pointerdown', 'keydown', 'touchend'].forEach(function(t){ D.removeEventListener(t, firstGesture, true); }); } }
+  if(D && D.addEventListener) ['pointerdown', 'keydown', 'touchend'].forEach(function(t){ D.addEventListener(t, firstGesture, true); });
+
+  W.TRSound = { play:play, set:setEnabled, toggle:function(){ setEnabled(!S.enabled); }, enabled:function(){ return S.enabled; }, onChange:onChange, dest:dest, context:context, unlock:unlock, adopt:adopt, mountButton:mountButton, render:render, recipes:RECIPES, names:function(){ return Object.keys(RECIPES); }, _state:S };
+})(window);
+/*tr-sound:end*/
+</script>
+<style id="tr-sound-css">
+.bank-row{display:flex;align-items:center;gap:8px;}
+.stick-call{position:absolute;left:50%;top:10px;z-index:4;transform:translate(-50%,-6px);max-width:calc(100% - 24px);padding:5px 13px;border-radius:999px;background:rgba(10,12,14,.74);color:#f3efe2;border:1px solid rgba(255,255,255,.14);font:700 13px/1.25 'Space Grotesk',sans-serif;letter-spacing:.2px;text-align:center;opacity:0;pointer-events:none;-webkit-user-select:none;user-select:none;}
+.stick-call.on{animation:stickCall 2300ms ease both;}
+@keyframes stickCall{0%{opacity:0;transform:translate(-50%,-6px)}10%{opacity:1;transform:translate(-50%,0)}82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-2px)}}
+@media (prefers-reduced-motion:reduce){.stick-call.on{animation:none;opacity:1;transform:translate(-50%,0)}}
+@media (max-width:560px){.stick-call{font-size:12px;top:7px;padding:4px 11px}}
+</style>
+<style id="tr-desktop-fit">
+/* standalone */
+@media (min-width:1320px) and (min-height:600px){
+  body{padding:12px 20px 10px;}
+  .wrap{max-width:1380px;display:grid;grid-template-columns:auto 1fr auto;column-gap:16px;align-items:end;}
+  .wrap > .back-link{grid-column:1 / -1;margin-bottom:4px;font-size:12px;}
+  .wrap > header{display:contents;}
+  .wrap > header > div:first-child{grid-column:1;grid-row:2;}
+  .wrap > header h1{font-size:26px;margin:0;}
+  .wrap > header .tagline{display:none;}
+  .wrap > header .bank-row{grid-column:3;grid-row:2;padding-bottom:2px;}
+  .wrap > header .bankroll-pill{padding:6px 12px 6px 10px;}
+  .wrap > .toolbar{grid-column:2;grid-row:2;margin:0 0 3px;gap:8px;justify-self:start;padding-left:12px;}
+  .wrap > #settings-panel{grid-column:1 / -1;}
+  .wrap > .layout-grid{grid-column:1 / -1;margin-top:6px;grid-template-columns:minmax(0,1036px) minmax(320px,1fr);gap:16px;}
+  .wrap > footer{grid-column:1 / -1;text-align:center;}
+  footer p.foot-note{display:inline-block;margin:2px 10px 0 !important;font-size:11px;}
+  .table-felt{margin-bottom:2px;}
+  .table-felt{padding:10px 14px;}
+  .top-block{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:center;}
+  .status-bar{grid-column:1;grid-row:1;margin:0 0 8px;}
+  .roll-strip{grid-column:2;grid-row:1;margin:0 0 8px;min-height:0;height:28px;flex-wrap:nowrap;}
+  .stage-wrap{grid-column:1 / -1;grid-row:2;}
+  .callout{grid-column:1 / -1;grid-row:3;margin:8px 0 0;min-height:26px;display:flex;align-items:baseline;justify-content:center;gap:12px;}
+  .callout .big{font-size:20px;}
+  .callout .sub{margin-top:0;min-height:0;font-size:12.5px;}
+  #jump{display:none !important;}
+  .dice-stage{--s:48px;--h:24px;height:134px;}
+  .puck-lane{height:26px;margin-bottom:0;}
+  .num{min-height:116px;padding:7px 6px 6px;}
+  .num .num-label{font-size:22px;}
+  .num .num-sub{margin-top:1px;}
+  .num-edge{min-height:17px;}
+  .pb-switch{margin-top:3px;}
+  .num .num-stack{min-height:24px;}
+  #bets{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;}
+  #bets > #grp-numbers,#bets > #props,#bets > #coach{flex:0 0 100%;min-width:0;}
+  #bets > #grp-lines{flex:2 1 0;min-width:0;}
+  #bets > #grp-board{flex:3.5 1 0;min-width:0;}
+  .line-bets,.board{margin-top:0;gap:8px;height:100%;}
+  .board{grid-template-columns:1fr 1fr 1.5fr;}
+  .board .wide{grid-column:auto;}
+  .spot{min-height:70px;padding:8px 10px 7px;}
+  .field-nums{gap:3px;margin-top:2px;}
+  .field-nums span{min-width:19px;font-size:10.5px;padding:2px 0;}
+  .props{margin-top:0;padding-top:8px;}
+  .props h3{margin-bottom:5px;}
+  .props-grid{gap:6px;}
+  .props-grid .spot{min-height:66px;padding:6px 9px 6px;}
+  .prop-art{min-height:24px;margin-bottom:0;}
+  .prop-art .d2{--d:22px;}
+  .prop-big{font-size:22px;}
+  .prop-big.s{font-size:16px;}
+  .props-grid .spot-title{font-size:12px;}
+  .coach{margin-top:0;padding:8px 12px;line-height:1.45;}
+  .coach .label{display:inline;margin:0 8px 0 0;}
+  .coach p{display:inline;}
+  .coach p + p{margin-top:0;}
+}
+@media (min-width:1320px) and (min-height:600px){
+  .props-grid .spot{flex-direction:row;flex-wrap:wrap;align-items:center;align-content:center;column-gap:7px;row-gap:2px;}
+  .props-grid .spot .prop-art{flex:0 0 auto;}
+  .props-grid .spot .spot-title:not(.sr-only){flex:0 1 auto;}
+  .props-grid .spot .spot-pay{flex:0 0 auto;}
+  .props-grid .spot .edge{margin-top:0;align-self:center;}
+  .side-panels{display:flex;flex-direction:column;gap:8px;top:12px;}
+  .side-panels .panel{margin:0;padding:12px 14px;border-radius:14px;}
+  .side-panels h2.section,.side-panels details.fold>summary{font-size:14.5px;margin:0 0 8px;}
+  .side-panels details.fold:not([open]){padding:10px 14px;}
+  .side-panels details.fold:not([open])>summary{margin:0;}
+  .side-panels .foot-note{font-size:11px;line-height:1.45;margin-top:6px;}
+}
+@media (min-width:1320px) and (min-height:600px){
+  .felt-main{position:relative;}
+  .felt-main > .hint-line{position:absolute;left:210px;right:250px;top:0;height:30px;margin:0;padding:2px 10px;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1.25;z-index:7;text-wrap:balance;overflow:hidden;}
+  .felt-main > .hint-line[style*="display: none"]{display:none !important;}
+  .line-bets .spot.has-bet .spot-pay{display:none;}
+  .odds-row.show{padding-right:0;margin-top:4px;gap:6px;}
+  .odds-btn{padding:3px 8px;font-size:11px;white-space:nowrap;}
+  .odds-max{padding:4px 10px;font-size:12px;}
+}
+@media (min-width:1320px) and (min-height:600px) and (max-height:880px){
+  .dice-stage{height:122px;}
+  .num{min-height:108px;}
+  .coach{padding:5px 12px;}
+  .props-grid .spot{min-height:60px;}
+  .wrap > .back-link{margin-bottom:2px;}
+}
+/* a shorter window (a laptop): the dice stage and the spacing give up a little so the table still fits */
+@media (min-width:1320px) and (min-height:600px) and (max-height:920px){
+  .dice-stage{--s:42px;--h:21px;height:108px;}
+  .num{min-height:98px;padding:6px 6px 5px;}
+  .num .num-label{font-size:20px;}
+  .spot{min-height:62px;padding:7px 10px 6px;}
+  .props-grid .spot{min-height:56px;padding:5px 9px 5px;}
+  .callout{margin:4px 0 0;min-height:22px;}
+  .status-bar{margin:0 0 4px;}
+  .roll-strip{margin:0 0 4px;}
+  .props{padding-top:4px;}
+  .props h3{margin-bottom:2px;}
+  .num-edge{min-height:14px;}
+  .pb-switch{margin-top:1px;}
+  .num .num-stack{min-height:20px;}
+  .num{padding:5px 6px 4px;}
+  .coach{padding:5px 12px;}
+  #bets{gap:6px;}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -677,15 +1098,19 @@ body{--gut:16px;}
     <h1>Craps</h1>
     <p class="tagline">Roll the dice, back the shooter or bet against them, and see exactly what every bet costs you. Free practice chips, no real money.</p>
   </div>
+  <div class="bank-row">
   <div class="bankroll-pill" id="bankroll-pill">
     <span class="label">Bankroll</span>
     <span class="pill-stack" id="bankroll-chip-stack" aria-hidden="true"></span>
     <span class="amount" id="bankroll-amount">$1,000</span>
   </div>
+  <button type="button" id="snd-btn"></button>
+  </div>
 </header>
 
 <div class="toolbar">
-  <button id="btn-toggle-settings" aria-expanded="false" aria-controls="settings-panel">Table settings</button>
+  <button type="button" id="btn-practice" title="Ten quick questions on the spots that cost real money. No bets.">Practice</button>
+    <button id="btn-toggle-settings" aria-expanded="false" aria-controls="settings-panel">Table settings</button>
   <span class="seg-label" id="level-label">Bets on the table</span>
   <div class="seg" id="level-seg" role="group" aria-labelledby="level-label">
     <button type="button" data-level="starter" aria-pressed="true" title="Pass Line, Don't Pass and the numbers">Starter</button>
@@ -693,7 +1118,9 @@ body{--gut:16px;}
     <button type="button" data-level="full" aria-pressed="false" title="Adds the one-roll bets: hardways, Any Seven, Any Craps, Yo and the rest">Full table</button>
   </div>
   <button type="button" id="btn-edge" class="toggle-btn" aria-pressed="true" title="Show or hide the house edge on every bet"><span class="dot"></span>House edge</button>
+  <a href="#" id="btn-manners" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Table manners</a>
   <a href="/learn/glossary/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
+  <a href="/report/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">My report</a>
 </div>
 
 <div class="panel" id="settings-panel" style="display:none;">
@@ -747,6 +1174,7 @@ body{--gut:16px;}
 
   <div class="stage-wrap">
     <div class="dice-stage" id="dice-stage" aria-hidden="true">
+<div class="stick-call" id="stick-call"></div>
       <div class="table-wall" id="table-wall"></div>
       <div class="shoot-hint" id="shoot-hint"><span id="shoot-hint-text">Flick it at the wall</span></div>
       <div class="die-pos" id="die-pos-0" title="Drag to move the die, tap to turn it. Push the two dice together to pick both up."><div class="die-shadow"></div><div class="die-hop"><div class="die-tilt"><div class="die" id="die-0"></div></div></div></div>
@@ -860,13 +1288,13 @@ body{--gut:16px;}
     <div class="hist" id="hist" aria-label="How often each total has rolled"></div>
     <p class="foot-note" id="hist-note">The dashed line is how often each total should come up.</p>
   </div>
-  <div class="panel">
-    <h2 class="section">What each bet costs</h2>
+  <details class="panel fold" id="fold-edge" open>
+    <summary class="section">What each bet costs</summary>
     <div class="edge-guide" id="edge-guide"></div>
     <p class="foot-note">Cost is the house edge: dollars the casino keeps on average per $100 resolved. Free odds are the only bet with no edge, and you can only take them behind a line or Come bet.</p>
-  </div>
-  <div class="panel how">
-    <h2 class="section">How craps works</h2>
+  </details>
+  <details class="panel how fold" id="fold-how" open>
+    <summary class="section">How craps works</summary>
     <ul>
       <li>One player rolls two dice (the shooter). Everyone bets on the same roll.</li>
       <li><b>Come-out roll:</b> a 7 or 11 wins the Pass Line. A 2, 3 or 12 loses it. Any other number becomes the <b>point</b>.</li>
@@ -884,7 +1312,7 @@ body{--gut:16px;}
       <li><b>Max odds</b> in Table settings puts the most free odds the table allows behind your Pass Line bet the moment a point is set, as far as your bankroll reaches. Right-click the odds to take them down and they stay down until the next point. It covers the Pass Line only, not Don't Pass or Come bets.</li>
       <li><b>Keep same bets out</b> puts back the bets that came down on the last roll (a Pass Line win, a Field loss). Switch it off to rebuild the table yourself each roll.</li>
     </ul>
-  </div>
+  </details>
 </div>
 
 </div>
@@ -1460,13 +1888,7 @@ function validSession(s){
 
 /* ============ SOUND ============ */
 var audioCtx=null, noiseBuf=null;
-function ensureAudio(){
-  if(audioCtx) return audioCtx;
-  var C=window.AudioContext||window.webkitAudioContext;
-  if(!C) return null;
-  try{ audioCtx=new C(); }catch(e){ audioCtx=null; }
-  return audioCtx;
-}
+function ensureAudio(){ return window.TRSound ? window.TRSound.context() : null; }
 function tone(freq,dur,type,vol){
   if(!G.settings.sound) return;
   var ctx=ensureAudio(); if(!ctx) return;
@@ -1475,42 +1897,16 @@ function tone(freq,dur,type,vol){
     o.type=type||'sine'; o.frequency.value=freq;
     g.gain.setValueAtTime(vol||0.05, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+dur);
-    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+dur);
+    o.connect(g); g.connect(window.TRSound.dest(ctx)); o.start(); o.stop(ctx.currentTime+dur);
   }catch(e){}
 }
-function noiseTick(vol,freq,q,dur){
-  if(!G.settings.sound) return;
-  var ctx=ensureAudio(); if(!ctx) return;
-  try{
-    if(!noiseBuf){
-      noiseBuf=ctx.createBuffer(1, Math.floor(ctx.sampleRate*0.12), ctx.sampleRate);
-      var d=noiseBuf.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-    }
-    var src=ctx.createBufferSource(); src.buffer=noiseBuf;
-    var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq; bp.Q.value=q||1.2;
-    var g=ctx.createGain(); var t=ctx.currentTime;
-    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    src.connect(bp); bp.connect(g); g.connect(ctx.destination); src.start(t); src.stop(t+dur+0.02);
-  }catch(e){}
-}
-function sfxChip(){ noiseTick(0.14,2600+Math.random()*600,2,0.045); tone(640,0.03,'triangle',0.018); }
-function sfxRoll(){
-  if(G.settings.turbo) return;
-  [0,70,150,230,300,380,470,560,680,830].forEach(function(ms,i){
-    setTimeout(function(){ noiseTick(0.2*Math.pow(0.8,i)+0.02, 1400+Math.random()*1800, 1.4, 0.055); }, ms);
-  });
-  setTimeout(function(){ tone(96,0.09,'sine',0.05); }, 310);
-  setTimeout(function(){ tone(112,0.08,'sine',0.04); }, 650);
-}
-function sfxWin(){ tone(659,0.11,'sine',0.05); setTimeout(function(){ tone(880,0.16,'sine',0.05); }, 90); }
-function sfxLose(){ tone(196,0.22,'sine',0.045); }
-function sfxPoint(){ tone(523,0.09,'triangle',0.04); setTimeout(function(){ tone(659,0.12,'triangle',0.04); }, 80); }
-function sfxPush(){ tone(392,0.14,'sine',0.04); }
-function sfxSweep(){
-  if(G.settings.turbo) return;
-  tone(210,0.05,'triangle',0.035);                       // the stick meets the dice
-  [30,90,150,210,270,330,390].forEach(function(ms,i){ setTimeout(function(){ noiseTick(0.05, 600+i*120, 0.8, 0.1); }, ms); });
-}
+function sfxChip(){ TRSound.play('chip'); }
+function sfxRoll(){ if(G.settings.turbo) return; TRSound.play('rattle',{dur:.34,v:.7}); }
+function sfxWin(){ TRSound.play('win'); }
+function sfxLose(){ TRSound.play('lose'); }
+function sfxPoint(){ TRSound.play('point'); }
+function sfxPush(){ TRSound.play('push'); }
+function sfxSweep(){ if(G.settings.turbo) return; TRSound.play('swish',{v:.9}); TRSound.play('tap',{v:.5}); }
 
 /* ============ ROLL SOUNDS: one cue per total, played when the dice settle ============ */
 // Cosmetic only: the dice are already decided (two random dice) before any of this runs, and nothing here feeds back into them.
@@ -1542,7 +1938,7 @@ function toneAt(freq,dur,type,vol,delay,toFreq){
     o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
     if(toFreq) o.frequency.exponentialRampToValueAtTime(toFreq,t+dur);
     g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.05,t+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+dur+0.02);
+    o.connect(g); g.connect(window.TRSound.dest(ctx)); o.start(t); o.stop(t+dur+0.02);
   }catch(e){}
 }
 // Plays the cue for this total (comeOut: no point was on, so a 7 is a winner); gives back how many seconds it lasts (0 when nothing played), so the win / lose chime can follow it.
@@ -1841,7 +2237,7 @@ function renderNumbers(){
     hit.setAttribute('data-key', key);
     hit.setAttribute('aria-label', word+' '+n+(nb?', $'+nb.amount+' on it':'')+'. Pays '+(mode==='buy'?BUY_TXT[n]+' minus a 5% fee on wins':PLACE_TXT[n])+'. House edge '+edgePct(E.LEDGER_BY_KEY[ek].edge)+'.');
     el.classList.toggle('has-bet', !!nb);
-    el.querySelector('.num-sub').textContent = isPhone() ? (mode==='buy' ? 'Pays '+BUY_TXT[n]+', 5% fee' : 'Pays '+PLACE_TXT[n])      // the box is narrow: the Place / Buy switch below says which
+    el.querySelector('.num-sub').textContent = (isPhone() || fitCompact()) ? (mode==='buy' ? 'Pays '+BUY_TXT[n]+', 5% fee' : 'Pays '+PLACE_TXT[n])      // the box is narrow: the Place / Buy switch below says which
                                                          : (mode==='buy' ? 'Buy pays '+BUY_TXT[n]+', 5% fee on wins' : 'Place pays '+PLACE_TXT[n]);
     setHTML(el.querySelector('.num-edge'), edgeBadge(ek,'ctr'));
     Array.prototype.forEach.call(el.querySelectorAll('.pb-switch button'), function(b){
@@ -2222,6 +2618,7 @@ function buildDiceFaces(){
 function rotStr(a){ return 'rotateX('+a[0]+'deg) rotateY('+a[1]+'deg) rotateZ('+a[2]+'deg)'; }
 // Where a die sits on the felt: a little apart, and the same for every roll (a seven lands exactly like any other total).
 // A phone: a narrow screen, or a phone turned on its side (wide, but not tall). The stage is smaller and the dice a little smaller with it.
+function fitCompact(){ return !!(window.matchMedia && matchMedia('(min-width:1320px) and (min-height:600px)').matches); }   // the one-screen desktop layout: smaller dice stage, shorter box captions
 function isPhone(){ var w=window.innerWidth||1000, h=window.innerHeight||1000; return w<=560 || (h<=520 && w<=999); }
 function diceX(i){ var w=isPhone()?36:46; return i===0?-w:w; }
 function dieEls(i){
@@ -2270,7 +2667,7 @@ function hasSet(){ return !!(setup.pos[0] || setup.pos[1] || setup.hand); }
 function hasHand(){ return !!setup.hand; }
 function syncSet(){ var st=$('dice-stage'); if(st) st.classList.toggle('locked', !canSet()); }
 function setMetrics(){
-  var st=$('dice-stage'), phone=isPhone(), s=phone?48:60;
+  var st=$('dice-stage'), phone=isPhone(), s=phone?48:(fitCompact()?48:60);
   var W=(st && st.clientWidth) || (phone?336:860), H=(st && st.clientHeight) || (phone?196:214);
   var R=Math.round(s*0.68), ground=phone?48:44, cube=Math.round(s*1.42), xm=Math.max(0, W/2-R-8);
   var obst=[];                                              // the buttons that sit on the tray: dice are kept clear of them
@@ -2324,13 +2721,13 @@ function cancelAnims(i){ setup.anims[i].forEach(function(a){ try{ a.cancel(); }c
 function setFace(i, v){ shownFace[i]=v; dieEls(i).die.style.transform=rotStr(ORIENT[v]); }
 
 /* ---- sounds and buzzes for handling the dice ---- */
-function sfxLift(){ noiseTick(0.05, 1700, 1.2, 0.035); }
-function sfxDrop(power){ power=(power===undefined)?0.6:power; noiseTick(0.07+0.16*power, 1500+Math.random()*500, 1.4, 0.05); tone(118,0.07,'sine',0.02+0.03*power); }
-function sfxTick(power){ noiseTick(0.03+0.1*power, 1900+Math.random()*700, 1.5, 0.03); }
-function sfxTurn(){ noiseTick(0.1, 2100+Math.random()*500, 1.6, 0.04); }
-function sfxClack(power){ power=(power===undefined)?0.6:power; noiseTick(0.1+0.14*power, 2300, 2.2, 0.03); setTimeout(function(){ noiseTick(0.08+0.1*power, 3100, 2.4, 0.025); }, 35); tone(420,0.03,'triangle',0.02); }
-function sfxWall(power){ power=(power===undefined)?0.7:power; noiseTick(0.18+0.2*power, 700+Math.random()*300, 0.9, 0.09); tone(84,0.14,'sine',0.05+0.05*power); }
-function sfxWhoosh(speed){ var p=clamp(speed/2000,0.2,1); [0,40,80].forEach(function(ms,i){ setTimeout(function(){ noiseTick(0.03+0.04*p, 700+i*500, 0.8, 0.07); }, ms); }); }
+function sfxLift(){ TRSound.play('lift'); }
+function sfxDrop(power){ power=(power===undefined)?0.6:power; TRSound.play('bounce',{n:2,v:.45+.6*power}); }
+function sfxTick(power){ power=(power===undefined)?0.5:power; TRSound.play('bounce',{n:1,v:.25+.7*power}); }
+function sfxTurn(){ TRSound.play('tap',{v:.6}); }
+function sfxClack(power){ power=(power===undefined)?0.6:power; TRSound.play('wall',{v:.3+.5*power}); }
+function sfxWall(power){ power=(power===undefined)?0.7:power; TRSound.play('wall',{v:.5+.7*power}); }
+function sfxWhoosh(speed){ var p=clamp(speed/2000,0.2,1); TRSound.play('swish',{v:.35+.5*p}); }
 function buzz(ms){ if(!G.settings.sound || G.settings.turbo) return; try{ if(typeof navigator!=='undefined' && typeof navigator.vibrate==='function') navigator.vibrate(ms); }catch(e){} }
 
 /* ---- the motion: a little physics, stepped 120 times a second whatever the screen's speed ----
@@ -2721,7 +3118,7 @@ function refitSet(){
 /* ---- the stickman: after a 7 he reaches around the dice with his hooked stick, draws them to him, then pushes them back to the middle ---- */
 var sweep=null;
 function sweepGeom(){
-  var st=$('dice-stage'), phone=isPhone(), s=phone?48:60;
+  var st=$('dice-stage'), phone=isPhone(), s=phone?48:(fitCompact()?48:60);
   var hw=((st && st.clientWidth) || (phone?336:860))/2;
   var R=Math.round(s*0.68), gap=4;                       // R: how far a die reaches sideways on screen
   var w=Math.abs(diceX(1)), sp=2*w;                      // where the dice rest, and how far apart
@@ -3030,6 +3427,7 @@ function recordRoll(res){
   if(res.sevenOut){ S.sevenOuts++; S.longest=Math.max(S.longest,S.shooterRolls); S.shooterRolls=0; }
   if(res.pointMade) S.pointsMade++;
   S.net+=res.net; S.best=Math.max(S.best,res.net);
+  try{ if(window.TRCost) TRCost.roll(G, res); }catch(err){}
   var cls='';
   if(res.sevenOut || (res.comeOut && res.sum===7)) cls='seven';
   else if(res.comeOut && res.sum===11) cls='nat';
@@ -3121,6 +3519,24 @@ function eventTarget(e){
   if((e.type==='come'||e.type==='dontcome') && e.number!==null && e.resolved) return document.querySelector('.num[data-number="'+e.number+'"]');
   return document.querySelector('.spot[data-key="'+e.type+'"]');
 }
+/* ---- the stickman calls the roll (in words over the dice; only with the sound on, and never in turbo) ---- */
+var STICK_CALL={2:'Aces! Snake eyes!',3:'Ace-deuce! Three craps!',4:'Four!',5:'Five! No field five!',6:'Six!',7:'Seven!',8:'Eight!',9:'Nine! Nina!',10:'Ten!',11:'Yo-eleven!',12:'Midnight! Boxcars!'};
+var stickTimer=null;
+function stickLine(res){
+  var s=res.sum, t;
+  if(res.sevenOut) return 'Seven out! Line away.';
+  if(s===7) return res.natural ? 'Seven! Front line winner!' : 'Seven!';
+  t=(res.hard && E.HARD_NUMBERS.indexOf(s)>=0) ? 'Hard '+SUM_NAME[s].toLowerCase()+'!' : STICK_CALL[s];
+  if(res.pointMade) t+=' Winner, pay the line.';
+  else if(res.pointEstablished) t+=' The point is '+s+'.';
+  return t;
+}
+function stickCall(res){
+  var el=$('stick-call'); if(!el || !G.settings.sound || G.settings.turbo) return;
+  el.textContent=stickLine(res);
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  clearTimeout(stickTimer); stickTimer=setTimeout(function(){ el.classList.remove('on'); }, 2400);
+}
 function afterSettle(res){
   var sm=summarize(res), big=$('callout-big'), sub=$('callout-sub'), co=$('callout');
   var name=rollName(res), headline=name, cls='';
@@ -3133,6 +3549,7 @@ function afterSettle(res){
   big.textContent=headline; big.className='big '+cls;
   sub.innerHTML = sm.html ? sm.html+(sm.net!==0?' &middot; net '+signedMoney(sm.net):'') : 'No bets decided.';
   void co.offsetWidth; co.classList.add('in');
+  stickCall(res);
   say(rollName(res)+', total '+res.sum+'. '+(sm.net? 'Net '+signedMoney(sm.net)+'.':'')+(res.pointEstablished?' Point is '+res.sum+'.':'')+(res.sevenOut?' Seven out.':''));
   // sounds: the roll's own cue first, then the chime for what it did to your bets
   var cueMs=Math.round(playRollCue(res.sum, res.comeOut)*1000);
@@ -3543,8 +3960,8 @@ function wirePhone(){
   if(nav) nav.addEventListener('click', function(ev){ var b=ev.target.closest ? ev.target.closest('button') : null; if(b) jumpTo(b.getAttribute('data-target')); });
   var raf=0;
   window.addEventListener('scroll', function(){ if(raf || typeof requestAnimationFrame!=='function') return; raf=requestAnimationFrame(function(){ raf=0; spyJump(); }); }, {passive:true});
-  var wasPhone=isPhone();
-  window.addEventListener('resize', function(){ if(wasPhone!==isPhone()){ wasPhone=isPhone(); renderNumbers(); } syncPins(); renderJump(); });
+  var wasPhone=isPhone()+'/'+fitCompact();
+  window.addEventListener('resize', function(){ var nowPhone=isPhone()+'/'+fitCompact(); if(wasPhone!==nowPhone){ wasPhone=nowPhone; renderNumbers(); } syncPins(); renderJump(); });
   if(typeof ResizeObserver==='function'){
     var ro=new ResizeObserver(function(){ syncPins(); });
     if($('top-block')) ro.observe($('top-block'));
@@ -3574,6 +3991,614 @@ function wirePhone(){
   // the puck needs layout; place it once the page has been laid out
   if(typeof requestAnimationFrame==='function') requestAnimationFrame(renderPuck);
   wire(); wirePhone();
+})();
+
+</script>
+<script id="tr-fit-fold">
+/* tr-fit-fold: on a wide, tall screen the two long reference panels start folded, so the side column fits one screen; on a phone they stay open as before */
+(function(){
+  if(!window.matchMedia) return;
+  var mq = matchMedia('(min-width:1320px) and (min-height:600px)');
+  if(!mq.matches) return;
+  ['fold-edge','fold-how'].forEach(function(id){ var d = document.getElementById(id); if(d) d.removeAttribute('open'); });
+})();
+</script>
+<script id="tr-sound-glue">
+(function(){
+  'use strict';
+  var T = window.TRSound; if(!T) return;
+  function $(id){ return document.getElementById(id); }
+  var play0 = T.play;
+  T.play = function(n, o){ try{ if(window.G && G.settings && !G.settings.sound) return false; }catch(e){} return play0.call(T, n, o); };
+  T.adopt($('set-sound'), function(on){ try{ if(window.G && G.settings) G.settings.sound = on; }catch(e){} });
+  T.mountButton($('snd-btn'));
+})();
+</script>
+<script id="tr-cost">
+/* TRLog: the session log.
+   Every game calls TRLog.hand(game, record) when a round resolves; nothing is ever shown in the game itself.
+   The Report page (/report/) reads the same key. Everything stays in this browser (localStorage).
+   A record is   {w: money the house edge applies to, n: net result, e: what the house edge alone would be expected to cost on w,
+                  m: what mistakes cost on top (EV lost versus perfect play), d: [[kind, chose, best, loss, context], ...], b: bankroll after}.
+   e and m are costs, so positive numbers. Luck is whatever is left:  luck = n + e + m. */
+(function(root){
+'use strict';
+var KEY = 'house_edge_log_v1', MAX_HANDS = 12000, IDLE_MS = 45 * 60 * 1000, MAX_PER_SESSION = 4000;
+var mem = null;
+function r2(x){ return Math.round(x * 100) / 100; }
+function load(){
+  if(mem) return mem;
+  try{ var raw = root.localStorage.getItem(KEY); mem = raw ? JSON.parse(raw) : null; }catch(e){ mem = null; }
+  if(!mem || mem.v !== 1 || !Array.isArray(mem.s)) mem = {v:1, s:[]};
+  return mem;
+}
+function count(L){ var n = 0; L.s.forEach(function(s){ n += s.h.length; }); return n; }
+function save(){
+  var L = load();
+  while(L.s.length > 1 && count(L) > MAX_HANDS) L.s.shift();
+  try{ root.localStorage.setItem(KEY, JSON.stringify(L)); return true; }
+  catch(e){
+    while(L.s.length > 1){ L.s.shift(); try{ root.localStorage.setItem(KEY, JSON.stringify(L)); return true; }catch(e2){} }
+    return false;
+  }
+}
+function newId(){ return Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36); }
+
+var TRLog = {
+  KEY: KEY,
+  /* rec: {w, n, e, m, d, b}   (d and b optional) */
+  hand: function(game, rec){
+    try{
+      if(!game || !rec || !isFinite(rec.n)) return false;
+      var L = load(), now = Date.now(), s = null;
+      for(var i = L.s.length - 1; i >= 0; i--){ if(L.s[i].g === game){ s = L.s[i]; break; } }
+      if(!s || (now - s.t1) > IDLE_MS || s.h.length >= MAX_PER_SESSION){
+        var b = (typeof rec.b === 'number') ? r2(rec.b - rec.n) : null;
+        s = {id:newId(), g:game, t0:now, t1:now, b0:b, h:[]};
+        L.s.push(s);
+      }
+      var row = [ Math.round((now - s.t0) / 1000), r2(rec.w || 0), r2(rec.n), r2(rec.e || 0), r2(rec.m || 0) ];
+      var d = (rec.d || []).map(function(x){ return [x[0], x[1], x[2], r2(x[3] || 0), String(x[4] || '').slice(0, 40)]; });
+      row.push(d.length ? d : 0);
+      row.push(typeof rec.b === 'number' ? r2(rec.b) : 0);
+      row.push(rec.k > 0 ? Math.round(rec.k) : 0);
+      s.h.push(row); s.t1 = now;
+      return save();
+    }catch(e){ return false; }
+  },
+  all: function(){ return load(); },
+  clear: function(){ mem = {v:1, s:[]}; try{ root.localStorage.removeItem(KEY); }catch(e){} },
+  count: function(){ return count(load()); },
+  /* the same data as plain objects, for the Report page */
+  rows: function(s){
+    return s.h.map(function(r, i){
+      return {i:i, t:s.t0 + r[0] * 1000, w:r[1], n:r[2], e:r[3], m:r[4], d:r[5] || [], b:r[6], k:r[7] || 0};
+    });
+  }
+};
+root.TRLog = TRLog;
+if(typeof module !== 'undefined' && module.exports) module.exports = TRLog;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---- TRCost (craps): every resolved wager is priced at its ledger edge; what a bet costs above the Pass Line is logged as the cost of choosing it ---- */
+window.TRCost = (function(){
+  var BASE = 7/495;   /* the Pass Line: the cheapest flat bet that needs no other bet */
+  return {
+    roll: function(G, res){
+      var w = 0, e = 0, m = 0, d = [], k = 0;
+      (res.events || []).forEach(function(ev){
+        if(!ev.resolved) return;
+        var k = E.ledgerKey(ev.type, ev.number), L = E.LEDGER_BY_KEY[k];
+        if(!L) return;
+        var a = ev.amount || 0;
+        if(a > 0){
+          w += a; k++;
+          e += Math.min(L.edge, BASE) * a;
+          var loss = Math.max(0, L.edge - BASE) * a;
+          if(loss > 0){
+            m += loss;
+            if(loss >= 0.02) d.push(['bet', k, 'pass', loss, (typeof betWord === 'function' ? betWord(ev) : L.label) + ' $' + a]);
+          }
+        }
+        if(ev.odds > 0 && (ev.oddsMode === 'win' || ev.oddsMode === 'lose')) w += ev.odds;   /* odds carry no edge, but they are money at risk */
+      });
+      if(w <= 0 && !res.net) return;
+      TRLog.hand('craps', {w: w, n: res.net || 0, e: e, m: m, d: d, b: G.bankroll, k: k});
+    }
+  };
+})();
+
+</script>
+<script id="tr-practice">
+/* ---- TRPractice: ten questions on the situations that cost real money, no bets, no cards to wait for. Misses come back once. ---- */
+window.TRPractice = (function(){
+  var KEY = 'house_edge_practice_v1', N = 10, st = null, root = null, prevFocus = null;
+  var SUIT = {s:'♠', h:'♥', d:'♦', c:'♣'};
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function card(rank, suit){
+    if(rank === 'JOKER' || rank === 'JK') return '<span class="pc-card pc-joker">JKR</span>';
+    return '<span class="pc-card' + (suit === 'h' || suit === 'd' ? ' red' : '') + '"><b>' + esc(rank) + '</b><i>' + (SUIT[suit] || '') + '</i></span>';
+  }
+  function css(){
+    if(document.getElementById('tr-prac-css')) return;
+    var s = document.createElement('style'); s.id = 'tr-prac-css';
+    s.textContent =
+      '#btn-practice{display:inline-flex;align-items:center;gap:6px;font:600 11.5px/1 var(--font-ui,Inter,system-ui,sans-serif);letter-spacing:.02em;color:var(--brass-bright,#F0C46B);background:transparent;border:1px solid color-mix(in srgb,var(--brass,#D6A94B) 55%,transparent);border-radius:999px;padding:6px 12px;cursor:pointer;min-height:0;box-shadow:none}' +
+      '#btn-practice:hover{background:color-mix(in srgb,var(--brass,#D6A94B) 14%,transparent);border-color:var(--brass,#D6A94B)}' +
+      '#btn-practice::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--brass,#D6A94B)}' +
+      '#tr-prac{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(4,5,7,.74);backdrop-filter:blur(3px);font-family:Inter,system-ui,sans-serif;color:var(--text,#EDEEF0)}' +
+      '#tr-prac.on{display:flex}' +
+      '#tr-prac .pp{width:min(620px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel,#15171B);border:1px solid var(--line,rgba(237,238,240,.12));border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:22px 24px 20px}' +
+      '#tr-prac .pp-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}' +
+      '#tr-prac .pp-top h2{margin:0;font:700 17px var(--font-display,"Space Grotesk",Inter,sans-serif);letter-spacing:-.01em;flex:1}' +
+      '#tr-prac .pp-x{background:none;border:0;color:var(--text-muted,#8A8F98);font-size:24px;line-height:1;cursor:pointer;padding:2px 6px}' +
+      '#tr-prac .pp-x:hover{color:var(--text,#EDEEF0)}' +
+      '#tr-prac .pp-bar{display:flex;gap:4px;margin-bottom:16px}' +
+      '#tr-prac .pp-bar i{flex:1;height:5px;border-radius:3px;background:var(--panel-2,#1D2025)}' +
+      '#tr-prac .pp-bar i.ok{background:var(--sage-bright,#65C7A3)}#tr-prac .pp-bar i.no{background:var(--coral,#E15D45)}#tr-prac .pp-bar i.now{background:var(--brass,#D6A94B)}' +
+      '#tr-prac .pp-meta{display:flex;justify-content:space-between;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#8A8F98);margin-bottom:10px}' +
+      '#tr-prac .pp-q{font:600 17px/1.35 Inter,sans-serif;margin:0 0 14px}' +
+      '#tr-prac .pp-scene{background:var(--panel-2,#1D2025);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:grid;gap:10px}' +
+      '#tr-prac .pp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}' +
+      '#tr-prac .pp-lab{font:600 10.5px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#8A8F98);min-width:78px}' +
+      '#tr-prac .pc-card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:52px;border-radius:7px;background:var(--card-face,#F4F5F7);color:#15171B;font:700 15px/1 Inter,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.4)}' +
+      '#tr-prac .pc-card i{font-style:normal;font-size:15px;margin-top:2px}#tr-prac .pc-card.red{color:#C23A2E}' +
+      '#tr-prac .pc-card.pc-joker{font-size:10px;letter-spacing:.04em;color:#7C5CC4}' +
+      '#tr-prac .pc-chip{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.07);font:600 13px Inter,sans-serif}' +
+      '#tr-prac .pc-big{font:700 22px var(--font-display,"Space Grotesk",Inter,sans-serif);font-variant-numeric:tabular-nums}' +
+      '#tr-prac .pp-opts{display:grid;gap:8px}' +
+      '#tr-prac .pp-opts.two{grid-template-columns:1fr 1fr}' +
+      '#tr-prac .pp-opt{display:flex;align-items:center;gap:10px;text-align:left;font:600 15px Inter,sans-serif;color:var(--text,#EDEEF0);background:var(--panel-2,#1D2025);border:1.5px solid var(--line,rgba(237,238,240,.12));border-radius:12px;padding:12px 14px;cursor:pointer;min-height:48px}' +
+      '#tr-prac .pp-opt:hover:not([disabled]){border-color:var(--brass,#D6A94B)}' +
+      '#tr-prac .pp-opt kbd{font:600 11px Inter,sans-serif;color:var(--text-muted,#8A8F98);border:1px solid var(--line,rgba(237,238,240,.2));border-radius:5px;padding:2px 6px}' +
+      '#tr-prac .pp-opt small{display:block;font:500 12px Inter,sans-serif;color:var(--text-muted,#8A8F98);margin-top:2px}' +
+      '#tr-prac .pp-opt.right{border-color:var(--sage-bright,#65C7A3);background:color-mix(in srgb,var(--sage-bright,#65C7A3) 14%,var(--panel-2,#1D2025))}' +
+      '#tr-prac .pp-opt.wrong{border-color:var(--coral,#E15D45);background:color-mix(in srgb,var(--coral,#E15D45) 14%,var(--panel-2,#1D2025))}' +
+      '#tr-prac .pp-opt[disabled]{cursor:default;color:var(--text,#EDEEF0);opacity:1}#tr-prac .pp-opt[disabled]:not(.right):not(.wrong){opacity:.5}#tr-prac .pp-opt:disabled small{color:var(--text-muted,#8A8F98)}' +
+      '#tr-prac .pp-fb{margin-top:14px;padding:13px 15px;border-radius:12px;font-size:14px;line-height:1.5;background:var(--panel-2,#1D2025)}' +
+      '#tr-prac .pp-fb b.v{display:block;font:700 15px Inter,sans-serif;margin-bottom:4px}' +
+      '#tr-prac .pp-fb.ok b.v{color:var(--sage-bright,#65C7A3)}#tr-prac .pp-fb.no b.v{color:var(--coral,#E15D45)}' +
+      '#tr-prac .pp-act{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}' +
+      '#tr-prac .pp-btn{font:700 14px Inter,sans-serif;border-radius:999px;padding:11px 20px;cursor:pointer;border:1px solid var(--line,rgba(237,238,240,.2));background:transparent;color:var(--text,#EDEEF0)}' +
+      '#tr-prac .pp-btn.pri{background:var(--brass,#D6A94B);border-color:var(--brass-bright,#F0C46B);color:#1B1608}' +
+      '#tr-prac .pp-score{text-align:center;padding:6px 0 4px}' +
+      '#tr-prac .pp-score .pc-big{font-size:56px;line-height:1}' +
+      '#tr-prac .pp-score p{margin:8px 0 0;color:var(--text-muted,#8A8F98)}' +
+      '#tr-prac .pp-miss{margin-top:14px;display:grid;gap:8px}' +
+      '#tr-prac .pp-miss div{background:var(--panel-2,#1D2025);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45}' +
+      '#tr-prac .pp-miss b{color:var(--sage-bright,#65C7A3)}' +
+      '@media (max-width:520px){#tr-prac .pp{padding:18px 16px 16px;border-radius:16px}#tr-prac .pp-opts.two{grid-template-columns:1fr}#tr-prac .pc-card{width:34px;height:47px}}';
+    document.head.appendChild(s);
+  }
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
+  function save(game, score){ try{ var d = load(), r = d[game] || {runs: 0, best: 0}; r.runs++; r.last = score; r.best = Math.max(r.best, score); d[game] = r; localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
+  function el(){
+    if(root) return root;
+    root = document.createElement('div'); root.id = 'tr-prac'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Practice');
+    root.addEventListener('click', function(e){ if(e.target === root) close(); });
+    document.body.appendChild(root);
+    document.addEventListener('keydown', onKey, true);
+    return root;
+  }
+  function close(){ if(!root) return; root.classList.remove('on'); root.innerHTML = ''; st = null; try{ if(prevFocus && prevFocus.focus) prevFocus.focus(); }catch(e){} if(location.hash === '#practice'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} } }
+  function onKey(e){
+    if(!st || !root || !root.classList.contains('on')) return;
+    if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
+    if(st.phase === 'ask' && /^[1-9]$/.test(e.key)){ var b = root.querySelectorAll('.pp-opt')[+e.key - 1]; if(b){ e.preventDefault(); b.click(); } }
+    else if(st.phase === 'fb' && (e.key === 'Enter' || e.key === ' ')){ var nx = root.querySelector('#pp-next'); if(nx){ e.preventDefault(); e.stopPropagation(); nx.click(); } }
+  }
+  function bar(){
+    var h = '';
+    for(var i = 0; i < N; i++){ var r = st.res[i]; h += '<i class="' + (r === 1 ? 'ok' : r === 0 ? 'no' : (i === st.firstIdx ? 'now' : '')) + '"></i>'; }
+    return '<div class="pp-bar" aria-hidden="true">' + h + '</div>';
+  }
+  function top(){ return '<div class="pp-top"><h2>' + esc(st.cfg.title) + '</h2><button type="button" class="pp-x" aria-label="Close practice">&times;</button></div>'; }
+  function paint(){
+    var q = st.cur, h = top() + bar();
+    h += '<div class="pp-meta"><span>' + (q.retry ? 'Second look' : 'Question ' + (st.asked + 1) + ' of ' + st.total) + '</span><span>Score ' + st.score + '</span></div>';
+    h += '<p class="pp-q">' + q.prompt + '</p>';
+    if(q.scene) h += '<div class="pp-scene">' + q.scene + '</div>';
+    h += '<div class="pp-opts' + (q.options.length === 2 ? ' two' : '') + '">' + q.options.map(function(o, i){ return '<button type="button" class="pp-opt" data-k="' + esc(o.k) + '"><kbd>' + (i + 1) + '</kbd><span>' + o.label + (o.sub ? '<small>' + o.sub + '</small>' : '') + '</span></button>'; }).join('') + '</div>';
+    h += '<div id="pp-fb"></div>';
+    root.innerHTML = '<div class="pp">' + h + '</div>';
+    root.querySelector('.pp-x').onclick = close;
+    Array.prototype.forEach.call(root.querySelectorAll('.pp-opt'), function(b){ b.onclick = function(){ answer(b.getAttribute('data-k')); }; });
+    st.phase = 'ask';
+  }
+  function answer(k){
+    if(st.phase !== 'ask') return; st.phase = 'fb';
+    var q = st.cur, ok = k === q.answer;
+    Array.prototype.forEach.call(root.querySelectorAll('.pp-opt'), function(b){
+      b.disabled = true; var bk = b.getAttribute('data-k');
+      if(bk === q.answer) b.classList.add('right'); else if(bk === k) b.classList.add('wrong');
+    });
+    if(!q.retry){
+      st.res[st.asked] = ok ? 1 : 0; if(ok) st.score++; else st.misses.push(q);
+      if(!ok) st.queue.push(Object.assign({}, q, {retry: true}));
+    }
+    var last = !st.queue.length;
+    var fb = '<div class="pp-fb ' + (ok ? 'ok' : 'no') + '"><b class="v">' + (ok ? 'Correct' : 'Not quite') + '</b>' + (typeof q.explain === 'function' ? q.explain(k, ok) : q.explain) + '</div>' +
+      '<div class="pp-act"><button type="button" class="pp-btn pri" id="pp-next">' + (last ? 'See my score' : 'Next') + '</button></div>';
+    root.querySelector('#pp-fb').innerHTML = fb;
+    var nx = root.querySelector('#pp-next'); nx.onclick = next; try{ nx.focus({preventScroll:true}); nx.scrollIntoView({block:'nearest'}); }catch(e){}
+    if(!q.retry) st.asked++;
+  }
+  function next(){
+    if(!st.queue.length) return summary();
+    st.cur = st.queue.shift(); st.firstIdx = st.asked; paint();
+  }
+  function summary(){
+    st.phase = 'done'; save(st.cfg.game, st.score);
+    var d = load()[st.cfg.game] || {}, msg = st.score === N ? 'A clean sweep. That is how the table plays it.' : st.score >= 8 ? 'Strong. A couple of spots to tighten.' : st.score >= 5 ? 'Getting there. The misses below are the money.' : 'Worth another pass. Read the reasons below, then go again.';
+    var h = top() + '<div class="pp-score"><div class="pc-big">' + st.score + ' / ' + N + '</div><p>' + msg + (d.best ? ' Best so far: ' + d.best + '/' + N + '.' : '') + '</p></div>';
+    if(st.misses.length){ h += '<div class="pp-miss">' + st.misses.map(function(q){ return '<div>' + (q.tag ? '<b style="color:var(--text)">' + q.tag + '</b> — ' : '') + 'right answer: <b>' + q.answerLabel + '</b></div>'; }).join('') + '</div>'; }
+    h += '<div class="pp-act">' + (st.misses.length ? '<button type="button" class="pp-btn" id="pp-again-miss">Drill only my misses</button>' : '') + '<button type="button" class="pp-btn pri" id="pp-again">Practice again</button><button type="button" class="pp-btn" id="pp-done">Back to the table</button></div>';
+    root.innerHTML = '<div class="pp">' + h + '</div>';
+    root.querySelector('.pp-x').onclick = close; root.querySelector('#pp-done').onclick = close;
+    root.querySelector('#pp-again').onclick = function(){ start(st.cfg); };
+    var m = root.querySelector('#pp-again-miss'); if(m) m.onclick = function(){ start(st.cfg, st.misses); };
+  }
+  function start(cfg, only){
+    css(); el();
+    st = {cfg: cfg, queue: [], res: [], score: 0, asked: 0, misses: [], phase: 'ask', firstIdx: 0};
+    var seen = {};
+    if(only && only.length){ only.forEach(function(q){ st.queue.push(Object.assign({}, q, {retry: false})); }); }
+    else { var guard = 0; while(st.queue.length < N && guard++ < 200){ var q = cfg.make(); if(q && !seen[q.tag + '|' + q.answer + '|' + q.prompt]){ seen[q.tag + '|' + q.answer + '|' + q.prompt] = 1; st.queue.push(q); } } }
+    var only10 = st.queue.slice(0, N); st.queue = only10; st.total = only10.length;
+    for(var i = 0; i < N; i++) st.res[i] = i < st.total ? undefined : -1;
+    root.classList.add('on');
+    st.cur = st.queue.shift(); paint();
+  }
+  function open(cfg){ prevFocus = document.activeElement; start(cfg); }
+  function wire(cfg){
+    css();
+    var b = document.getElementById('btn-practice');
+    if(b) b.addEventListener('click', function(e){ e.preventDefault(); open(cfg); });
+    if(location.hash === '#practice') setTimeout(function(){ open(cfg); }, 700);
+    window.addEventListener('hashchange', function(){ if(location.hash === '#practice') open(cfg); });
+  }
+  return {open: open, wire: wire, card: card, esc: esc};
+})();
+
+/* ---- practice: craps (what each bet costs, what it pays, and what a roll does) ---- */
+(function(){
+  var P = window.TRPractice;
+  function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
+  function shuffle(a){ return a.slice().sort(function(){ return Math.random() - .5; }); }
+  function pctTxt(e){ return (e * 100).toFixed(2) + '%'; }
+  function qEdge(){
+    var L = E.LEDGER.filter(function(r){ return r.key !== 'dontpass'; }), set = [], g = 0;
+    while(set.length < 3 && g++ < 60){ var r = pick(L); if(!set.some(function(x){ return Math.abs(x.edge - r.edge) < 1e-9 || x.key === r.key; })) set.push(r); }
+    var best = set.reduce(function(m, r){ return r.edge < m.edge ? r : m; }, set[0]);
+    return {tag: 'cheapest bet', answer: best.key, answerLabel: best.label, prompt: 'Which of these bets has the lowest house edge?', scene: '', options: shuffle(set).map(function(r){ return {k: r.key, label: r.label}; }),
+      explain: set.map(function(r){ return '<b>' + r.label + '</b> ' + (r.edge === 0 ? 'no edge at all' : pctTxt(r.edge)); }).join(' · ') + '. ' + best.blurb};
+  }
+  function money(n){ return '$' + n; }
+  function qPay(){
+    var kinds = [
+      function(){ var n = pick([6, 8]), s = pick([6, 12, 18, 24, 30]); return {txt: 'You have ' + money(s) + ' on Place ' + n + '. It rolls. What do you win?', ratio: [7, 6], stake: s, tag: 'place ' + n + ' payout'}; },
+      function(){ var n = pick([5, 9]), s = pick([5, 10, 15, 20]); return {txt: 'You have ' + money(s) + ' on Place ' + n + '. It rolls. What do you win?', ratio: [7, 5], stake: s, tag: 'place ' + n + ' payout'}; },
+      function(){ var n = pick([4, 10]), s = pick([5, 10, 15, 20]); return {txt: 'You have ' + money(s) + ' on Place ' + n + '. It rolls. What do you win?', ratio: [9, 5], stake: s, tag: 'place ' + n + ' payout'}; },
+      function(){ var pt = pick([4, 10, 5, 9, 6, 8]), s = ({4: [10, 20, 30], 10: [10, 20, 30], 5: [10, 20], 9: [10, 20], 6: [10, 20, 30], 8: [10, 20, 30]})[pt], st = pick(s), r = (pt === 4 || pt === 10) ? [2, 1] : (pt === 5 || pt === 9) ? [3, 2] : [6, 5]; return {txt: 'The point is ' + pt + '. You have ' + money(st) + ' of free odds behind your Pass Line bet and the point is made. How much do the odds pay?', ratio: r, stake: st, tag: 'odds on ' + pt}; },
+      function(){ var n = pick([6, 8, 4, 10]), s = pick([5, 10]); var r = (n === 6 || n === 8) ? [9, 1] : [7, 1]; return {txt: 'You have ' + money(s) + ' on the Hard ' + n + ' and it rolls the hard way. What do you win?', ratio: r, stake: s, tag: 'hard ' + n + ' payout'}; }
+    ];
+    var q = pick(kinds)(), win = q.stake * q.ratio[0] / q.ratio[1], pool = [[1, 1], [6, 5], [7, 6], [3, 2], [7, 5], [9, 5], [2, 1], [9, 1], [7, 1]], opts = {};
+    opts[win] = 1; var g = 0;
+    while(Object.keys(opts).length < 4 && g++ < 60){ var rr = pick(pool), v = q.stake * rr[0] / rr[1]; if(Math.abs(v - Math.round(v)) < 1e-9) opts[v] = 1; }
+    var vals = shuffle(Object.keys(opts).map(Number));
+    return {tag: q.tag, answer: String(win), answerLabel: money(win), prompt: q.txt, scene: '', options: vals.map(function(v){ return {k: String(v), label: money(v)}; }),
+      explain: 'It pays ' + q.ratio[0] + ':' + q.ratio[1] + ', so ' + money(q.stake) + ' wins ' + money(win) + '.' + (q.tag.indexOf('place') === 0 ? ' Bet in the right multiples ($6 for the 6 and 8, $5 for the rest) so the payout is not rounded down.' : '')};
+  }
+  function qRoll(){
+    var r = Math.random(), sum, bet, phase, pt;
+    if(r < .5){
+      phase = 'come'; bet = Math.random() < .7 ? 'pass' : 'dont'; sum = pick([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 7, 11, 2, 3, 12]);
+      var ans;
+      if(bet === 'pass') ans = (sum === 7 || sum === 11) ? 'win' : (sum === 2 || sum === 3 || sum === 12) ? 'lose' : 'point';
+      else ans = (sum === 2 || sum === 3) ? 'win' : (sum === 7 || sum === 11) ? 'lose' : sum === 12 ? 'push' : 'point';
+      var opts = bet === 'pass' ? [['win', 'Pass Line wins'], ['lose', 'Pass Line loses'], ['point', 'A point is set, roll again']] : [['win', 'Don’t Pass wins'], ['lose', 'Don’t Pass loses'], ['push', 'Push (the 12 is barred)'], ['point', 'A point is set, roll again']];
+      var why = sum === 7 || sum === 11 ? 'A 7 or 11 on the come-out is a natural: Pass wins, Don’t Pass loses.' : (sum === 2 || sum === 3 || sum === 12) ? (bet === 'pass' ? 'A 2, 3 or 12 on the come-out is craps: Pass loses.' : (sum === 12 ? 'The 12 is barred: Don’t Pass pushes, it neither wins nor loses.' : 'A 2 or 3 is craps: Don’t Pass wins.')) : 'Any other number becomes the point; nothing resolves yet.';
+      return {tag: 'come-out ' + sum, answer: ans, answerLabel: opts.filter(function(o){ return o[0] === ans; })[0][1], prompt: 'Come-out roll: <b>' + sum + '</b>. You have a ' + (bet === 'pass' ? 'Pass Line' : 'Don’t Pass') + ' bet. What happens?', scene: '', options: opts.map(function(o){ return {k: o[0], label: o[1]}; }), explain: why};
+    }
+    pt = pick([4, 5, 6, 8, 9, 10]); sum = Math.random() < .4 ? 7 : Math.random() < .5 ? pt : pick([2, 3, 4, 5, 6, 8, 9, 10, 11, 12].filter(function(x){ return x !== pt; }));
+    var a2 = sum === 7 ? 'lose' : sum === pt ? 'win' : 'again';
+    return {tag: 'point ' + pt + ', roll ' + sum, answer: a2, answerLabel: a2 === 'win' ? 'Pass Line wins' : a2 === 'lose' ? 'Pass Line loses (seven out)' : 'Nothing resolves', prompt: 'The point is <b>' + pt + '</b>. The shooter rolls <b>' + sum + '</b>. What happens to your Pass Line bet?', scene: '',
+      options: [['win', 'Pass Line wins'], ['lose', 'Pass Line loses (seven out)'], ['again', 'Nothing resolves, roll again']].map(function(o){ return {k: o[0], label: o[1]}; }),
+      explain: sum === 7 ? 'A 7 before the point is a seven out: the Pass Line loses and the dice move on.' : sum === pt ? 'The point is made: Pass Line wins, and a new come-out follows.' : 'Only the point and the 7 settle a Pass Line bet once the point is on.'};
+  }
+  function make(){ var r = Math.random(); return r < .33 ? qEdge() : r < .62 ? qPay() : qRoll(); }
+  P.wire({game: 'craps', title: 'Craps practice', make: make});
+})();
+
+</script>
+<script id="tr-manners">
+/* Table Ready: the real-table rehearsal.
+   One shared "Table manners" panel for all five games. It turns each game's existing Table manners pop-up into a short walk-through:
+   one move at a time, a big drawing, a plain sentence, and (where the game lets you try it) a line saying how.
+   It reuses the game's own #manners-overlay and #btn-manners-close, so the way the pop-up opens and closes is still the game's own.
+   Craps never had one: this builds it there. It never touches a rule, a bet or a result. */
+(function(){
+  'use strict';
+  var W = window, D = document;
+  if(W.TRManners) return;
+  function $(id){ return D.getElementById(id); }
+
+  /* ---------- which game ---------- */
+  var path = (W.location && W.location.pathname) || '';
+  var KEY = $('spot-tie') ? 'baccarat' : $('spot-fortune') ? 'paigow' : ($('spot-blind') && $('spot-trips')) ? 'uth'
+          : ($('btn-roll') && $('felt')) ? 'craps' : $('set-tablesignals') ? 'blackjack'
+          : /ultimate-texas-holdem/.test(path) ? 'uth' : /pai-gow/.test(path) ? 'paigow' : /baccarat/.test(path) ? 'baccarat' : /craps/.test(path) ? 'craps' : /blackjack/.test(path) ? 'blackjack' : '';
+  if(!KEY) return;
+
+  /* ---------- the words: five games, four moves each, the same shape everywhere ---------- */
+  var GAMES = {
+    blackjack: { name: 'Blackjack', at: 'blackjack', sub: 'The strategy matters, and so does not looking like a first-timer. Four habits worth knowing.',
+      items: [
+        { ic: 'hand',  t: 'Signal, don’t just say it', d: 'Tap the felt for hit, wave a flat hand over your cards for stand. The dealer and the cameras rely on the gesture.', tr: 'Try it here: with Table show on, tap your hand to hit and swipe across it to stand.' },
+        { ic: 'lock',  t: 'Hands off once they’re dealt', d: 'When your cards are face up, leave them alone. The dealer moves everything. You only touch chips.' },
+        { ic: 'chips', t: 'Chips go in the circle', d: 'Never hand chips straight to the dealer. Set them in the betting circle and the dealer takes it from there.' },
+        { ic: 'cup',   t: 'Keep the felt clear', d: 'Drinks and phones stay off the felt. Most dealers will ask you to move them.' } ] },
+    baccarat: { name: 'Baccarat', at: 'baccarat', sub: 'Mostly watching and waiting. Four habits worth knowing.',
+      items: [
+        { ic: 'cards', t: 'Let the dealer flip', d: 'At mini-baccarat the dealer turns every card, so don’t touch them. At bigger tables the largest bettor may be offered the squeeze. Check it’s allowed first.', tr: 'Try it here: with Table show on, the hand for your side is passed to you. Tap the cards to peel them.' },
+        { ic: 'stop',  t: '“No more bets” means hands off', d: 'Once the dealer calls it, leave your chips alone until the hand resolves.' },
+        { ic: 'chips', t: 'Chips go in the marked area', d: 'Never hand them straight to the dealer.' },
+        { ic: 'coin',  t: 'Know how commission works', d: 'At many tables the dealer keeps a running tab of the 5% Banker commission and you settle when you leave or when asked. Some tables simply take it every hand.' } ] },
+    paigow: { name: 'Pai Gow', at: 'pai gow', sub: 'Setting your hand is the whole game. Four habits worth knowing.',
+      items: [
+        { ic: 'cards', t: 'Seven cards, two hands', d: 'Keep the Low Hand (two cards) apart from the High Hand (five). In a casino the Low Hand goes in front.' },
+        { ic: 'lock',  t: 'Set it once, then hands off', d: 'After you set your hand, don’t touch it again. The dealer compares the hands and your cards are locked.' },
+        { ic: 'nocard', t: 'Leave the dealer’s cards alone', d: 'Don’t touch the dealer’s cards or the deck.' },
+        { ic: 'chips', t: 'Chips go in the marked area', d: 'Never handed to the dealer. The dealer pays and collects.' } ] },
+    uth: { name: 'Ultimate Texas Hold’em', at: 'Ultimate Texas Hold’em', sub: 'It’s you against the dealer. Four habits worth knowing.',
+      items: [
+        { ic: 'eye',   t: 'Shield your hole cards', d: 'Look only at your own, and keep them covered from other players and the overhead camera. Standard practice.' },
+        { ic: 'users', t: 'Other seats don’t matter', d: 'You only play the dealer. No bluffing, and no folding to protect anyone but yourself.' },
+        { ic: 'lock',  t: 'Check or bet is final', d: 'Once you act there’s no taking it back, so think before you act, not after.' },
+        { ic: 'chips', t: 'Ante and Blind stay equal', d: 'Chips go in the marked circles, never to the dealer. Your Play bet gets its own spot once you commit it.' } ] },
+    craps: { name: 'Craps', at: 'craps', sub: 'Loud, fast, and friendly. Four habits worth knowing.',
+      items: [
+        { ic: 'hand',  t: 'Shoot with one hand', d: 'Throw the dice with a single hand, and keep that hand over the table while the dice are in play.' },
+        { ic: 'wall',  t: 'Hit the far wall', d: 'Both dice should reach the back wall. Throwing them off the table is a no roll, and the stickman will let you know.' },
+        { ic: 'mouth', t: 'Call your bet out loud', d: 'For Place, Buy and one-roll bets, say the bet (“place the six”, “hard eight”) and the dealer places it for you.' },
+        { ic: 'dice',  t: 'Some players never say “seven”', d: 'They call it “big red” instead. It’s a superstition, not a rule, but you’ll hear it.' } ] }
+  };
+  var G = GAMES[KEY];
+
+  /* the big drawings: bold, simple, one idea each. pathLength lets every line draw itself in. */
+  var ART = {
+    hand:  '<path d="M42 74V34a9 9 0 0118 0v26m0-12V24a9 9 0 0118 0v34m0-26a9 9 0 0118 0v44m0-30a9 9 0 0118 0v34c0 28-15 44-40 44-19 0-29-9-38-23l-17-27a10 10 0 0116-11l7 8"/><path d="M104 14c8 3 14 9 17 17M112 6c12 4 21 13 25 25" opacity=".55"/>',
+    lock:  '<rect x="38" y="56" width="74" height="56" rx="10"/><path d="M54 56V42a21 21 0 0142 0v14"/><circle cx="75" cy="82" r="6"/><path d="M75 88v10"/>',
+    chips: '<circle cx="75" cy="82" r="38" stroke-dasharray="6 7" opacity=".5"/><ellipse cx="75" cy="76" rx="22" ry="8"/><path d="M53 76v10c0 4.4 9.8 8 22 8s22-3.6 22-8V76M53 86v10c0 4.4 9.8 8 22 8s22-3.6 22-8V86"/><path d="M75 28v18M67 38l8 8 8-8"/>',
+    cup:   '<path d="M48 24h54l-6 76a8 8 0 01-8 7H62a8 8 0 01-8-7l-6-76z"/><path d="M51 52h48"/><path d="M112 40l20 20M132 40l-20 20" opacity=".6"/>',
+    cards: '<rect x="36" y="26" width="52" height="74" rx="8"/><path d="M72 26l8-6a9 9 0 0113 3l26 48a9 9 0 01-4 12l-17 8"/>',
+    stop:  '<circle cx="75" cy="65" r="40"/><path d="M52 65h46"/>',
+    nocard:'<rect x="48" y="28" width="54" height="76" rx="9"/><path d="M62 46h26M62 58h14" opacity=".6"/><circle cx="75" cy="66" r="48"/><path d="M41 100L109 32"/>',
+    coin:  '<circle cx="75" cy="65" r="40"/><path d="M75 40v50M62 55h20a8 8 0 010 16H68a8 8 0 000 16h22"/>',
+    eye:   '<path d="M14 65s24-38 61-38 61 38 61 38-24 38-61 38S14 65 14 65z"/><circle cx="75" cy="65" r="16"/><path d="M25 104L125 26" opacity=".5"/>',
+    users: '<circle cx="75" cy="48" r="16"/><path d="M42 106c3-20 16-30 33-30s30 10 33 30"/><circle cx="28" cy="58" r="10" opacity=".5"/><circle cx="122" cy="58" r="10" opacity=".5"/>',
+    wall:  '<path d="M16 112V40l59-22 59 22v72"/><path d="M16 76h118M46 52v24M104 52v24M75 76v36"/><circle cx="44" cy="100" r="6" opacity=".6"/>',
+    mouth: '<path d="M24 24h102v62H66l-30 24V86H24z"/><path d="M48 46h54M48 62h34"/>',
+    dice:  '<rect x="30" y="34" width="56" height="56" rx="12"/><circle cx="48" cy="52" r="4"/><circle cx="68" cy="72" r="4"/><circle cx="58" cy="62" r="4"/><rect x="82" y="26" width="42" height="42" rx="9" transform="rotate(14 103 47)" opacity=".7"/>',
+    ok:    '<circle cx="75" cy="65" r="42"/><path d="M54 66l15 15 29-32"/>'
+  };
+  function art(ic){
+    var i = 0;
+    var s = (ART[ic] || ART.ok).replace(/<(path|circle|rect|ellipse)\b([^>]*)>/g, function(m, tag, attrs){
+      var dashed = /stroke-dasharray/.test(attrs);          // a dashed ring keeps its own dashes and fades in instead of drawing
+      return '<' + tag + (dashed ? '' : ' pathLength="1"') + ' style="--i:' + (i++) + '"' + attrs + '>';
+    });
+    return '<svg viewBox="0 0 150 130" aria-hidden="true" focusable="false">' + s + '</svg>';
+  }
+  function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  /* ---------- the look ---------- */
+  var CSS = [
+    /* the pop-up itself: a full-screen scrim (Blackjack, Baccarat, Craps) or the game's own dialog shell (Pai Gow, Ultimate Texas Hold'em) */
+    '#manners-overlay.rt-fixed{position:fixed !important;inset:0 !important;z-index:90 !important;border-radius:0 !important;background:rgba(6,7,8,.66) !important;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);padding:16px !important;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center !important;overflow-y:auto;overscroll-behavior:contain;text-align:left !important;}',
+    '#manners-back{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}',
+    '.dlg#manners-overlay.rt{background:none;border:0;padding:0;box-shadow:none;max-width:520px;width:100%;overflow-x:hidden;overflow-y:auto;border-radius:22px;max-height:calc(100dvh - 24px);}',
+    '.rt-sr{position:absolute !important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}',
+    /* the card */
+    '.rt-card{position:relative;width:min(520px,100%);margin:auto;box-sizing:border-box;background:linear-gradient(180deg,#1A1D22,var(--panel,#15171B));border:1px solid rgba(237,238,240,.12);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -30px #000;text-align:left;color:var(--text,#EDEEF0);font-family:Inter,system-ui,-apple-system,sans-serif;animation:rtIn 320ms cubic-bezier(.34,1.56,.64,1) both;}',
+    '@keyframes rtIn{from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:none;}}',
+    '.rt-card *{box-sizing:border-box;}',
+    '.rt-art{position:relative;height:clamp(112px,24dvh,168px);display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse 70% 90% at 50% 100%,rgba(255,255,255,.06),transparent 70%),linear-gradient(180deg,#0E1013,#13161A);border-bottom:1px solid rgba(237,238,240,.09);}',
+    '.rt-art .rt-pic{grid-area:1/1;display:grid;place-items:center;opacity:0;visibility:hidden;transform:translateY(8px) scale(.96);transition:opacity 200ms ease,transform 320ms cubic-bezier(.16,1,.3,1),visibility 0s linear 200ms;}',
+    '.rt-art .rt-pic.on{opacity:1;visibility:visible;transform:none;transition:opacity 260ms ease 60ms,transform 420ms cubic-bezier(.34,1.56,.64,1) 60ms,visibility 0s;}',
+    '.rt-art svg{width:min(150px,38%);min-width:104px;height:auto;aspect-ratio:150/130;stroke:var(--brass-bright,#F0C46B);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}',
+    '.rt-art svg > *{stroke-dasharray:1;stroke-dashoffset:1;}',
+    '.rt-art svg > [stroke-dasharray]{stroke-dasharray:6 7;stroke-dashoffset:0;opacity:0;}',
+    '.rt-art .rt-pic.on svg > *{animation:rtDraw 780ms cubic-bezier(.4,0,.2,1) forwards;animation-delay:calc(120ms + var(--i,0) * 90ms);}',
+    '.rt-art .rt-pic.on svg > [stroke-dasharray]{animation:rtFade 600ms ease forwards;animation-delay:calc(120ms + var(--i,0) * 90ms);}',
+    '@keyframes rtDraw{to{stroke-dashoffset:0;}}',
+    '@keyframes rtFade{to{opacity:.5;}}',
+    '.rt-kick{font:700 10.5px "Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-bright,#F0C46B);}',
+    '.rt-art .rt-kick{position:absolute;left:18px;top:16px;z-index:2;}',
+    '.rt-x{position:absolute;right:12px;top:10px;z-index:3;width:34px;height:34px;min-height:0 !important;padding:0 !important;display:grid;place-items:center;border-radius:11px;background:rgba(237,238,240,.06);border:1px solid transparent;color:var(--text-muted,#8A8F98);font-size:20px;line-height:1;cursor:pointer;transition:background 140ms,color 140ms;}',
+    '.rt-x:hover{background:rgba(237,238,240,.12);color:var(--text,#EDEEF0);}',
+    '.rt-txts{display:grid;padding:20px 26px 6px;}',
+    '.rt-txt{grid-area:1/1;opacity:0;visibility:hidden;transform:translateX(14px);transition:opacity 180ms ease,transform 260ms cubic-bezier(.16,1,.3,1),visibility 0s linear 180ms;}',
+    '.rt-card[data-dir="back"] .rt-txt{transform:translateX(-14px);}',
+    '.rt-txt.on{opacity:1;visibility:visible;transform:none;transition:opacity 260ms ease 70ms,transform 380ms cubic-bezier(.16,1,.3,1) 70ms,visibility 0s;}',
+    '.rt-card h2.rt-h{font:700 21px/1.25 "Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:-.3px;margin:0 0 6px;color:var(--text,#EDEEF0);text-wrap:balance;}',
+    '#manners-overlay .rt-card p.rt-p{margin:0;max-width:none !important;font-size:13.5px !important;line-height:1.6;color:var(--text-muted,#8A8F98);}',
+    '#manners-overlay .rt-card p.rt-try{margin:11px 0 0;font-size:12.5px !important;line-height:1.5;color:var(--sage-bright,#65C7A3);display:flex;gap:8px;align-items:flex-start;}',
+    '.rt-try::before{content:"";width:6px;height:6px;margin-top:6px;border-radius:50%;background:var(--sage-bright,#65C7A3);flex:0 0 auto;}',
+    '.rt-tip{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12.5px;color:var(--text-muted,#8A8F98);}',
+    '.rt-tip i{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.28);background:radial-gradient(circle,transparent 38%,rgba(255,255,255,.3) 39% 46%,transparent 47%),#3A3D44;flex:0 0 auto;}',
+    '.rt-nav{display:flex;align-items:center;gap:12px;padding:12px 22px 20px 26px;}',
+    '.rt-dots{display:flex;gap:6px;margin-right:auto;align-items:center;}',
+    '.rt-dot{width:7px;height:7px;min-height:0 !important;padding:0 !important;border:0;border-radius:99px;background:rgba(237,238,240,.18);cursor:pointer;transition:width 200ms ease,background 200ms ease;position:relative;}',
+    '.rt-dot::after{content:"";position:absolute;inset:-9px -3px;}',
+    '.rt-dot.on{width:20px;background:var(--brass-bright,#F0C46B);}',
+    '.rt-card .rt-back,.rt-card .rt-next{font:600 13px Inter,system-ui,sans-serif;border-radius:10px;padding:9px 16px;cursor:pointer;transition:border-color 140ms,background 140ms,transform 120ms;}',
+    '.rt-card .rt-back{background:var(--panel-2,#1D2025);color:var(--text,#EDEEF0);border:1px solid rgba(237,238,240,.09);}',
+    '.rt-card .rt-back:hover:not(:disabled){border-color:rgba(237,238,240,.22);}',
+    '.rt-card .rt-back:disabled{visibility:hidden;}',
+    '.rt-card .rt-next{background:var(--brass,#D6A94B);color:#20160A;border:0;min-width:84px;}',
+    '.rt-card .rt-next:hover{background:var(--brass-bright,#F0C46B);}',
+    '.rt-card .rt-back:active,.rt-card .rt-next:active{transform:scale(.97);}',
+    '.rt-card button:focus-visible{outline:2px solid var(--brass-bright,#F0C46B);outline-offset:2px;}',
+    '@media (max-width:520px){.rt-txts{padding:16px 20px 4px;}.rt-nav{padding:10px 16px 16px 20px;}.rt-card h2.rt-h{font-size:19px;}.rt-card{border-radius:20px;}.rt-art .rt-kick{left:16px;top:14px;}.rt-card .rt-back,.rt-card .rt-next{min-height:44px;padding:9px 18px;}}',
+    '@media (max-height:460px){.rt-art{height:84px;}.rt-art svg{min-width:0;width:auto;height:66px;}.rt-txts{padding-top:12px;}.rt-nav{padding-bottom:12px;}}',
+    '@media (prefers-reduced-motion:reduce){.rt-card,.rt-art .rt-pic,.rt-txt,.rt-dot{animation:none !important;transition:none !important;}.rt-art svg > *{stroke-dashoffset:0 !important;animation:none !important;}.rt-art svg > [stroke-dasharray]{opacity:.5 !important;}}'
+  ].join('\n');
+
+  /* ---------- state ---------- */
+  var S = { i: 0, last: 0, open: false, opener: null, force: false, own: false, dlg: false, ov: null, back: null, btn: null, built: false, els: {} };
+
+  function go(i, dir){
+    if(!S.built) return;
+    i = Math.max(0, Math.min(S.last, i));
+    var E = S.els;
+    if(dir) E.card.setAttribute('data-dir', dir < 0 ? 'back' : 'fwd');
+    for(var k = 0; k <= S.last; k++){
+      var on = k === i;
+      E.pics[k].classList.toggle('on', on); E.txts[k].classList.toggle('on', on);
+      E.pics[k].setAttribute('aria-hidden', on ? 'false' : 'true'); E.txts[k].setAttribute('aria-hidden', on ? 'false' : 'true');
+      E.dots[k].classList.toggle('on', on);
+      if(on) E.dots[k].setAttribute('aria-current', 'step'); else E.dots[k].removeAttribute('aria-current');
+    }
+    E.kick.textContent = i < S.last ? 'Move ' + (i + 1) + ' of ' + S.last : G.name;
+    E.back.disabled = i === 0;
+    S.btn.textContent = i === S.last ? 'Got it' : 'Next';
+    S.i = i;
+  }
+
+  function build(){
+    var ov = S.ov, btn = S.btn, n = G.items.length;
+    S.last = n;
+    if(btn.parentNode) btn.parentNode.removeChild(btn);      // the game's own button lives on: it is still what closes the pop-up
+    var pics = '', txts = '', dots = '';
+    G.items.forEach(function(it, i){
+      pics += '<div class="rt-pic" data-i="' + i + '">' + art(it.ic) + '</div>';
+      txts += '<div class="rt-txt" data-i="' + i + '"><h2 class="rt-h">' + esc(it.t) + '</h2><p class="rt-p">' + esc(it.d) + '</p>' + (it.tr ? '<p class="rt-try">' + esc(it.tr) + '</p>' : '') + '</div>';
+      dots += '<button type="button" class="rt-dot" tabindex="-1" data-i="' + i + '" aria-label="Move ' + (i + 1) + ' of ' + n + '"></button>';
+    });
+    pics += '<div class="rt-pic" data-i="' + n + '">' + art('ok') + '</div>';
+    txts += '<div class="rt-txt" data-i="' + n + '"><h2 class="rt-h">You’re ready to sit down</h2><p class="rt-p">That’s every habit that matters at a real ' + esc(G.at) + ' table. The rest you pick up by watching.</p><div class="rt-tip"><i aria-hidden="true"></i><span>Tipping the dealer is optional.</span></div></div>';
+    dots += '<button type="button" class="rt-dot" tabindex="-1" data-i="' + n + '" aria-label="The last card"></button>';
+    ov.innerHTML =
+      '<h2 class="rt-sr" id="manners-title">Table manners</h2><p class="rt-sr" id="manners-sub">' + esc(G.sub) + '</p>' +
+      '<div class="rt-card" data-dir="fwd">' +
+        '<div class="rt-art"><span class="rt-kick" aria-hidden="true"></span><button type="button" class="rt-x" aria-label="Close">&times;</button>' + pics + '</div>' +
+        '<div class="rt-txts" aria-live="polite">' + txts + '</div>' +
+        '<div class="rt-nav"><div class="rt-dots">' + dots + '</div><button type="button" class="rt-back">Back</button></div>' +
+      '</div>';
+    var card = ov.querySelector('.rt-card'), nav = ov.querySelector('.rt-nav');
+    btn.className = 'primary rt-next'; btn.type = 'button';
+    nav.appendChild(btn);
+    S.els = {
+      card: card, kick: ov.querySelector('.rt-kick'), back: ov.querySelector('.rt-back'), x: ov.querySelector('.rt-x'),
+      pics: [].slice.call(ov.querySelectorAll('.rt-pic')), txts: [].slice.call(ov.querySelectorAll('.rt-txt')), dots: [].slice.call(ov.querySelectorAll('.rt-dot'))
+    };
+    ov.classList.add('rt');
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'manners-title'); ov.setAttribute('aria-describedby', 'manners-sub'); ov.setAttribute('tabindex', '-1');
+    S.built = true;
+    go(0);
+  }
+
+  /* ---------- open, close ---------- */
+  function visible(){
+    if(S.dlg) return !!S.back && !S.back.hidden;
+    var d = S.ov.style.display; return !!d && d !== 'none';
+  }
+  function closeNow(){ S.force = true; try{ S.btn.click(); }finally{ S.force = false; } }
+
+  function sync(){
+    var v = visible();
+    if(v && !S.open){
+      S.open = true;
+      if(!S.dlg){
+        var take = function(){ try{ S.btn.focus({ preventScroll: true }); }catch(e){} };
+        take();
+        setTimeout(function(){ if(S.open && !S.ov.contains(D.activeElement)) take(); }, 0);   // a page that hands focus back after a click (Craps does) must not take it from here
+      }
+    }
+    else if(!v && S.open){
+      S.open = false;
+      go(0);                                               // every visit starts at the first move, however it was opened
+      if(!S.dlg){ var o = S.opener; S.opener = null; try{ if(o && o.focus && D.body.contains(o)) o.focus({ preventScroll: true }); }catch(e){} }
+    }
+  }
+
+  function focusables(){ return [].slice.call(S.ov.querySelectorAll('button:not([disabled])')).filter(function(b){ return b.offsetParent !== null || b === S.btn; }); }
+  function onKey(e){
+    if(!S.open) return;
+    var k = e.key, inside = S.ov.contains(e.target);
+    if(k === 'ArrowRight' || k === 'ArrowLeft'){
+      e.preventDefault(); e.stopPropagation();
+      if(k === 'ArrowRight'){ if(S.i < S.last) go(S.i + 1, 1); } else go(S.i - 1, -1);
+      return;
+    }
+    if(S.dlg) return;                                        // Pai Gow and Ultimate Texas Hold'em: their dialog helper keeps focus in and closes on Escape
+    if(k === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeNow(); return; }
+    if(k === 'Tab'){
+      var f = focusables(); if(!f.length){ e.preventDefault(); return; }
+      var a = D.activeElement, first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && (a === first || !S.ov.contains(a))){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && (a === last || !S.ov.contains(a))){ e.preventDefault(); first.focus(); }
+      return;
+    }
+    if((k === ' ' || k === 'Enter') && !inside){ e.preventDefault(); e.stopPropagation(); }       // the table behind must not deal or roll while this is open
+    else if(k === ' ' && inside){ e.stopPropagation(); }
+  }
+  function onKeyUp(e){
+    if(!S.open || S.dlg) return;
+    if(e.key === ' ' || e.key === 'Enter'){ if(!S.ov.contains(e.target)){ e.preventDefault(); e.stopPropagation(); } else e.stopPropagation(); }
+  }
+
+  /* ---------- start ---------- */
+  function start(){
+    var link = $('btn-manners');
+    if(!link) return;
+    var css = D.createElement('style'); css.id = 'tr-manners-css'; css.textContent = CSS; D.head.appendChild(css);
+    var ov = $('manners-overlay'), btn = $('btn-manners-close');
+    if(!ov || !btn){                                         // Craps had no Table manners: build the pop-up here, with the same shape as the others
+      ov = D.createElement('div'); ov.id = 'manners-overlay'; ov.style.display = 'none'; D.body.appendChild(ov);
+      btn = D.createElement('button'); btn.id = 'btn-manners-close'; btn.type = 'button';
+      S.own = true;
+    }
+    S.ov = ov; S.btn = btn; S.back = $('manners-back'); S.dlg = !!S.back && S.back.contains(ov);
+    if(!S.dlg){
+      ov.classList.add('rt-fixed');
+      if(ov.parentNode !== D.body) D.body.appendChild(ov);   // out of any panel that clips or transforms, so it can cover the page
+    }
+    build();
+    if(S.own){
+      link.addEventListener('click', function(e){ e.preventDefault(); S.opener = link; ov.style.display = 'flex'; });
+      btn.addEventListener('click', function(){ ov.style.display = 'none'; });
+    }
+
+    /* remember what opened it, so focus can go back there */
+    D.addEventListener('click', function(e){ var l = e.target && e.target.closest ? e.target.closest('#btn-manners') : null; if(l) S.opener = l; }, true);
+    /* the walk-through: Next goes on until the last card, where the same button is the game's own "Got it" */
+    ov.addEventListener('click', function(e){
+      var t = e.target;
+      if(t === S.btn){
+        if(!S.force && S.i < S.last){ e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); go(S.i + 1, 1); }
+        return;
+      }
+      var b = t.closest ? t.closest('button') : null;
+      if(b === S.els.back){ go(S.i - 1, -1); }
+      else if(b === S.els.x){ closeNow(); }
+      else if(b && b.classList.contains('rt-dot')){ var j = +b.getAttribute('data-i'); go(j, j < S.i ? -1 : 1); }
+      else if(t === ov && !S.dlg){ closeNow(); }             // a tap on the dim area
+    }, true);
+    D.addEventListener('keydown', onKey, true);
+    D.addEventListener('keyup', onKeyUp, true);
+
+    if(typeof MutationObserver === 'function'){
+      var mo = new MutationObserver(sync);
+      if(S.dlg) mo.observe(S.back, { attributes: true, attributeFilter: ['hidden', 'style'] });
+      else mo.observe(ov, { attributes: true, attributeFilter: ['style'] });
+    }
+    sync();
+  }
+
+  W.TRManners = { go: go, close: function(){ closeNow(); }, state: function(){ return { i: S.i, last: S.last, open: S.open }; }, game: KEY };
+  try{ start(); }catch(e){ try{ console.warn('[manners]', e); }catch(x){} }
 })();
 
 </script>
