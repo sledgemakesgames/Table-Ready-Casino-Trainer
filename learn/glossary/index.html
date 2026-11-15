@@ -153,7 +153,7 @@ h1{margin:0;font:700 clamp(50px,8vw,108px)/.98 var(--display);letter-spacing:-.0
 <body>
 <header class="top">
   <div class="lft"><span class="brandwrap"><button type="button" class="coin" id="brand-coin" aria-label="Flip the coin"><span class="coin-hop"><span class="coin-in"><span class="mark front" aria-hidden="true"></span><span class="mark back" aria-hidden="true"><b class="suit">♠</b></span></span></span></button><a class="brand" href="/">Table Ready</a></span>
-    <nav class="nav" aria-label="Site"><a href="/learn/">Learn to play</a><a href="/learn/glossary/" aria-current="page">Glossary</a></nav></div>
+    <nav class="nav" aria-label="Site"><a href="/learn/">Learn to play</a><a href="/learn/glossary/" aria-current="page">Glossary</a><a href="/report/">My report</a></nav></div>
   <div class="rgt"><div class="themes" role="group" aria-label="Table theme"><button type="button" data-th="graphite" aria-pressed="true" aria-label="Graphite theme" title="Graphite" style="--sw:#1D2025"></button><button type="button" data-th="emerald" aria-pressed="false" aria-label="Emerald Felt theme" title="Emerald Felt" style="--sw:#0F3D36"></button><button type="button" data-th="midnight" aria-pressed="false" aria-label="Midnight theme" title="Midnight" style="--sw:#1B2233"></button><button type="button" data-th="crimson" aria-pressed="false" aria-label="Crimson theme" title="Crimson" style="--sw:#2E1920"></button></div>
   <div class="bank" role="group" aria-label="Bankroll"><i aria-hidden="true"></i><span>Bankroll</span><b id="bankroll-amount">$1,000</b></div></div>
 </header>
@@ -182,7 +182,7 @@ h1{margin:0;font:700 clamp(50px,8vw,108px)/.98 var(--display);letter-spacing:-.0
   </div>
 </main>
 <footer>
-  <div><a href="/learn/">Learn to play</a> &nbsp;&nbsp; <a href="/learn/glossary/">Glossary</a></div>
+  <div><a href="/learn/">Learn to play</a> &nbsp;&nbsp; <a href="/learn/glossary/">Glossary</a> &nbsp;&nbsp; <a href="/report/">My report</a></div>
   <div>For education only — free practice tables, not real-money gambling.<br>© 2026 SledgeMakesGames. All rights reserved.</div>
 </footer>
 
@@ -217,6 +217,8 @@ renderBankroll();
   var SUITS = ['\u2660', '\u2665', '\u2666', '\u2663'], angle = 0;
   var calm = false; try{ calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){}
   coin.addEventListener('click', function(){
+    if(coin.__eat){ coin.__eat = false; return; }                       /* the release at the end of a long press is not also a flip */
+    if(window.TRSound) window.TRSound.play('coin');
     angle += 180;
     if((angle / 180) % 2 === 1 && suit) suit.textContent = SUITS[Math.floor(Math.random() * SUITS.length)];
     inner.style.transform = 'rotateY(' + angle + 'deg)';

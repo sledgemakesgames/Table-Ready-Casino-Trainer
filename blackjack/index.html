@@ -1025,6 +1025,372 @@ body.rebet-on #btn-deal{margin-left:0 !important}
 }
 
 </style>
+<script id="tr-sound">
+/*tr-sound:start*/
+/* Table Ready sound: everything is synthesised with WebAudio (no audio files). One switch for the whole site. */
+(function(W){
+  'use strict';
+  var D = W.document, KEY = 'house_edge_sound_v1';
+  var AC = W.AudioContext || W.webkitAudioContext;
+  var S = { ctx:null, master:null, bus:null, enabled:true, unlocked:false, active:0, listeners:[], hiddenSuspended:false };
+  try{ var v = W.localStorage.getItem(KEY); if(v === '0') S.enabled = false; S.stored = (v === '0' || v === '1'); }catch(e){ S.stored = false; }
+
+  /* ---------- small helpers ---------- */
+  function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function noiseBuffer(c){
+    if(c.__trNoise) return c.__trNoise;
+    var n = (c.sampleRate * 2) | 0, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), s = 20240607;
+    for(var i = 0; i < n; i++){ s = (Math.imul(s, 1664525) + 1013904223) >>> 0; d[i] = s / 2147483648 - 1; }
+    c.__trNoise = b; return b;
+  }
+  function track(node){ S.active++; node.onended = function(){ S.active = Math.max(0, S.active - 1); try{ node.disconnect(); }catch(e){} }; }
+  /* a short burst of filtered noise with a fast attack and an exponential decay */
+  function burst(c, out, t, p, R){
+    var src = c.createBufferSource(); src.buffer = noiseBuffer(c);
+    var f = c.createBiquadFilter(); f.type = p.type || 'bandpass'; f.frequency.setValueAtTime(p.f, t); if(p.to) f.frequency.exponentialRampToValueAtTime(p.to, t + p.dur); f.Q.value = p.q == null ? 0.9 : p.q;
+    var g = c.createGain(), a = p.a == null ? 0.002 : p.a;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(p.g, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + p.dur);
+    src.connect(f); f.connect(g); g.connect(out);
+    src.start(t, R() * 1.5); src.stop(t + p.dur + 0.03); track(src);
+  }
+  /* a decaying tone, optionally gliding from f to p.to */
+  function ping(c, out, t, p){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = p.type || 'sine'; o.frequency.setValueAtTime(p.f, t); if(p.to) o.frequency.exponentialRampToValueAtTime(p.to, t + p.dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(p.g, t + (p.a || 0.001)); g.gain.exponentialRampToValueAtTime(0.0001, t + p.dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + p.dur + 0.03); track(o);
+  }
+
+  /* ---------- the sounds ---------- */
+  var RECIPES = {};
+  /* one clay chip on another: a tick of noise, a few inharmonic partials, a little body */
+  function clack(c, out, t, R, v, pitch){
+    var b = pitch || (2050 + R() * 500);
+    burst(c, out, t, { f:4300 + R() * 600, q:1.4, dur:0.012, g:0.2 * v, a:0.0005 }, R);
+    ping(c, out, t, { f:b, g:0.10 * v, dur:0.05 });
+    ping(c, out, t, { f:b * 1.59, g:0.055 * v, dur:0.034 });
+    ping(c, out, t, { f:b * 2.33, g:0.03 * v, dur:0.024 });
+    ping(c, out, t, { f:900, to:600, g:0.06 * v, dur:0.022 });
+  }
+  RECIPES.chip = function(c, o, t, R, v){ clack(c, o, t, R, v == null ? 1 : v); };
+  RECIPES.chipLight = function(c, o, t, R, v){ clack(c, o, t, R, 0.55 * (v == null ? 1 : v), 2500 + R() * 600); };
+  /* several chips set down or stacked: n clacks, a little uneven, tapering off */
+  RECIPES.chips = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 3, at = t;
+    for(var i = 0; i < n; i++){ clack(c, o, at, R, (0.95 - i * 0.1 / Math.max(1, n - 1) * 3) * v, 1900 + R() * 900); at += 0.032 + R() * 0.03; }
+  };
+  /* a payout or a rake: a run of chips falling over one another */
+  RECIPES.cascade = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 7, at = t;
+    for(var i = 0; i < n; i++){ clack(c, o, at, R, (0.55 + R() * 0.45) * v * (1 - i / (n * 1.6)), 1700 + R() * 1400); at += 0.026 + R() * 0.034; }
+  };
+  /* a card sliding off the shoe and landing: a swish, then a slap and a soft thump */
+  RECIPES.card = function(c, o, t, R, v){
+    burst(c, o, t, { f:3600 * (0.92 + R() * 0.2), to:1500, q:0.7, dur:0.075, g:0.15 * v, a:0.006 }, R);
+    burst(c, o, t + 0.052, { f:1500, q:1.1, dur:0.028, g:0.2 * v, a:0.001 }, R);
+    ping(c, o, t + 0.052, { f:150, to:92, g:0.12 * v, dur:0.07 });
+  };
+  RECIPES.land = function(c, o, t, R, v){
+    burst(c, o, t, { f:1400, q:1.1, dur:0.03, g:0.2 * v, a:0.001 }, R);
+    burst(c, o, t, { f:520, q:0.9, dur:0.055, g:0.11 * v, a:0.001 }, R);
+    ping(c, o, t, { f:140, to:90, g:0.1 * v, dur:0.07 });
+  };
+  /* a card turned over: a dry papery flick */
+  RECIPES.flip = function(c, o, t, R, v){
+    burst(c, o, t, { f:4200, type:'highpass', q:0.5, dur:0.03, g:0.11 * v, a:0.001 }, R);
+    burst(c, o, t + 0.012, { f:2600 * (0.9 + R() * 0.2), to:1300, q:0.8, dur:0.06, g:0.12 * v, a:0.003 }, R);
+  };
+  RECIPES.slide = function(c, o, t, R, v){ burst(c, o, t, { f:2600, to:1700, q:0.7, dur:0.1, g:0.07 * v, a:0.01 }, R); };
+  /* a deck being riffled: fast flicks that speed up and slow down, and a thump when the halves are bridged and squared */
+  RECIPES.riffle = function(c, o, t, R, v, op){
+    var at = t, gap = 0.055, N = (op && op.n) || 22;
+    for(var i = 0; i < N; i++){
+      burst(c, o, at, { f:2400 + R() * 1800, q:1.2, dur:0.016, g:(0.07 + R() * 0.04) * v, a:0.0008 }, R);
+      gap = i < 9 ? gap * 0.93 : gap * 1.07; at += gap * (0.8 + R() * 0.4);
+    }
+    burst(c, o, at + 0.04, { f:900, type:'lowpass', q:0.7, dur:0.09, g:0.14 * v, a:0.002 }, R);
+    ping(c, o, at + 0.04, { f:130, to:80, g:0.1 * v, dur:0.09 });
+    return at - t + 0.2;
+  };
+  /* a fingertip tapping the felt (hit), and a hand waved flat over it (stand) */
+  RECIPES.tap = function(c, o, t, R, v){
+    burst(c, o, t, { f:1100, type:'lowpass', q:0.7, dur:0.04, g:0.2 * v, a:0.001 }, R);
+    ping(c, o, t, { f:190, to:130, g:0.13 * v, dur:0.05 });
+  };
+  RECIPES.knock = function(c, o, t, R, v){ RECIPES.tap(c, o, t, R, v); RECIPES.tap(c, o, t + 0.1, R, v * 0.8); };
+  RECIPES.swish = function(c, o, t, R, v){ burst(c, o, t, { f:2800, to:700, q:0.6, dur:0.22, g:0.07 * v, a:0.02 }, R); };
+  /* a heavy, dull thump: a bust */
+  RECIPES.thud = function(c, o, t, R, v){ burst(c, o, t, { f:230, to:90, q:0.8, dur:0.16, g:0.2 * v, a:0.004 }, R); burst(c, o, t, { f:700, type:'lowpass', q:0.7, dur:0.05, g:0.1 * v, a:0.002 }, R); ping(c, o, t, { f:78, to:55, g:0.14 * v, dur:0.18 }); };   // the little mid knock is for phone speakers, which cannot play the low end
+  RECIPES.pat = function(c, o, t, R, v){ burst(c, o, t, { f:700, type:'lowpass', q:0.7, dur:0.06, g:0.14 * v, a:0.002 }, R); ping(c, o, t, { f:120, to:85, g:0.12 * v, dur:0.08 }); };
+  /* the dealer clearing a losing bet: a rake across the felt, a thump and a couple of loose chips */
+  RECIPES.sweep = function(c, o, t, R, v){
+    burst(c, o, t, { f:2200, to:600, q:0.6, dur:0.24, g:0.11 * v, a:0.03 }, R);
+    clack(c, o, t + 0.2, R, 0.5 * v, 2000);
+    clack(c, o, t + 0.25, R, 0.35 * v, 2300);
+    ping(c, o, t + 0.05, { f:95, to:70, g:0.08 * v, dur:0.16 });
+  };
+  RECIPES.lose = function(c, o, t, R, v){ RECIPES.sweep(c, o, t, R, v); };
+  RECIPES.win = function(c, o, t, R, v){
+    RECIPES.cascade(c, o, t, R, 0.8 * v, { n:6 });
+    bell(c, o, t + 0.12, 1568, 0.032 * v, 0.55); bell(c, o, t + 0.2, 2093, 0.02 * v, 0.45);
+  };
+  RECIPES.bigwin = function(c, o, t, R, v){
+    RECIPES.cascade(c, o, t, R, v, { n:12 });
+    [1175, 1568, 1976, 2349].forEach(function(f, i){ bell(c, o, t + 0.1 + i * 0.09, f, 0.04 * v, 0.7); });
+  };
+  RECIPES.push = function(c, o, t, R, v){ clack(c, o, t, R, 0.7 * v, 2300); clack(c, o, t + 0.07, R, 0.5 * v, 2100); };
+  function bell(c, out, t, f, g, dur){
+    ping(c, out, t, { f:f, g:g, dur:dur });
+    ping(c, out, t, { f:f * 2.76, g:g * 0.4, dur:dur * 0.45 });
+    ping(c, out, t, { f:f * 5.4, g:g * 0.15, dur:dur * 0.2 });
+  }
+  RECIPES.chime = function(c, o, t, R, v){ [784, 988, 1175, 1568].forEach(function(f, i){ bell(c, o, t + i * 0.085, f, 0.04 * v, 0.45); }); };
+  RECIPES.ding = function(c, o, t, R, v){ bell(c, o, t, 1175, 0.045 * v, 0.5); bell(c, o, t + 0.09, 1568, 0.036 * v, 0.6); };
+  RECIPES.point = function(c, o, t, R, v){ bell(c, o, t, 880, 0.04 * v, 0.4); bell(c, o, t + 0.08, 1175, 0.04 * v, 0.5); };
+  /* the pitboss: a few unhurried footfalls on carpet, and a low "hm" or sigh */
+  RECIPES.step = function(c, o, t, R, v){
+    for(var i = 0; i < 3; i++){
+      var at = t + i * 0.27, g = (0.55 + i * 0.2) * v;
+      burst(c, o, at, { f:260, type:'lowpass', q:0.6, dur:0.075, g:0.2 * g, a:0.004 }, R);
+      ping(c, o, at, { f:78 - i * 4, to:55, g:0.14 * g, dur:0.11 });
+    }
+  };
+  function voiced(c, out, t, f0, f1, dur, g, f1a, f2a){
+    var f = c.createBiquadFilter(), f2 = c.createBiquadFilter(), gn = c.createGain(), lp = c.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = f1a; f.Q.value = 5; f2.type = 'bandpass'; f2.frequency.value = f2a; f2.Q.value = 7;
+    lp.type = 'lowpass'; lp.frequency.value = 1500;
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(g, t + dur * 0.25); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    [0, 1].forEach(function(k){
+      var o = c.createOscillator(); o.type = 'sawtooth'; o.detune.value = k ? 9 : -9;
+      o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f1, t + dur);
+      o.connect(f); o.connect(f2); o.start(t); o.stop(t + dur + 0.03); track(o);
+    });
+    f.connect(lp); f2.connect(lp); lp.connect(gn); gn.connect(out);
+  }
+  RECIPES.hm = function(c, o, t, R, v){ voiced(c, o, t, 118, 104, 0.26, 0.11 * v, 480, 1000); voiced(c, o, t + 0.2, 104, 92, 0.3, 0.1 * v, 440, 950); };
+  RECIPES.sigh = function(c, o, t, R, v){
+    voiced(c, o, t, 150, 92, 0.46, 0.09 * v, 700, 1150);
+    burst(c, o, t, { f:900, to:500, q:0.5, dur:0.5, g:0.06 * v, a:0.12 }, R);
+  };
+  /* dice: shaken in the hand, thrown, then bouncing off the felt and the back wall */
+  RECIPES.rattle = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 0.38, n = Math.max(6, Math.round(dur * 55)), at = t;
+    for(var i = 0; i < n; i++){
+      burst(c, o, at, { f:1100 + R() * 1900, q:1.5, dur:0.013 + R() * 0.01, g:(0.09 + R() * 0.12) * v, a:0.0006 }, R);
+      if(R() < 0.45) ping(c, o, at, { f:360 + R() * 300, g:0.05 * v, dur:0.018 });
+      at += dur / n * (0.5 + R());
+    }
+    return dur;
+  };
+  RECIPES.bounce = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 5, at = t, gap = 0.12, g = 1;
+    for(var i = 0; i < n; i++){
+      burst(c, o, at, { f:1300 + R() * 500, q:1, dur:0.026, g:0.16 * g * v, a:0.0008 }, R);
+      ping(c, o, at, { f:230 + R() * 40, to:120, g:0.16 * g * v, dur:0.05 });
+      at += gap; gap *= 0.7; g *= 0.68;
+    }
+    return at - t;
+  };
+  RECIPES.wall = function(c, o, t, R, v){
+    burst(c, o, t, { f:900, type:'lowpass', q:0.6, dur:0.05, g:0.2 * v, a:0.001 }, R);
+    burst(c, o, t, { f:3200, q:1.2, dur:0.016, g:0.1 * v, a:0.0006 }, R);
+    ping(c, o, t, { f:420, to:260, g:0.12 * v, dur:0.06 });
+  };
+  RECIPES.dice = function(c, o, t, R, v){
+    RECIPES.rattle(c, o, t, R, 0.8 * v, { dur:0.28 });
+    burst(c, o, t + 0.26, { f:2000, to:900, q:0.6, dur:0.12, g:0.05 * v, a:0.02 }, R);
+    RECIPES.wall(c, o, t + 0.42, R, v);
+    RECIPES.bounce(c, o, t + 0.5, R, v, { n:5 });
+  };
+  RECIPES.lift = function(c, o, t, R, v){ RECIPES.rattle(c, o, t, R, 0.5 * v, { dur:0.09 }); };
+  /* the logo coin: a bright ring that dies away; a toss is a ring with a flutter, then a few coin-on-coin settling clinks */
+  function ring(c, out, t, g, dur, f){
+    [1, 1.47, 2.12, 2.89].forEach(function(m, i){ ping(c, out, t, { f:f * m, g:g / (1 + i * 0.9), dur:dur / (1 + i * 0.5) }); });
+  }
+  RECIPES.coin = function(c, o, t, R, v){
+    burst(c, o, t, { f:5200, q:1.2, dur:0.012, g:0.1 * v, a:0.0005 }, R);
+    ring(c, o, t, 0.07 * v, 0.55, 3300 + R() * 150);
+  };
+  RECIPES.toss = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 1.5;
+    burst(c, o, t, { f:5200, q:1.2, dur:0.014, g:0.12 * v, a:0.0005 }, R);
+    var lfo = c.createOscillator(), depth = c.createGain(), amp = c.createGain();
+    amp.gain.setValueAtTime(0.0001, t); amp.gain.linearRampToValueAtTime(0.05 * v, t + 0.01); amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    lfo.frequency.value = 17; depth.gain.value = 0.028 * v; lfo.connect(depth); depth.connect(amp.gain);
+    [3300, 4850, 7000].forEach(function(f, i){
+      var os = c.createOscillator(), gg = c.createGain();
+      os.type = 'sine'; os.frequency.setValueAtTime(f * 0.97, t); os.frequency.linearRampToValueAtTime(f * 1.03, t + dur * 0.5); os.frequency.linearRampToValueAtTime(f * 0.98, t + dur);
+      gg.gain.value = 1 / (1 + i * 1.2); os.connect(gg); gg.connect(amp); os.start(t); os.stop(t + dur + 0.05); track(os);
+    });
+    amp.connect(o); lfo.start(t); lfo.stop(t + dur + 0.05); track(lfo);
+    return dur;
+  };
+  RECIPES.coinLand = function(c, o, t, R, v){
+    var at = t, gap = 0.1, g = 1;
+    for(var i = 0; i < 4; i++){ ring(c, o, at, 0.07 * g * v, 0.35 * g, 3300 + i * 120); burst(c, o, at, { f:5000, q:1.2, dur:0.012, g:0.08 * g * v, a:0.0005 }, R); at += gap; gap *= 0.62; g *= 0.62; }
+  };
+  RECIPES.charge = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 0.5, os = c.createOscillator(), g = c.createGain();
+    os.type = 'triangle'; os.frequency.setValueAtTime(260, t); os.frequency.exponentialRampToValueAtTime(980, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.035 * v, t + dur * 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.04);
+    os.connect(g); g.connect(o); os.start(t); os.stop(t + dur + 0.08); track(os); return dur;
+  };
+  RECIPES.ui = function(c, o, t, R, v){ ping(c, o, t, { f:1320, g:0.05 * v, dur:0.035 }); ping(c, o, t + 0.04, { f:1760, g:0.04 * v, dur:0.04 }); };
+
+  /* ---------- the context, the switch and the page wiring ---------- */
+  function makeContext(){
+    if(!AC) return null;
+    var c = new AC();
+    var master = c.createGain(); master.gain.value = S.enabled ? 0.9 : 0;
+    var comp = c.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 12; comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.2;
+    master.connect(comp); comp.connect(c.destination);
+    S.ctx = c; S.master = master; return c;
+  }
+  function ready(){
+    if(!AC) return null;
+    if(!S.ctx){ if(!S.unlocked) return null; makeContext(); }
+    var c = S.ctx;
+    if(c.state === 'suspended'){ try{ c.resume(); }catch(e){} return null; }
+    return c.state === 'running' ? c : null;
+  }
+  function unlock(){
+    if(!AC) return;
+    S.unlocked = true;
+    if(!S.ctx) makeContext();
+    try{ if(S.ctx.state !== 'running') S.ctx.resume(); }catch(e){}
+  }
+  function play(name, o){
+    if(!S.enabled) return false;
+    var r = RECIPES[name]; if(!r) return false;
+    var c = ready(); if(!c || S.active > 90) return false;
+    try{ r(c, S.master, c.currentTime + 0.004, Math.random, (o && o.v != null) ? o.v : 1, o || {}); return true; }catch(e){ return false; }
+  }
+  function setEnabled(on, quiet){
+    on = !!on; var was = S.enabled; S.enabled = on; S.stored = true;
+    try{ W.localStorage.setItem(KEY, on ? '1' : '0'); }catch(e){}
+    if(S.master){ try{ var n = S.ctx.currentTime; S.master.gain.cancelScheduledValues(n); S.master.gain.setValueAtTime(S.master.gain.value, n); S.master.gain.linearRampToValueAtTime(on ? 0.9 : 0, n + 0.04); }catch(e){} }
+    if(on && !was && !quiet) play('ui');
+    if(on !== was) S.listeners.slice().forEach(function(fn){ try{ fn(on); }catch(e){} });
+  }
+  function onChange(fn){ S.listeners.push(fn); }
+  /* legacy code that makes its own nodes can still send them through the master (so the switch and the limiter apply) */
+  function dest(c){ return (S.ctx && c === S.ctx && S.master) ? S.master : c.destination; }
+  /* a settings checkbox that mirrors the switch (first run: keep the choice the player made in an older version) */
+  function adopt(box, apply){
+    if(!box) return;
+    if(!S.stored && box.checked === false) setEnabled(false, true);
+    box.checked = S.enabled;
+    box.addEventListener('change', function(){ setEnabled(box.checked); });
+    onChange(function(on){ box.checked = on; if(apply) apply(on); });
+    if(apply) apply(S.enabled);
+  }
+  var ICON_ON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z" fill="currentColor"/><path d="M15.2 8.6a4.6 4.6 0 0 1 0 6.8M17.6 6.2a8 8 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z" fill="currentColor"/><path d="M15.6 9.4l5 5.2M20.6 9.4l-5 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  function paint(btn){
+    btn.setAttribute('aria-pressed', S.enabled ? 'true' : 'false');
+    btn.setAttribute('aria-label', S.enabled ? 'Sound on. Press to mute' : 'Sound off. Press to turn on');
+    btn.setAttribute('title', S.enabled ? 'Sound on' : 'Sound off');
+    btn.innerHTML = S.enabled ? ICON_ON : ICON_OFF;
+  }
+  function mountButton(btn){
+    if(!btn) return;
+    if(!D.getElementById('tr-snd-css')){
+      var st = D.createElement('style'); st.id = 'tr-snd-css';
+      st.textContent = '.snd-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.18));background:transparent;color:var(--text-muted,var(--muted,#9aa0a8));cursor:pointer;flex:0 0 auto;transition:color .15s,border-color .15s,background .15s}.snd-btn:hover{color:var(--text,#fff);border-color:currentColor}.snd-btn:focus-visible{outline:2px solid var(--accent,var(--brass-bright,#d8b24a));outline-offset:2px}.snd-btn[aria-pressed="true"]{color:var(--text,#fff)}@media (pointer:coarse){.snd-btn{width:44px;height:44px}}';
+      (D.head || D.documentElement).appendChild(st);
+    }
+    btn.classList.add('snd-btn'); btn.type = 'button'; paint(btn);
+    btn.addEventListener('click', function(){ unlock(); setEnabled(!S.enabled); });
+    onChange(function(){ paint(btn); });
+  }
+  function context(){ return ready(); }
+  function render(name, seed, dur, opts){
+    var OAC = W.OfflineAudioContext || W.webkitOfflineAudioContext;
+    if(!OAC) return Promise.reject(new Error('no OfflineAudioContext'));
+    var sr = 44100, c = new OAC(1, Math.max(1, Math.round(dur * sr)), sr), R = mulberry(seed || 1);
+    RECIPES[name](c, c.destination, 0.01, R, 1, opts || {});
+    return c.startRendering().then(function(b){ return b.getChannelData(0); });
+  }
+  /* sleeping tabs make no noise */
+  if(D && D.addEventListener) D.addEventListener('visibilitychange', function(){
+    if(!S.ctx) return;
+    try{ if(D.hidden){ if(S.ctx.state === 'running'){ S.hiddenSuspended = true; S.ctx.suspend(); } } else if(S.hiddenSuspended){ S.hiddenSuspended = false; S.ctx.resume(); } }catch(e){}
+  });
+  /* the first touch, key or click on the page is what lets the browser start the audio */
+  function firstGesture(){ unlock(); if(S.ctx && S.ctx.state === 'running'){ ['pointerdown', 'keydown', 'touchend'].forEach(function(t){ D.removeEventListener(t, firstGesture, true); }); } }
+  if(D && D.addEventListener) ['pointerdown', 'keydown', 'touchend'].forEach(function(t){ D.addEventListener(t, firstGesture, true); });
+
+  W.TRSound = { play:play, set:setEnabled, toggle:function(){ setEnabled(!S.enabled); }, enabled:function(){ return S.enabled; }, onChange:onChange, dest:dest, context:context, unlock:unlock, adopt:adopt, mountButton:mountButton, render:render, recipes:RECIPES, names:function(){ return Object.keys(RECIPES); }, _state:S };
+})(window);
+/*tr-sound:end*/
+</script>
+<style id="tr-sound-css">
+.bank-row{display:flex;align-items:center;gap:8px;}
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  .topbar .bank-row{display:contents;}
+  .topbar .bank-row .snd-btn{display:none;}
+}
+</style>
+<style id="tr-desktop-fit">
+/* Desktop: the table, the stats, the recent hands and the strategy chart share one screen. */
+details.src{margin-top:8px;}
+details.src summary{font-size:11.5px;color:var(--text-muted);cursor:pointer;list-style:none;}
+details.src summary::-webkit-details-marker{display:none;}
+details.src summary::before{content:"\25B8  ";}
+details.src[open] summary::before{content:"\25BE  ";}
+details.src summary:hover{color:var(--text);}
+details.src p{margin:6px 0 0;}
+@media (min-width:1200px) and (min-height:600px){
+  body{padding:12px 20px 12px;}
+  .wrap{max-width:1360px;}
+  .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:end;}
+  .topbar .back-link{grid-column:1 / -1;margin-bottom:4px;font-size:12px;}
+  .topbar header{display:contents;}
+  h1{font-size:26px;}
+  .tagline{font-size:12.5px;margin-top:2px;}
+  .topbar header > div:last-child{display:flex !important;flex-direction:row !important;flex-wrap:wrap;align-items:center !important;justify-content:flex-end;gap:8px 12px !important;padding-bottom:2px;}
+  .topbar header > div:last-child > a{font-size:12px;}
+  .topbar .bankroll-pill{padding:6px 12px 6px 10px;}
+  .topbar #btn-toggle-settings{padding:7px 12px;font-size:12.5px;}
+  .topbar{margin-bottom:10px;}
+  .layout-grid{display:grid;grid-template-columns:minmax(0,900px) minmax(330px,1fr);gap:16px;align-items:start;}
+  .table-felt{margin-bottom:8px;}
+  .side-panels{display:flex;flex-direction:column;gap:8px;position:sticky;top:12px;}
+  .side-panels .panel{margin:0;padding:11px 14px 12px;border-radius:14px;}
+  .side-panels h2.section{font-size:14.5px;margin:0 0 7px;}
+  #stats-grid{grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:6px !important;}
+  .stat-card{padding:6px 8px;border-radius:9px;}
+  .stat-card .sl{font-size:9.5px;margin-bottom:1px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stat-card .sv{font-size:14.5px;white-space:nowrap;}
+  .history{max-height:clamp(120px,calc(100dvh - 640px),330px);overflow-y:auto;padding-right:2px;}
+  .history .row{padding:3px 0;}
+  .tabs{margin:2px 0 7px;}
+  .tabs button{padding:5px 8px;font-size:12px;}
+  .legend{font-size:11px;gap:4px 10px;margin-bottom:4px;}
+  #chart-context{margin:0 0 5px !important;font-size:11.5px !important;}
+  table.chart{font-size:11px;}
+  table.chart td{padding:2px 1px;}
+  .side-panels details.src{margin-top:6px;}
+  .wrap > p.foot-note{display:inline-block;margin:6px 10px 0 !important;font-size:11px;}
+  .wrap{text-align:center;}
+  .wrap > *{text-align:left;}
+  .wrap > p.foot-note{text-align:center;}
+}
+@media (min-width:1200px) and (min-height:600px) and (max-height:940px){
+  .tagline{display:none;}
+  .topbar{margin-bottom:6px;}
+}
+/* a shorter window (a laptop): the cards and the spacing give up a little so the whole table still fits */
+@media (min-width:1200px) and (min-height:600px) and (max-height:830px){
+  .card{width:72px;height:101px;}
+  .cards-row{min-height:101px;margin-bottom:4px;}
+  body.tbl-on #felt-print{max-width:430px;margin-top:0;}
+  .hand-box{padding:10px 12px;}
+  .zone-label{margin-bottom:5px;}
+  .table-felt{padding-top:8px;padding-bottom:8px;}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -1037,14 +1403,19 @@ body.rebet-on #btn-deal{margin-left:0 !important}
     <p class="tagline">A blackjack decision trainer — free play, no real money, built to teach correct strategy.</p>
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+<div class="bank-row">
     <div class="bankroll-pill">
       <span class="label">Bankroll</span>
       <span id="chip-stack" style="display:flex;align-items:center;"></span>
       <strong id="bankroll-val" class="amount" style="color:var(--brass-bright);">1000</strong>
     </div>
+<button type="button" id="snd-btn"></button>
+</div>
+    <button type="button" id="btn-practice" title="Ten quick questions on the spots that cost real money. No bets.">Practice</button>
     <button id="btn-toggle-settings">Table settings</button>
     <a href="#" id="btn-manners" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Table manners</a>
     <a href="/learn/glossary/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
+    <a href="/report/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">My report</a>
   </div>
 </header>
 <button type="button" id="m-menu-btn" class="m-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" aria-controls="m-menu"><i></i><i></i><i></i></button>
@@ -1175,7 +1546,7 @@ body.rebet-on #btn-deal{margin-left:0 !important}
       <li>Use hand signals along with talking — tap the felt for hit, wave your hand for stand. Dealers rely on the gesture, not just the word. (Try it here: with Table show on, tap your hand to hit and swipe across it to stand.)</li>
       <li>Once your cards are dealt face up, don't touch them. The dealer moves everything; you only touch chips.</li>
       <li>Chips go in the betting circle in front of you — never handed straight to the dealer.</li>
-      <li>Tipping the dealer (called a "toke") is optional, but common after a win.</li>
+      <li>Tipping the dealer is optional.</li>
       <li>Keep drinks and phones off the felt — most dealers will ask you to move them.</li>
     </ul>
     <button id="btn-manners-close" class="primary">Got it</button>
@@ -1316,7 +1687,7 @@ body.rebet-on #btn-deal{margin-left:0 !important}
   <div style="overflow-x:auto;">
     <table class="chart" id="chart-table"></table>
   </div>
-  <p class="foot-note">This is baseline basic strategy for a dealer-stands-on-soft-17 game, checked against the standard S17 table. The insurance, hard 16 vs 10, and hard 15 vs 10 count-based deviations called out live are among the highest-value entries in Don Schlesinger's published "Illustrious 18" (Blackjack Attack). The pair-of-tens-vs-10 double at +6 is a more niche play included for completeness, not one of the core 18.</p>
+    <details class="src"><summary>Where this chart comes from</summary><p class="foot-note">This is baseline basic strategy for a dealer-stands-on-soft-17 game, checked against the standard S17 table. The insurance, hard 16 vs 10, and hard 15 vs 10 count-based deviations called out live are among the highest-value entries in Don Schlesinger's published "Illustrious 18" (Blackjack Attack). The pair-of-tens-vs-10 double at +6 is a more niche play included for completeness, not one of the core 18.</p></details>
 </div>
 </div>
 </div>
@@ -1342,14 +1713,8 @@ function rankVal(r){ if(r==='A') return 11; if(r==='J'||r==='Q'||r==='K') return
 function hiLo(r){ if(['2','3','4','5','6'].indexOf(r)>=0) return 1; if(['10','J','Q','K','A'].indexOf(r)>=0) return -1; return 0; }
 
 var audioCtx=null;
-function ensureAudioCtx(){
-  if(audioCtx) return audioCtx;
-  var Ctx = window.AudioContext || window.webkitAudioContext;
-  if(!Ctx) return null;
-  audioCtx = new Ctx();
-  return audioCtx;
-}
-function playTone(freq, duration, type, volume){
+function ensureAudioCtx(){ return window.TRSound ? window.TRSound.context() : null; }
+function playTone(freq, duration, type, volume){   // anything still making its own tone goes through the site's master switch and limiter
   if(!G.soundOn) return;
   var ctx=ensureAudioCtx();
   if(!ctx) return;
@@ -1359,19 +1724,19 @@ function playTone(freq, duration, type, volume){
   osc.frequency.value=freq;
   gain.gain.setValueAtTime(volume||0.06, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+duration);
-  osc.connect(gain); gain.connect(ctx.destination);
+  osc.connect(gain); gain.connect(window.TRSound.dest(ctx));
   osc.start(); osc.stop(ctx.currentTime+duration);
 }
-function sfxCard(){ if(G.turbo) return; playTone(680, 0.045, 'square', 0.025); }
-function sfxChip(){ playTone(520, 0.04, 'triangle', 0.035); }
-function sfxWin(){ playTone(659,0.11,'sine',0.05); setTimeout(function(){ playTone(880,0.16,'sine',0.05); }, 90); }
-function sfxLose(){ playTone(196,0.22,'sine',0.045); }
-function sfxPush(){ playTone(392,0.14,'sine',0.04); }
-function sfxHit(){ playTone(780, 0.045, 'square', 0.03); }
-function sfxStand(){ playTone(300, 0.1, 'sine', 0.035); }
-function sfxDouble(){ playTone(520,0.05,'triangle',0.035); setTimeout(function(){ playTone(740,0.07,'triangle',0.035); }, 55); }
-function sfxSplit(){ playTone(600,0.06,'triangle',0.03); playTone(760,0.06,'triangle',0.024); }
-function sfxSurrender(){ playTone(260,0.16,'sine',0.03); }
+function sfxCard(){ if(G.turbo) return; TRSound.play('card'); }
+function sfxChip(){ TRSound.play('chip'); }
+function sfxWin(){ TRSound.play('win'); }
+function sfxLose(){ TRSound.play('lose'); }
+function sfxPush(){ TRSound.play('push'); }
+function sfxHit(){ TRSound.play('tap',{v:.8}); }
+function sfxStand(){ TRSound.play('swish',{v:.6}); }
+function sfxDouble(){ TRSound.play('chips',{n:2}); }
+function sfxSplit(){ TRSound.play('chips',{n:3,v:.8}); }
+function sfxSurrender(){ TRSound.play('slide'); }
 function sfxDecision(action){
   if(action==='H') sfxHit();
   else if(action==='S') sfxStand();
@@ -1379,29 +1744,7 @@ function sfxDecision(action){
   else if(action==='P') sfxSplit();
   else if(action==='R') sfxSurrender();
 }
-function sfxShuffle(){
-  if(!G.soundOn) return;
-  var ctx=ensureAudioCtx();
-  if(!ctx) return;
-  var duration=0.4;
-  var bufferSize=Math.floor(ctx.sampleRate*duration);
-  var buffer=ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  var data=buffer.getChannelData(0);
-  for(var i=0;i<bufferSize;i++){
-    data[i]=(Math.random()*2-1)*Math.pow(1-i/bufferSize,1.4);
-  }
-  var noise=ctx.createBufferSource();
-  noise.buffer=buffer;
-  var filter=ctx.createBiquadFilter();
-  filter.type='bandpass';
-  filter.frequency.value=1700;
-  filter.Q.value=0.6;
-  var gain=ctx.createGain();
-  gain.gain.setValueAtTime(0.07, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+duration);
-  noise.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-  noise.start();
-}
+function sfxShuffle(){ TRSound.play('riffle'); }
 
 var DEALER_STREAK_LINES=[
   "Table's gone ice cold.",
@@ -2889,7 +3232,7 @@ function startDeal(){
   if(nSpots===2) G.hands.push({cards:[], bet:bet2, status:'active', fromSplit:false, isSplitAces:false, decision:null, aceLimited:false, spot:1});
   G.roundSpots=nSpots;
   G.bots=[];
-  G.activeIdx=0; G.holeRevealed=false; G.locked=true; G.phase='dealing'; G.feedbackLog=[]; G.lastClass=null; G.insuranceBet=0;
+  G.activeIdx=0; G.holeRevealed=false; G.locked=true; G.phase='dealing'; G.feedbackLog=[]; try{ if(window.TRCost) TRCost.reset(G); }catch(e){} G.lastClass=null; G.insuranceBet=0;
   renderAll();
   buildChart(G.activeTab);
 
@@ -3350,6 +3693,7 @@ function finishRound(){
   }
   G.openBet=null; G.openTC=null;
   G.history.push(histEntry);
+  try{ if(window.TRCost) TRCost.round(G, totalNet); }catch(e){}
 
   renderResults(results, headline);
   renderAll();
@@ -3437,6 +3781,7 @@ function personalizedReason(cls, h, dealerR, effectiveAction){
 function showFeedback(action, cls, effectiveAction, correct, note, doubleUnavailable, doubleUnaffordable, h, dealerR){
   var z=document.getElementById('feedback-zone');
   var reason = personalizedReason(cls, h, dealerR, effectiveAction);
+  try{ if(window.TRCost) TRCost.decision(G, action, effectiveAction, cls, h, dealerR); }catch(e){}
   var extra = (doubleUnavailable?'This spot is normally a double, but you can only double on your first two cards — since this hand already took a hit, hit is the next-best play.':'') +
               (doubleUnaffordable?'This spot is normally a double, but your bankroll isn\u2019t enough to cover it right now — hit is the next-best play.':'') +
               (note?((doubleUnavailable||doubleUnaffordable)?' ':'')+note:'');
@@ -3949,12 +4294,8 @@ var PitBoss = (function(){
   /* ---------- sounds (the game's own tone and noise, only if its sound is on) ---------- */
   function sfx(name){
     try{
-      var on = W.G && (W.G.soundOn || W.G.sound); if(!on) return;
-      if(name === 'step' && W.playTone){ W.playTone(98, .14, 'sine', .05); }
-      else if(name === 'hm' && W.playTone){ W.playTone(165, .16, 'sine', .045); setTimeout(function(){ W.playTone(147, .22, 'sine', .04); }, 150); }
-      else if(name === 'tap' && W.playTone){ W.playTone(240, .04, 'square', .02); }
-      else if(name === 'pat' && W.playTone){ W.playTone(130, .06, 'sine', .05); }
-      else if(name === 'ding' && W.playTone){ W.playTone(1175, .22, 'sine', .035); setTimeout(function(){ W.playTone(1568, .3, 'sine', .03); }, 90); }
+      var r = ({ step:'step', hm:'hm', tap:'tap', pat:'pat', ding:'ding' })[name];
+      if(r && window.TRSound) window.TRSound.play(r);
     }catch(e){}
   }
 
@@ -4141,31 +4482,19 @@ var Show = (function(){
   function cssVar(n){ try{ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }catch(e){ return ''; } }
 
   /* ---------- sound (shares the page's sound switch) ---------- */
-  function ctxOk(){ if(!G.soundOn) return null; var c = ensureAudioCtx(); if(!c) return null; try{ if(c.state==='suspended' && c.resume) c.resume(); }catch(e){} return c; }
-  function noise(dur, freq, q, vol, sweep){
-    var c = ctxOk(); if(!c) return;
-    var n = Math.floor(c.sampleRate*dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
-    for(var i=0;i<n;i++) d[i] = (rnd()*2-1) * Math.pow(1-i/n, 1.8);
-    var src = c.createBufferSource(); src.buffer = b;
-    var f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 0.8;
-    if(sweep){ try{ f.frequency.setValueAtTime(freq, c.currentTime); f.frequency.exponentialRampToValueAtTime(sweep, c.currentTime+dur); }catch(e){} }
-    var g = c.createGain(); g.gain.setValueAtTime(vol, c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+dur);
-    src.connect(f); f.connect(g); g.connect(c.destination); src.start();
-  }
-  function sfxFlick(){ noise(0.07, 3200, 0.9, 0.05, 1500); }
-  function sfxLand(){ noise(0.035, 1300, 1.2, 0.035); noise(0.05, 520, 0.9, 0.02); }            // a card on felt: a slap and a soft thump under it
-  function tink(f, dur, vol){ var c = ctxOk(); if(!c) return; try{ var o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, c.currentTime); g.gain.setValueAtTime(vol, c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + dur + 0.02); }catch(e){} }
-  function sfxThud(){ noise(0.16, 230, 0.8, 0.07, 90); tink(78, 0.18, 0.05); }                 // a bust
-  function sfxSlide(){ noise(0.09, 2400, 0.7, 0.03, 1800); }
-  function sfxKnock(){ if(G.soundOn){ playTone(150, 0.07, 'sine', 0.09); setTimeout(function(){ playTone(120, 0.06, 'sine', 0.06); }, 70); } }
-  function sfxSwish(){ noise(0.2, 2600, 0.6, 0.05, 700); }
-  function sfxClack(){ if(!G.soundOn) return; noise(0.018, 4200 + rnd()*600, 1.6, 0.05); tink(2400 + rnd()*400, 0.05, 0.011); }   // clay on clay
-  function sfxChime(){ if(!G.soundOn) return; [784, 988, 1175, 1568].forEach(function(f,i){ setTimeout(function(){ playTone(f, 0.22, 'sine', 0.045); }, i*85); }); }
-  function sfxCoin(i){ if(!G.soundOn) return; noise(0.016, 3800 + (i%5)*260 + rnd()*300, 1.8, 0.04); tink(2900 + (i%5)*120, 0.04, 0.009); }
-  function sfxHm(){ if(G.soundOn){ playTone(196, 0.16, 'sine', 0.05); setTimeout(function(){ playTone(174, 0.2, 'sine', 0.045); }, 150); } }
-  function sfxSigh(){ if(G.soundOn){ playTone(330, 0.14, 'sine', 0.04); setTimeout(function(){ playTone(262, 0.3, 'sine', 0.04); }, 130); } }
-  function sfxTick(){ noise(0.03, 2600, 1.4, 0.022); }
-  function sfxPick(){ noise(0.05, 1700, 1.0, 0.04, 900); }
+  function sfxFlick(){ TRSound.play('card'); }
+  function sfxLand(){ TRSound.play('land'); }
+  function sfxThud(){ TRSound.play('thud'); }                 // a bust
+  function sfxSlide(){ TRSound.play('slide'); }
+  function sfxKnock(){ TRSound.play('knock'); }
+  function sfxSwish(){ TRSound.play('swish'); }
+  function sfxClack(){ if(!G.soundOn) return; rnd(); rnd(); TRSound.play('chip'); }   // clay on clay (the two draws keep the dealer's private random stream where it always was)
+  function sfxChime(){ TRSound.play('chime'); }
+  function sfxCoin(i){ if(!G.soundOn) return; rnd(); TRSound.play('chipLight',{v:.55+(i%5)*.05}); }
+  function sfxHm(){ TRSound.play('hm'); }
+  function sfxSigh(){ TRSound.play('sigh'); }
+  function sfxTick(){ TRSound.play('chipLight',{v:.3}); }
+  function sfxPick(){ TRSound.play('chipLight',{v:.6}); }
   function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 
   /* ---------- the dealer (inline SVG, decorative) ---------- */
@@ -4291,10 +4620,55 @@ var Show = (function(){
     else { held(false); S.say.classList.remove('on'); }
     if(still) later(function(){ if(S.st) S.st.removeAttribute('data-still'); }, 60);
   }
+  /* ---------- tips: the tip button (the tip module) hands him a chip and he thanks you; a good tipper gets a fan ---------- */
+  S.tip = null; S.resAt = 0;
+  function tipStop(quiet){
+    var g = S.tip; if(!g) return;
+    S.tip = null; (g.recs || []).forEach(unlater);
+    try{ if(S.dealer){ S.dealer.removeAttribute('data-bow'); S.dealer.removeAttribute('data-cheer'); } held(false); }catch(e){}
+    try{ if(W.TRTip) TRTip.cleanup(); }catch(e){}
+    if(quiet) return;
+    try{ setArmMs(300); restPose(); look((S.st.clientWidth || 300) / 2, 90); setMood(baseMood()); }catch(e){}
+    presence();
+  }
+  W.TRDealer = {
+    game: 'blackjack',
+    stage: function(){ return S.built ? S.st : null; },
+    fx: function(){ return !!fx(); },
+    current: function(){ return S.tip; },
+    settled: function(){ try{ return ['betting', 'result'].indexOf(G.phase) >= 0; }catch(e){ return true; } },
+    canTip: function(){
+      try{
+        return !!(on() && S.built && !S.tip && !S.egg && ['betting', 'result'].indexOf(G.phase) >= 0 && (G.phase === 'betting' || now() - (S.resAt || 0) > 2400) &&
+          idleNow() && !overlayOpen() && !(W.PitBoss && PitBoss.active()) && !S.pay && S.bankHold == null && !S.shuf && !S.drag && !S.cd && !insuranceOpen());
+      }catch(e){ return false; }
+    },
+    pending: function(){ try{ return G.phase === 'betting' ? ((function(){ var n = spotCount(), v = function(id){ var e = $(id); return e ? (parseInt(e.value, 10) || 0) : 0; }, t = v('bet-amount') + (n === 2 ? v('bet-amount-2') : 0); ['pp', 'tp', 'tl', 'bb'].forEach(function(k){ if(G.sidebets && G.sidebets[k]) t += v('sb-' + k + '-amt'); }); return t; })()) : 0; }catch(e){ return 0; } },
+    spend: function(n){ G.bankroll -= n; renderCountBar(); try{ saveSharedBankroll(); saveSession(); }catch(e){} },
+    hold: function(g){
+      g.recs = g.recs || [];
+      if(S.egg) eggStop(true);
+      dwellStop();
+      if(S.visit) endVisit(true);
+      var was = S.state !== 'up';
+      S.tip = g;
+      if(S.lowerRec){ unlater(S.lowerRec); S.lowerRec = null; }
+      presence(); restPose();
+      return was;
+    },
+    release: function(g){ if(S.tip === g) tipStop(); },
+    later: function(fn, ms){ return later(fn, ms); },
+    mood: function(m, hold){ setMood(m, hold); },
+    say: function(t, ms){ sayIt(t, ms, true); },
+    arm: function(x, y, ms){ if(!S.st) return; setArmMs(ms); armTo(x, y); },
+    look: function(x, y){ look(x, y); },
+    sfx: function(n, o){ try{ TRSound.play(n, o); }catch(e){} }
+  };
+
   function presence(){
-    var want = G.phase !== 'betting' || !!S.egg || !!S.visit || !!S.shuf;
+    var want = G.phase !== 'betting' || !!S.egg || !!S.visit || !!S.shuf || !!S.tip;
     if(want && S.state !== 'up'){ setState('up'); restPose(); }
-    else if(!want && S.state === 'up'){ if(!S.lowerRec){ S.lowerRec = later(function(){ S.lowerRec = null; if(G.phase==='betting' && !S.busy && S.queue.length===0) setState('away'); }, 160); } }
+    else if(!want && S.state === 'up'){ if(!S.lowerRec){ S.lowerRec = later(function(){ S.lowerRec = null; if(G.phase==='betting' && !S.busy && S.queue.length===0 && !S.tip) setState('away'); }, 160); } }
   }
   /* Called by the deal sequence: bring the dealer up first, then run cb. */
   function enter(cb){
@@ -4328,7 +4702,7 @@ var Show = (function(){
     presence();
   }
   function eggStart(e){
-    if(!on() || !S.built || S.egg || !idleNow() || overlayOpen()) return;
+    if(!on() || !S.built || S.egg || S.tip || !idleNow() || overlayOpen()) return;
     if(S.eggEnd && now() - S.eggEnd < 700) return;
     if(G.phase==='dealing' || G.phase==='dealer') return;
     if(S.visit) endVisit(true);
@@ -4377,7 +4751,7 @@ var Show = (function(){
   function nudgeWanted(){ return on() && S.built && G.phase === 'betting' && !S.nudge.off && chatLvl() === 'chatty'; }
   function nudgeBusy(){
     if(W.document.hidden) return true;                                // nobody is looking
-    if(S.egg || S.cd || S.drag || !idleNow()) return true;            // he is already busy, or a chip / a double is in the player's hand
+    if(S.egg || S.tip || S.cd || S.drag || !idleNow()) return true;            // he is already busy, or a chip / a double is in the player's hand
     if(overlayOpen() || insuranceOpen()) return true;
     var sp = $('settings-panel'); if(sp && sp.style.display === 'block') return true;
     var ae = document.activeElement; if(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return true;   // typing a bet
@@ -4428,7 +4802,7 @@ var Show = (function(){
 
   /* He comes up (if he is down), says one thing, and goes back down -- for the things that are about you, not about the clock. */
   function visitSay(text, mood, hold){
-    if(!on() || !S.built || S.egg || S.shuf || chatLvl() === 'off') return false;
+    if(!on() || !S.built || S.egg || S.tip || S.shuf || chatLvl() === 'off') return false;
     if(S.visit) endVisit(true);
     hold = hold || 2200;
     var v = S.visit = {line:-1, text:text, sayRec:null, endRec:null};
@@ -5177,7 +5551,7 @@ var Show = (function(){
   }
 
   /* ---------- the shuffle: once the cut card is in, he riffles the cards, squares them, and slides the cut card into the shoe ---------- */
-  function sfxRiffle(){ if(!G.soundOn) return; for(var i = 0; i < 12; i++) (function(i){ setTimeout(function(){ noise(0.025, 2100 + (i % 3) * 500, 1.1, 0.02); }, 380 + i * 62); })(i); }
+  function sfxRiffle(){ setTimeout(function(){ TRSound.play('riffle'); }, 150); }
   /* everything the shuffle puts on the table, taken away again */
   function riffleReset(){
     var r = S.riffle; if(!r) return;
@@ -5659,18 +6033,22 @@ var Show = (function(){
     var hot = headline.cls === 'win' && S.run.w >= 3 && (S.run.w - 3) % 2 === 0;
     var cold = headline.cls === 'lose' && !dealerBJ && S.run.l >= 4 && (S.run.l - 4) % 2 === 0;
     W.RESULT_PAUSE = fx() ? Math.round(S.T.result * (qf() < 1 ? 0.75 : 1) * (bjIdx>=0 ? 1.2 : (push22 ? 1.25 : (dealerBJ ? 1.2 : (anyWin||anyLose ? 1.1 : 0.88))))) : S.orig.RESULT_PAUSE;
-    if(bjIdx>=0){ setMood('wow', 900); later(function(){ setMood('grin', 2400); }, 900); }
+    S.resAt = now();
+    var fr = null; try{ if(W.TRTip) fr = TRTip.react(bjIdx>=0 ? 'big' : anyWin ? 'win' : anyLose ? 'lose' : 'push', dt.total <= 21); }catch(e){ err('tip react', e); }
+    if(bjIdx>=0){ setMood('wow', 900); later(function(){ setMood(fr ? fr.mood : 'grin', 2400); if(fr) TRTip.cheer(fr); }, 900); }
     else if(push22 && !anyWin){ setMood('smirk', 2200); }
     else if(hot){ setMood('sweat', 2800); }
     else if(dt.total>21){ setMood('sad', 2200); }
     else if(cold){ setMood('sm1', 2600); }
     else if(anyLose){ setMood('smirk', 1700); }
     else if(anyWin){ setMood('grin', 1700); }
+    if(fr && bjIdx < 0 && !push22){ setMood(fr.mood, fr.hold || 2400); TRTip.cheer(fr); }
     if(bjIdx>=0) sayIt('Blackjack pays '+(G.payout===1.5 ? '3 to 2' : '6 to 5')+'.', 2600);
     else if(dealerBJ) sayIt('Dealer has blackjack.', 2000);
     else if(push22) sayIt('Dealer 22. It’s a push.', 2600);
     else if(hot){ S.stats.streaks++; sayIt(HOT_LINES[(S.stats.streaks - 1) % HOT_LINES.length], 2600, true); }
     else if(cold){ S.stats.streaks++; sayIt(COLD_LINES[(S.stats.streaks - 1) % COLD_LINES.length], 2800, true); }
+    else if(fr && fr.line && !push22) sayIt(fr.line, fr.ms || 2200, true);
     if(push22) later(guard('push22', pushMarker), 30);
     if(dealerBJ) later(guard('dealer blackjack', function(){ throwMarker('dbj'); }), 30);
     if(!fx()) return;
@@ -6368,7 +6746,7 @@ var Show = (function(){
     W.runDealSequence = function(totalSeats, cardsPerSeat, onComplete){
       var self = this, args = arguments;
       if(!(S.ready && on() && S.built && fx())) return _run.apply(self, args);
-      if(S.egg) eggStop(true);
+      if(S.egg) eggStop(true); if(S.tip) tipStop(true);
       if(S.shuf) shuffleStop(true);
       unlater(S.shufRec); S.shufRec = null;
       enter(function(){
@@ -6630,7 +7008,7 @@ try{ Show.init(); }catch(e){ if(window.console && console.warn) console.warn('[t
   var bar = $('topbar'), btn = $('m-menu-btn'), header = bar && bar.querySelector('header');
   if(!bar || !btn || !header) return;
   var home = header.children[1];                                       // the column the links normally live in
-  var items = [$('btn-toggle-settings'), $('btn-manners'), home && home.querySelector('a[href*="glossary"]')].filter(Boolean);
+  var items = [$('btn-practice'), $('btn-toggle-settings'), $('btn-manners'), home && home.querySelector('a[href*="glossary"]'), home && home.querySelector('a[href="/report/"]')].filter(Boolean);
   var menu = document.createElement('div'); menu.id = 'm-menu'; menu.className = 'm-menu';
   var shuffle = document.createElement('button'); shuffle.type = 'button'; shuffle.id = 'm-shuffle'; shuffle.textContent = 'Shuffle the shoe';
   shuffle.addEventListener('click', function(){ try{ if(typeof window.fullReshuffle === 'function') window.fullReshuffle(); }catch(e){} });
@@ -6652,7 +7030,7 @@ try{ Show.init(); }catch(e){ if(window.console && console.warn) console.warn('[t
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && bar.classList.contains('m-open')){ openMenu(false); btn.focus(); } });
 
   function layout(){
-    if(mq.matches){ items.forEach(function(e, i){ menu.appendChild(e); if(i === 0) menu.appendChild(shuffle); }); menu.appendChild(rules); }
+    if(mq.matches){ items.forEach(function(e, i){ menu.appendChild(e); if(i === 1) menu.appendChild(shuffle); }); menu.appendChild(rules); }
     else { items.forEach(function(e){ home.appendChild(e); }); openMenu(false); if(rules.parentNode) rules.parentNode.removeChild(rules); if(shuffle.parentNode) shuffle.parentNode.removeChild(shuffle); }
   }
   /* the settings panel as a sheet: the game still shows and hides it itself; this only dresses it while it is open on a phone */
@@ -6705,6 +7083,1217 @@ try{ Show.init(); }catch(e){ if(window.console && console.warn) console.warn('[t
   layout();
   if(mq.addEventListener) mq.addEventListener('change', layout); else if(mq.addListener) mq.addListener(layout);
 })();
+</script>
+<script id="tr-sound-glue">
+(function(){
+  'use strict';
+  var T = window.TRSound; if(!T) return;
+  function $(id){ return document.getElementById(id); }
+  /* the game's own flag also silences the engine (the two are kept in step; this is the belt to the braces) */
+  var play0 = T.play;
+  T.play = function(n, o){ try{ if(window.G && ('soundOn' in G) && !G.soundOn) return false; }catch(e){} return play0.call(T, n, o); };
+  /* the settings checkbox and the header speaker are two faces of the one site-wide switch */
+  T.adopt($('set-sound'), function(on){ try{ if(window.G && ('soundOn' in G)) G.soundOn = on; }catch(e){} });
+  T.mountButton($('snd-btn'));
+  /* on a phone the speaker lives in the menu, with the other things you do not need while playing */
+  var menu = $('m-menu');
+  if(menu){
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'm-sound';
+    function paint(){ var on = T.enabled(); b.textContent = on ? 'Sound: on' : 'Sound: off'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+    paint(); T.onChange(paint);
+    b.addEventListener('click', function(){ T.unlock(); T.toggle(); });
+    var rules = menu.querySelector('.m-rules');
+    if(rules) menu.insertBefore(b, rules); else menu.appendChild(b);
+  }
+})();
+</script>
+<script id="tr-cost">
+/* TRLog: the session log.
+   Every game calls TRLog.hand(game, record) when a round resolves; nothing is ever shown in the game itself.
+   The Report page (/report/) reads the same key. Everything stays in this browser (localStorage).
+   A record is   {w: money the house edge applies to, n: net result, e: what the house edge alone would be expected to cost on w,
+                  m: what mistakes cost on top (EV lost versus perfect play), d: [[kind, chose, best, loss, context], ...], b: bankroll after}.
+   e and m are costs, so positive numbers. Luck is whatever is left:  luck = n + e + m. */
+(function(root){
+'use strict';
+var KEY = 'house_edge_log_v1', MAX_HANDS = 12000, IDLE_MS = 45 * 60 * 1000, MAX_PER_SESSION = 4000;
+var mem = null;
+function r2(x){ return Math.round(x * 100) / 100; }
+function load(){
+  if(mem) return mem;
+  try{ var raw = root.localStorage.getItem(KEY); mem = raw ? JSON.parse(raw) : null; }catch(e){ mem = null; }
+  if(!mem || mem.v !== 1 || !Array.isArray(mem.s)) mem = {v:1, s:[]};
+  return mem;
+}
+function count(L){ var n = 0; L.s.forEach(function(s){ n += s.h.length; }); return n; }
+function save(){
+  var L = load();
+  while(L.s.length > 1 && count(L) > MAX_HANDS) L.s.shift();
+  try{ root.localStorage.setItem(KEY, JSON.stringify(L)); return true; }
+  catch(e){
+    while(L.s.length > 1){ L.s.shift(); try{ root.localStorage.setItem(KEY, JSON.stringify(L)); return true; }catch(e2){} }
+    return false;
+  }
+}
+function newId(){ return Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36); }
+
+var TRLog = {
+  KEY: KEY,
+  /* rec: {w, n, e, m, d, b}   (d and b optional) */
+  hand: function(game, rec){
+    try{
+      if(!game || !rec || !isFinite(rec.n)) return false;
+      var L = load(), now = Date.now(), s = null;
+      for(var i = L.s.length - 1; i >= 0; i--){ if(L.s[i].g === game){ s = L.s[i]; break; } }
+      if(!s || (now - s.t1) > IDLE_MS || s.h.length >= MAX_PER_SESSION){
+        var b = (typeof rec.b === 'number') ? r2(rec.b - rec.n) : null;
+        s = {id:newId(), g:game, t0:now, t1:now, b0:b, h:[]};
+        L.s.push(s);
+      }
+      var row = [ Math.round((now - s.t0) / 1000), r2(rec.w || 0), r2(rec.n), r2(rec.e || 0), r2(rec.m || 0) ];
+      var d = (rec.d || []).map(function(x){ return [x[0], x[1], x[2], r2(x[3] || 0), String(x[4] || '').slice(0, 40)]; });
+      row.push(d.length ? d : 0);
+      row.push(typeof rec.b === 'number' ? r2(rec.b) : 0);
+      row.push(rec.k > 0 ? Math.round(rec.k) : 0);
+      s.h.push(row); s.t1 = now;
+      return save();
+    }catch(e){ return false; }
+  },
+  all: function(){ return load(); },
+  clear: function(){ mem = {v:1, s:[]}; try{ root.localStorage.removeItem(KEY); }catch(e){} },
+  count: function(){ return count(load()); },
+  /* the same data as plain objects, for the Report page */
+  rows: function(s){
+    return s.h.map(function(r, i){
+      return {i:i, t:s.t0 + r[0] * 1000, w:r[1], n:r[2], e:r[3], m:r[4], d:r[5] || [], b:r[6], k:r[7] || 0};
+    });
+  }
+};
+root.TRLog = TRLog;
+if(typeof module !== 'undefined' && module.exports) module.exports = TRLog;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* TRBJ: exact expected values for blackjack decisions, infinite deck, the dealer peeking for blackjack.
+   Used to price a mistake: loss = EV(what basic strategy says) - EV(what you did), in units of the opening bet. */
+(function(root){
+'use strict';
+var VALS = [2,3,4,5,6,7,8,9,10,11];
+var PROB = {2:1/13,3:1/13,4:1/13,5:1/13,6:1/13,7:1/13,8:1/13,9:1/13,10:4/13,11:1/13};
+
+function Engine(o){
+  o = o || {};
+  var h17 = !!o.h17, das = o.das !== false, surrender = !!o.surrender, bjPay = (typeof o.bjPay === 'number') ? o.bjPay : 1.5;
+  var dcache = {}, scache = {}, hcache = {}, ncache = {};
+
+  /* dealer: final distribution [17,18,19,20,21,bust] from a running (total, soft) */
+  function dealerFrom(total, soft){
+    var key = total + (soft ? 's' : 'h');
+    if(dcache[key]) return dcache[key];
+    var out;
+    if(total > 21 && !soft){ out = [0,0,0,0,0,1]; }
+    else if(total >= 17 && !(total === 17 && soft && h17)){
+      out = [0,0,0,0,0,0]; if(total > 21) out[5] = 1; else out[total - 17] = 1;
+    } else {
+      out = [0,0,0,0,0,0];
+      VALS.forEach(function(v){
+        var t = total + v, s = soft || v === 11;
+        if(t > 21 && s){ t -= 10; s = false; }          // an ace counted 11 drops to 1
+        var d = (t > 21) ? [0,0,0,0,0,1] : dealerFrom(t, s);
+        for(var i = 0; i < 6; i++) out[i] += PROB[v] * d[i];
+      });
+    }
+    dcache[key] = out; return out;
+  }
+  /* given the upcard, the hole card, with the peek: no blackjack, so the hole card is conditioned */
+  function dealerDist(up){
+    if(ncache[up]) return ncache[up];
+    var out = [0,0,0,0,0,0], z = 0;
+    VALS.forEach(function(v){
+      if((up === 11 && v === 10) || (up === 10 && v === 11)) return;      // peeked: that would be blackjack
+      var t = up + v, s = (up === 11 || v === 11);
+      if(t > 21){ t -= 10; s = false; }
+      var d = dealerFrom(t, s);
+      for(var i = 0; i < 6; i++) out[i] += PROB[v] * d[i];
+      z += PROB[v];
+    });
+    for(var i = 0; i < 6; i++) out[i] /= z;
+    ncache[up] = out; return out;
+  }
+  function standEV(total, up){
+    var key = total + ':' + up; if(key in scache) return scache[key];
+    var d = dealerDist(up), ev;
+    if(total > 21) ev = -1;
+    else {
+      ev = d[5];                                               // dealer busts
+      for(var t = 17; t <= 21; t++){ if(total > t) ev += d[t - 17]; else if(total < t) ev -= d[t - 17]; }
+      if(total < 17) ev = d[5] - (1 - d[5]);                  // anything the dealer makes beats a total under 17
+    }
+    scache[key] = ev; return ev;
+  }
+  /* after a hit: keep playing, stand or hit again, no doubling */
+  function playOn(total, soft, up){
+    if(total > 21 && soft){ total -= 10; soft = false; }
+    if(total > 21) return -1;
+    var key = total + (soft ? 's' : 'h') + up; if(key in hcache) return hcache[key];
+    var st = standEV(total, up), hit = hitEV(total, soft, up);
+    hcache[key] = Math.max(st, hit); return hcache[key];
+  }
+  function hitEV(total, soft, up){
+    var ev = 0;
+    VALS.forEach(function(v){
+      var t = total + v, s = soft || v === 11;
+      if(t > 21 && s){ t -= 10; s = false; }
+      ev += PROB[v] * (t > 21 ? -1 : playOn(t, s, up));
+    });
+    return ev;
+  }
+  function doubleEV(total, soft, up){
+    var ev = 0;
+    VALS.forEach(function(v){
+      var t = total + v, s = soft || v === 11;
+      if(t > 21 && s){ t -= 10; s = false; }
+      ev += PROB[v] * (t > 21 ? -1 : standEV(t, up));
+    });
+    return 2 * ev;
+  }
+  /* one hand started from a single split card v, then dealt a second card */
+  function splitOneEV(v, up){
+    var ev = 0;
+    VALS.forEach(function(c){
+      var t = v + c, s = (v === 11 || c === 11);
+      if(t > 21){ t -= 10; s = false; }
+      var best = Math.max(standEV(t, up), hitEV(t, s, up));
+      if(das) best = Math.max(best, doubleEV(t, s, up));
+      ev += PROB[c] * best;
+    });
+    return ev;
+  }
+  function norm(cards){            // cards: values, ace = 11
+    var sum = 0, aces = 0;
+    cards.forEach(function(v){ sum += v; if(v === 11) aces++; });
+    while(sum > 21 && aces > 0){ sum -= 10; aces--; }
+    return {total: sum, soft: aces > 0};
+  }
+  /* EV of one action for a hand (values) against an upcard value, per unit of the opening bet */
+  function actionEV(action, cards, up){
+    var h = norm(cards);
+    if(action === 'S') return standEV(h.total, up);
+    if(action === 'H') return hitEV(h.total, h.soft, up);
+    if(action === 'D') return doubleEV(h.total, h.soft, up);
+    if(action === 'R') return -0.5;
+    if(action === 'P'){ if(cards.length === 2 && cards[0] === cards[1]) return 2 * splitOneEV(cards[0], up); return null; }
+    return null;
+  }
+  function best(cards, up){
+    var acts = ['S','H'], out = {a:'S', ev:-9};
+    if(cards.length === 2){ acts.push('D'); if(cards[0] === cards[1]) acts.push('P'); if(surrender) acts.push('R'); }
+    acts.forEach(function(a){ var e = actionEV(a, cards, up); if(e !== null && e > out.ev){ out = {a:a, ev:e}; } });
+    return out;
+  }
+  /* the house edge on the opening bet, perfect basic strategy, this rule set (positive = the casino's edge) */
+  function houseEdge(){
+    var tot = 0;
+    VALS.forEach(function(up){
+      var pBJ = up === 11 ? 4/13 : (up === 10 ? 1/13 : 0);
+      VALS.forEach(function(a){ VALS.forEach(function(b){
+        var p = PROB[up] * PROB[a] * PROB[b], ev;
+        if((a === 11 && b === 10) || (a === 10 && b === 11)) ev = (1 - pBJ) * bjPay;
+        else ev = -pBJ + (1 - pBJ) * best([a, b], up).ev;
+        tot += p * ev;
+      }); });
+    });
+    return -tot;
+  }
+  return {actionEV:actionEV, best:best, houseEdge:houseEdge, standEV:standEV, dealerDist:dealerDist};
+}
+
+var cache = {};
+function get(o){
+  var k = [!!o.h17, o.das !== false, !!o.surrender, o.bjPay || 1.5].join('|');
+  return cache[k] || (cache[k] = Engine(o));
+}
+var TRBJ = {
+  Engine: get,
+  /* what a decision cost, in units of the opening bet (never negative). chose / best: 'H','S','D','P','R' */
+  loss: function(o, cardVals, upVal, chose, bestAct){
+    var E = get(o), a = E.actionEV(chose, cardVals, upVal), b = E.actionEV(bestAct, cardVals, upVal);
+    if(a === null || b === null) return 0;
+    return Math.max(0, b - a);
+  },
+  edge: function(o){ return get(o).houseEdge(); },
+  INS_EDGE: 1/13          // taking insurance: -1/13 per dollar of insurance
+};
+root.TRBJ = TRBJ;
+if(typeof module !== 'undefined' && module.exports) module.exports = TRBJ;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---- side bets and the dealer-bust ladder (used to price the Buster Bet) ---- */
+(function(root){
+  var TRBJ = root.TRBJ;
+  if(!TRBJ) return;
+  var VALS = [2,3,4,5,6,7,8,9,10,11], PROB = {2:1/13,3:1/13,4:1/13,5:1/13,6:1/13,7:1/13,8:1/13,9:1/13,10:4/13,11:1/13};
+  /* P(dealer busts holding exactly n cards), n = 3..8 (8 means 8 or more), infinite deck, no peek (the bet is placed before the deal) */
+  TRBJ.busterLadder = function(h17){
+    var out = [0,0,0,0,0,0,0,0,0];            // index = number of cards
+    function go(total, soft, n, p){
+      if(total > 21 && soft){ total -= 10; soft = false; }
+      if(total > 21){ out[Math.min(n, 8)] += p; return; }
+      if(total >= 17 && !(total === 17 && soft && h17)) return;
+      VALS.forEach(function(v){ go(total + v, soft || v === 11, n + 1, p * PROB[v]); });
+    }
+    VALS.forEach(function(a){ VALS.forEach(function(b){ go(a + b, a === 11 || b === 11, 2, PROB[a] * PROB[b]); }); });
+    return out;
+  };
+  /* expected return per $1 on a side bet, from the table the game pays: house edge = -EV */
+  TRBJ.sideEdges = function(opts){
+    var D = opts.decks || 2, N = 52 * D, res = {};
+    // Perfect Pairs: first two cards
+    var pp = opts.payPP, den = N - 1;
+    var pPerf = (D - 1) / den, pCol = D / den, pMix = 2 * D / den;
+    res.pp = -(pp.perfect * pPerf + pp.colored * pCol + pp.mixed * pMix - (1 - pPerf - pCol - pMix));
+    // 21+3 / TriLux: the player's two cards and the dealer's upcard, every combination of card types
+    if(opts.eval3){
+      var types = [];
+      ['A','2','3','4','5','6','7','8','9','10','J','Q','K'].forEach(function(r){ ['♠','♥','♦','♣'].forEach(function(s){ types.push({r:r, suit:s, color:(s === '♥' || s === '♦') ? 'red' : 'black'}); }); });
+      var ev = 0;
+      for(var i = 0; i < 52; i++) for(var j = 0; j < 52; j++) for(var k = 0; k < 52; k++){
+        var ci = D, cj = D - (j === i ? 1 : 0), ck = D - (k === i ? 1 : 0) - (k === j ? 1 : 0);
+        if(cj <= 0 || ck <= 0) continue;
+        var p = (ci / N) * (cj / (N - 1)) * (ck / (N - 2));
+        var cards = [types[i], types[j], types[k]].map(function(t){ return {r:t.r, suit:t.suit, color:t.color, v:(t.r === 'A' ? 11 : (['J','Q','K'].indexOf(t.r) >= 0 ? 10 : parseInt(t.r, 10)))}; });
+        var kind = opts.eval3(cards), pay = opts.pay3[kind] || 0;
+        ev += p * (pay > 0 ? pay : -1);
+      }
+      res.tp = -ev; res.tl = -ev;
+    }
+    // Buster: pays by the number of cards in a busted dealer hand
+    var lad = TRBJ.busterLadder(!!opts.h17), eb = 0, pb = 0;
+    for(var n = 3; n <= 8; n++){ eb += lad[n] * opts.busterPay(n); pb += lad[n]; }
+    res.bb = -(eb - (1 - pb));
+    return res;
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---- TRCost (blackjack): turns the game's own decisions and results into a log record ---- */
+window.TRCost = (function(){
+  var sideCache = {};
+  function rankV(r){ return r === 'A' ? 11 : (r === 'J' || r === 'Q' || r === 'K') ? 10 : parseInt(r, 10); }
+  function rules(G){ return {h17: !!G.hitSoft17, surrender: !!G.surrenderEnabled, bjPay: G.payout || 1.5, das: true}; }
+  function sideEdges(G){
+    var key = [G.decks, !!G.hitSoft17].join('|');
+    if(sideCache[key]) return sideCache[key];
+    try{
+      sideCache[key] = TRBJ.sideEdges({decks: G.decks || 2, h17: !!G.hitSoft17, payPP: PAY_PP, pay3: PAY3, eval3: eval3, busterPay: busterPay});
+    }catch(e){ sideCache[key] = {pp:0.05, tp:0.035, tl:0.035, bb:0.08}; }
+    return sideCache[key];
+  }
+  return {
+    reset: function(G){ G._trDec = []; },
+    /* one of the player's decisions: what was done, what basic strategy said, what that difference costs */
+    decision: function(G, action, eff, cls, h, dealerR){
+      if(!G._trDec) G._trDec = [];
+      if(!h || !h.cards || !dealerR) return;
+      var vals = h.cards.map(function(c){ return c.v || rankV(c.r); }), up = rankV(dealerR);
+      var t = handTotal(h.cards), kind = cls && cls.kind ? cls.kind : (t.soft ? 'soft' : 'hard');
+      var loss = (action === eff) ? 0 : TRBJ.loss(rules(G), vals, up, action, eff) * h.bet;
+      var ctx = (kind === 'pair' ? 'pair of ' + (h.cards[0].r === 'A' ? 'aces' : (h.cards[0].v === 10 ? 'tens' : h.cards[0].r + 's')) : (kind === 'soft' ? 'soft ' : 'hard ') + t.total) + ' v ' + (dealerR === 'A' ? 'ace' : (up === 10 ? '10' : dealerR));
+      G._trDec.push([kind, action, eff, loss, ctx]);
+    },
+    /* the round is over: price it and log it */
+    round: function(G, totalNet){
+      var w = 0, side = 0, e = 0, m = 0, sE = sideEdges(G);
+      G.hands.forEach(function(h){
+        if(h.fromSplit) return;
+        var base = (h.dblIdx != null && !h.freeDoubleBonus) ? h.bet / 2 : h.bet;
+        w += base;
+      });
+      e = TRBJ.edge(rules(G)) * w;
+      var d = (G._trDec || []).slice();
+      d.forEach(function(x){ m += x[3]; });
+      /* side bets are optional and carry a bigger edge than the hand itself: perfect play would not make them, so their whole edge is counted as avoidable */
+      var SN = {pp:'Perfect Pairs', tp:'21+3', tl:'TriLux', bb:'Buster Bet'};
+      ['pp','tp','tl','bb'].forEach(function(k){ if(G.sidebets && G.sidebets[k] && G.sbAmounts[k]){ var a = G.sbAmounts[k], c = a * (sE[k] || 0); w += a; m += c; d.push(['side', k, 'none', c, SN[k] + ' $' + a]); } });
+      if(G.insuranceBet > 0){ var li = G.insuranceBet * TRBJ.INS_EDGE; m += li; d.push(['ins', 'INS', 'NOINS', li, 'insurance']); }
+      var k = (G._trDec || []).length + (G.insuranceBet > 0 ? 1 : 0);
+      ['pp','tp','tl','bb'].forEach(function(q){ if(G.sidebets && G.sidebets[q] && G.sbAmounts[q]) k++; });
+      TRLog.hand('blackjack', {w: w, n: totalNet, e: e, m: m, d: d.filter(function(x){ return x[3] > 0.004; }), b: G.bankroll, k: k});
+      G._trDec = [];
+    }
+  };
+})();
+
+</script>
+<script id="tr-practice">
+/* ---- TRPractice: ten questions on the situations that cost real money, no bets, no cards to wait for. Misses come back once. ---- */
+window.TRPractice = (function(){
+  var KEY = 'house_edge_practice_v1', N = 10, st = null, root = null, prevFocus = null;
+  var SUIT = {s:'♠', h:'♥', d:'♦', c:'♣'};
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function card(rank, suit){
+    if(rank === 'JOKER' || rank === 'JK') return '<span class="pc-card pc-joker">JKR</span>';
+    return '<span class="pc-card' + (suit === 'h' || suit === 'd' ? ' red' : '') + '"><b>' + esc(rank) + '</b><i>' + (SUIT[suit] || '') + '</i></span>';
+  }
+  function css(){
+    if(document.getElementById('tr-prac-css')) return;
+    var s = document.createElement('style'); s.id = 'tr-prac-css';
+    s.textContent =
+      '#btn-practice{display:inline-flex;align-items:center;gap:6px;font:600 11.5px/1 var(--font-ui,Inter,system-ui,sans-serif);letter-spacing:.02em;color:var(--brass-bright,#F0C46B);background:transparent;border:1px solid color-mix(in srgb,var(--brass,#D6A94B) 55%,transparent);border-radius:999px;padding:6px 12px;cursor:pointer;min-height:0;box-shadow:none}' +
+      '#btn-practice:hover{background:color-mix(in srgb,var(--brass,#D6A94B) 14%,transparent);border-color:var(--brass,#D6A94B)}' +
+      '#btn-practice::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--brass,#D6A94B)}' +
+      '#tr-prac{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(4,5,7,.74);backdrop-filter:blur(3px);font-family:Inter,system-ui,sans-serif;color:var(--text,#EDEEF0)}' +
+      '#tr-prac.on{display:flex}' +
+      '#tr-prac .pp{width:min(620px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel,#15171B);border:1px solid var(--line,rgba(237,238,240,.12));border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:22px 24px 20px}' +
+      '#tr-prac .pp-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}' +
+      '#tr-prac .pp-top h2{margin:0;font:700 17px var(--font-display,"Space Grotesk",Inter,sans-serif);letter-spacing:-.01em;flex:1}' +
+      '#tr-prac .pp-x{background:none;border:0;color:var(--text-muted,#8A8F98);font-size:24px;line-height:1;cursor:pointer;padding:2px 6px}' +
+      '#tr-prac .pp-x:hover{color:var(--text,#EDEEF0)}' +
+      '#tr-prac .pp-bar{display:flex;gap:4px;margin-bottom:16px}' +
+      '#tr-prac .pp-bar i{flex:1;height:5px;border-radius:3px;background:var(--panel-2,#1D2025)}' +
+      '#tr-prac .pp-bar i.ok{background:var(--sage-bright,#65C7A3)}#tr-prac .pp-bar i.no{background:var(--coral,#E15D45)}#tr-prac .pp-bar i.now{background:var(--brass,#D6A94B)}' +
+      '#tr-prac .pp-meta{display:flex;justify-content:space-between;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#8A8F98);margin-bottom:10px}' +
+      '#tr-prac .pp-q{font:600 17px/1.35 Inter,sans-serif;margin:0 0 14px}' +
+      '#tr-prac .pp-scene{background:var(--panel-2,#1D2025);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:grid;gap:10px}' +
+      '#tr-prac .pp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}' +
+      '#tr-prac .pp-lab{font:600 10.5px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted,#8A8F98);min-width:78px}' +
+      '#tr-prac .pc-card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:52px;border-radius:7px;background:var(--card-face,#F4F5F7);color:#15171B;font:700 15px/1 Inter,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.4)}' +
+      '#tr-prac .pc-card i{font-style:normal;font-size:15px;margin-top:2px}#tr-prac .pc-card.red{color:#C23A2E}' +
+      '#tr-prac .pc-card.pc-joker{font-size:10px;letter-spacing:.04em;color:#7C5CC4}' +
+      '#tr-prac .pc-chip{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.07);font:600 13px Inter,sans-serif}' +
+      '#tr-prac .pc-big{font:700 22px var(--font-display,"Space Grotesk",Inter,sans-serif);font-variant-numeric:tabular-nums}' +
+      '#tr-prac .pp-opts{display:grid;gap:8px}' +
+      '#tr-prac .pp-opts.two{grid-template-columns:1fr 1fr}' +
+      '#tr-prac .pp-opt{display:flex;align-items:center;gap:10px;text-align:left;font:600 15px Inter,sans-serif;color:var(--text,#EDEEF0);background:var(--panel-2,#1D2025);border:1.5px solid var(--line,rgba(237,238,240,.12));border-radius:12px;padding:12px 14px;cursor:pointer;min-height:48px}' +
+      '#tr-prac .pp-opt:hover:not([disabled]){border-color:var(--brass,#D6A94B)}' +
+      '#tr-prac .pp-opt kbd{font:600 11px Inter,sans-serif;color:var(--text-muted,#8A8F98);border:1px solid var(--line,rgba(237,238,240,.2));border-radius:5px;padding:2px 6px}' +
+      '#tr-prac .pp-opt small{display:block;font:500 12px Inter,sans-serif;color:var(--text-muted,#8A8F98);margin-top:2px}' +
+      '#tr-prac .pp-opt.right{border-color:var(--sage-bright,#65C7A3);background:color-mix(in srgb,var(--sage-bright,#65C7A3) 14%,var(--panel-2,#1D2025))}' +
+      '#tr-prac .pp-opt.wrong{border-color:var(--coral,#E15D45);background:color-mix(in srgb,var(--coral,#E15D45) 14%,var(--panel-2,#1D2025))}' +
+      '#tr-prac .pp-opt[disabled]{cursor:default;color:var(--text,#EDEEF0);opacity:1}#tr-prac .pp-opt[disabled]:not(.right):not(.wrong){opacity:.5}#tr-prac .pp-opt:disabled small{color:var(--text-muted,#8A8F98)}' +
+      '#tr-prac .pp-fb{margin-top:14px;padding:13px 15px;border-radius:12px;font-size:14px;line-height:1.5;background:var(--panel-2,#1D2025)}' +
+      '#tr-prac .pp-fb b.v{display:block;font:700 15px Inter,sans-serif;margin-bottom:4px}' +
+      '#tr-prac .pp-fb.ok b.v{color:var(--sage-bright,#65C7A3)}#tr-prac .pp-fb.no b.v{color:var(--coral,#E15D45)}' +
+      '#tr-prac .pp-act{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}' +
+      '#tr-prac .pp-btn{font:700 14px Inter,sans-serif;border-radius:999px;padding:11px 20px;cursor:pointer;border:1px solid var(--line,rgba(237,238,240,.2));background:transparent;color:var(--text,#EDEEF0)}' +
+      '#tr-prac .pp-btn.pri{background:var(--brass,#D6A94B);border-color:var(--brass-bright,#F0C46B);color:#1B1608}' +
+      '#tr-prac .pp-score{text-align:center;padding:6px 0 4px}' +
+      '#tr-prac .pp-score .pc-big{font-size:56px;line-height:1}' +
+      '#tr-prac .pp-score p{margin:8px 0 0;color:var(--text-muted,#8A8F98)}' +
+      '#tr-prac .pp-miss{margin-top:14px;display:grid;gap:8px}' +
+      '#tr-prac .pp-miss div{background:var(--panel-2,#1D2025);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45}' +
+      '#tr-prac .pp-miss b{color:var(--sage-bright,#65C7A3)}' +
+      '@media (max-width:520px){#tr-prac .pp{padding:18px 16px 16px;border-radius:16px}#tr-prac .pp-opts.two{grid-template-columns:1fr}#tr-prac .pc-card{width:34px;height:47px}}';
+    document.head.appendChild(s);
+  }
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
+  function save(game, score){ try{ var d = load(), r = d[game] || {runs: 0, best: 0}; r.runs++; r.last = score; r.best = Math.max(r.best, score); d[game] = r; localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
+  function el(){
+    if(root) return root;
+    root = document.createElement('div'); root.id = 'tr-prac'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Practice');
+    root.addEventListener('click', function(e){ if(e.target === root) close(); });
+    document.body.appendChild(root);
+    document.addEventListener('keydown', onKey, true);
+    return root;
+  }
+  function close(){ if(!root) return; root.classList.remove('on'); root.innerHTML = ''; st = null; try{ if(prevFocus && prevFocus.focus) prevFocus.focus(); }catch(e){} if(location.hash === '#practice'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} } }
+  function onKey(e){
+    if(!st || !root || !root.classList.contains('on')) return;
+    if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
+    if(st.phase === 'ask' && /^[1-9]$/.test(e.key)){ var b = root.querySelectorAll('.pp-opt')[+e.key - 1]; if(b){ e.preventDefault(); b.click(); } }
+    else if(st.phase === 'fb' && (e.key === 'Enter' || e.key === ' ')){ var nx = root.querySelector('#pp-next'); if(nx){ e.preventDefault(); e.stopPropagation(); nx.click(); } }
+  }
+  function bar(){
+    var h = '';
+    for(var i = 0; i < N; i++){ var r = st.res[i]; h += '<i class="' + (r === 1 ? 'ok' : r === 0 ? 'no' : (i === st.firstIdx ? 'now' : '')) + '"></i>'; }
+    return '<div class="pp-bar" aria-hidden="true">' + h + '</div>';
+  }
+  function top(){ return '<div class="pp-top"><h2>' + esc(st.cfg.title) + '</h2><button type="button" class="pp-x" aria-label="Close practice">&times;</button></div>'; }
+  function paint(){
+    var q = st.cur, h = top() + bar();
+    h += '<div class="pp-meta"><span>' + (q.retry ? 'Second look' : 'Question ' + (st.asked + 1) + ' of ' + st.total) + '</span><span>Score ' + st.score + '</span></div>';
+    h += '<p class="pp-q">' + q.prompt + '</p>';
+    if(q.scene) h += '<div class="pp-scene">' + q.scene + '</div>';
+    h += '<div class="pp-opts' + (q.options.length === 2 ? ' two' : '') + '">' + q.options.map(function(o, i){ return '<button type="button" class="pp-opt" data-k="' + esc(o.k) + '"><kbd>' + (i + 1) + '</kbd><span>' + o.label + (o.sub ? '<small>' + o.sub + '</small>' : '') + '</span></button>'; }).join('') + '</div>';
+    h += '<div id="pp-fb"></div>';
+    root.innerHTML = '<div class="pp">' + h + '</div>';
+    root.querySelector('.pp-x').onclick = close;
+    Array.prototype.forEach.call(root.querySelectorAll('.pp-opt'), function(b){ b.onclick = function(){ answer(b.getAttribute('data-k')); }; });
+    st.phase = 'ask';
+  }
+  function answer(k){
+    if(st.phase !== 'ask') return; st.phase = 'fb';
+    var q = st.cur, ok = k === q.answer;
+    Array.prototype.forEach.call(root.querySelectorAll('.pp-opt'), function(b){
+      b.disabled = true; var bk = b.getAttribute('data-k');
+      if(bk === q.answer) b.classList.add('right'); else if(bk === k) b.classList.add('wrong');
+    });
+    if(!q.retry){
+      st.res[st.asked] = ok ? 1 : 0; if(ok) st.score++; else st.misses.push(q);
+      if(!ok) st.queue.push(Object.assign({}, q, {retry: true}));
+    }
+    var last = !st.queue.length;
+    var fb = '<div class="pp-fb ' + (ok ? 'ok' : 'no') + '"><b class="v">' + (ok ? 'Correct' : 'Not quite') + '</b>' + (typeof q.explain === 'function' ? q.explain(k, ok) : q.explain) + '</div>' +
+      '<div class="pp-act"><button type="button" class="pp-btn pri" id="pp-next">' + (last ? 'See my score' : 'Next') + '</button></div>';
+    root.querySelector('#pp-fb').innerHTML = fb;
+    var nx = root.querySelector('#pp-next'); nx.onclick = next; try{ nx.focus({preventScroll:true}); nx.scrollIntoView({block:'nearest'}); }catch(e){}
+    if(!q.retry) st.asked++;
+  }
+  function next(){
+    if(!st.queue.length) return summary();
+    st.cur = st.queue.shift(); st.firstIdx = st.asked; paint();
+  }
+  function summary(){
+    st.phase = 'done'; save(st.cfg.game, st.score);
+    var d = load()[st.cfg.game] || {}, msg = st.score === N ? 'A clean sweep. That is how the table plays it.' : st.score >= 8 ? 'Strong. A couple of spots to tighten.' : st.score >= 5 ? 'Getting there. The misses below are the money.' : 'Worth another pass. Read the reasons below, then go again.';
+    var h = top() + '<div class="pp-score"><div class="pc-big">' + st.score + ' / ' + N + '</div><p>' + msg + (d.best ? ' Best so far: ' + d.best + '/' + N + '.' : '') + '</p></div>';
+    if(st.misses.length){ h += '<div class="pp-miss">' + st.misses.map(function(q){ return '<div>' + (q.tag ? '<b style="color:var(--text)">' + q.tag + '</b> — ' : '') + 'right answer: <b>' + q.answerLabel + '</b></div>'; }).join('') + '</div>'; }
+    h += '<div class="pp-act">' + (st.misses.length ? '<button type="button" class="pp-btn" id="pp-again-miss">Drill only my misses</button>' : '') + '<button type="button" class="pp-btn pri" id="pp-again">Practice again</button><button type="button" class="pp-btn" id="pp-done">Back to the table</button></div>';
+    root.innerHTML = '<div class="pp">' + h + '</div>';
+    root.querySelector('.pp-x').onclick = close; root.querySelector('#pp-done').onclick = close;
+    root.querySelector('#pp-again').onclick = function(){ start(st.cfg); };
+    var m = root.querySelector('#pp-again-miss'); if(m) m.onclick = function(){ start(st.cfg, st.misses); };
+  }
+  function start(cfg, only){
+    css(); el();
+    st = {cfg: cfg, queue: [], res: [], score: 0, asked: 0, misses: [], phase: 'ask', firstIdx: 0};
+    var seen = {};
+    if(only && only.length){ only.forEach(function(q){ st.queue.push(Object.assign({}, q, {retry: false})); }); }
+    else { var guard = 0; while(st.queue.length < N && guard++ < 200){ var q = cfg.make(); if(q && !seen[q.tag + '|' + q.answer + '|' + q.prompt]){ seen[q.tag + '|' + q.answer + '|' + q.prompt] = 1; st.queue.push(q); } } }
+    var only10 = st.queue.slice(0, N); st.queue = only10; st.total = only10.length;
+    for(var i = 0; i < N; i++) st.res[i] = i < st.total ? undefined : -1;
+    root.classList.add('on');
+    st.cur = st.queue.shift(); paint();
+  }
+  function open(cfg){ prevFocus = document.activeElement; start(cfg); }
+  function wire(cfg){
+    css();
+    var b = document.getElementById('btn-practice');
+    if(b) b.addEventListener('click', function(e){ e.preventDefault(); open(cfg); });
+    if(location.hash === '#practice') setTimeout(function(){ open(cfg); }, 700);
+    window.addEventListener('hashchange', function(){ if(location.hash === '#practice') open(cfg); });
+  }
+  return {open: open, wire: wire, card: card, esc: esc};
+})();
+
+/* ---- practice: blackjack (basic strategy for the rules at this table, priced by the exact engine) ---- */
+(function(){
+  var P = window.TRPractice, NAME = {H:'Hit', S:'Stand', D:'Double', P:'Split', R:'Surrender'};
+  var SU = ['s','h','d','c'];
+  function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
+  function rankOf(v){ return v === 11 ? 'A' : v === 10 ? pick(['10','J','Q','K']) : String(v); }
+  function cardOf(v){ return P.card(rankOf(v), pick(SU)); }
+  function rules(){ var G = window.G; return {h17: !!G.hitSoft17, surrender: !!G.surrenderEnabled, bjPay: G.payout || 1.5, das: true}; }
+  function sgnEv(x){ return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2); }
+  function why(kind, up, best, tot){
+    var weak = up >= 2 && up <= 6, name = up === 11 ? 'an ace' : 'a ' + up;
+    if(best === 'S') return weak ? 'The dealer shows ' + name + ', a weak card that busts often, so you let the dealer take the risk.' : 'Hitting would bust too often to be worth it.';
+    if(best === 'H') return weak ? 'Your total is too low to stand on, even against a weak card.' : 'The dealer likely makes a hand, so a stiff total has to improve.';
+    if(best === 'D') return 'Your hand is strong enough, and the dealer weak enough, that getting double money on the table pays.';
+    if(best === 'P') return 'Two hands starting from this card are worth more than one hand starting from this pair.';
+    return 'Giving up half the bet loses less than playing this one out.';
+  }
+  function make(){
+    var G = window.G, o = rules(), E = TRBJ.Engine(o), up = pick([2,3,4,5,6,7,8,9,10,10,10,10,11]), t = Math.random(), cards, kind;
+    if(t < .45){ kind = 'hard'; var tot = 5 + Math.floor(Math.random() * 13), a, b, g = 0; do { a = 2 + Math.floor(Math.random() * 9); b = tot - a; g++; } while((b < 2 || b > 10 || a === b) && g < 60); if(b < 2 || b > 10 || a === b) return null; cards = [a, b]; }
+    else if(t < .75){ kind = 'soft'; cards = [11, 2 + Math.floor(Math.random() * 8)]; }
+    else { kind = 'pair'; cards = pick([2,3,4,5,6,7,8,9,10,11]); cards = [cards, cards]; }
+    var best = E.best(cards, up), isPair = cards[0] === cards[1];
+    var legal = ['H','S','D'].concat(isPair ? ['P'] : []).concat(o.surrender ? ['R'] : []);
+    var evs = {}; legal.forEach(function(a){ evs[a] = E.actionEV(a, cards, up); });
+    var ans = legal.reduce(function(m, a){ return evs[a] > evs[m] ? a : m; }, legal[0]);
+    var total = cards[0] + cards[1], soft = cards.indexOf(11) >= 0 && !(isPair && cards[0] === 11), txt = isPair ? 'Pair of ' + (cards[0] === 11 ? 'aces' : cards[0] === 10 ? 'tens' : cards[0] + 's') : (soft ? 'Soft ' + total : 'Hard ' + total);
+    var tag = txt.toLowerCase() + ' v ' + (up === 11 ? 'ace' : up);
+    return {
+      tag: tag, answer: ans, answerLabel: NAME[ans],
+      prompt: 'What does basic strategy say here?',
+      scene: '<div class="pp-row"><span class="pp-lab">Dealer shows</span>' + cardOf(up) + '</div><div class="pp-row"><span class="pp-lab">You hold</span>' + cardOf(cards[0]) + cardOf(cards[1]) + '<span class="pc-chip">' + txt + '</span></div>',
+      options: legal.map(function(a){ return {k: a, label: NAME[a]}; }),
+      explain: function(k, ok){
+        var list = legal.slice().sort(function(a, b){ return evs[b] - evs[a]; }).map(function(a){ return NAME[a] + ' ' + sgnEv(evs[a]); }).join(' · ');
+        return (ok ? '' : '<b>' + NAME[ans] + '</b> is the play. ') + why(kind, up, ans, total) + '<br><span style="color:var(--text-muted)">Expected result per $1 bet: ' + list + '. These numbers use the rules at your table.</span>';
+      }
+    };
+  }
+  P.wire({game: 'blackjack', title: 'Blackjack practice', make: make});
+})();
+
+</script>
+<script id="tr-tip">
+/* ---- Tip the dealer ----
+   A small "Tip $5" button on the counter. The dealer takes the chip and thanks you a different way each time; tip enough and he becomes a fan
+   (a heart pin, a happy face when you win, a kind one when you lose). It is play money out of your bankroll, only between hands, and it never
+   touches the cards. The total lives with the session: it resets with "Reset session" / "Reset bankroll", or when the tab is closed.
+   The dealer's own code (in each game page) publishes window.TRDealer; this file only talks to that. */
+(function(){
+  'use strict';
+  var W = window, D = document;
+  var TIP = 5, FAN = 20, SUPER = 50;
+  var game = (location.pathname.match(/\/(blackjack|baccarat|pai-gow|ultimate-texas-holdem)\b/) || [])[1] || 'table';
+  var KEY = 'house_edge_tips_v1_' + game;
+  var st = {total: 0, n: 0}, lastKind = '', lineAt = {};
+  var busyGest = null, kinds = [];
+
+  /* ---------- memory (this tab's session) ---------- */
+  function store(){ try{ return W.sessionStorage; }catch(e){ return null; } }
+  function load(){
+    var s = store(); if(!s) return;
+    try{ var v = JSON.parse(s.getItem(KEY) || 'null'); if(v && isFinite(v.total) && v.total >= 0) st = {total: Math.floor(v.total), n: Math.max(0, Math.floor(v.n) || 0)}; }catch(e){}
+  }
+  function save(){ var s = store(); if(!s) return; try{ s.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+  function level(){ return st.total >= SUPER ? 3 : st.total >= FAN ? 2 : st.total >= TIP ? 1 : 0; }
+  function money(n){ return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function rnd(){ return Math.random(); }          /* the dealer's reactions are decoration: they never touch the shoe's random stream */
+  function line(key, list){                        /* the next line from a list, never the one used last time */
+    var i = Math.floor(rnd() * list.length); if(i === lineAt[key] && list.length > 1) i = (i + 1) % list.length;
+    lineAt[key] = i; return list[i];
+  }
+
+  /* ---------- how he reacts to a result, once he is a fan ---------- */
+  var LINES = {
+    l1win: ['Nice one.', 'Well played.', 'Good for you.'],
+    win2: ['Yes! That’s my player!', 'Beautiful. Just beautiful.', 'Look at you go!', 'That’s what I like to see!'],
+    win3: ['That’s my guy!', 'Best player at the table!', 'I’d high-five you if I could.', 'Tell everyone I dealt that.'],
+    big2: ['I KNEW it!', 'Are you kidding me?!', 'Unbelievable!'],
+    big3: ['I KNEW it! I knew it!', 'That’s my favorite player!', 'Somebody call the pit!'],
+    lose2: ['Aw, so close.', 'Shake it off, boss.', 'Next one’s yours.', 'I’m rooting for you.'],
+    lose3: ['I felt that one too.', 'I believe in you.', 'We’ll get the next one.'],
+    push2: ['Safe. I’ll take it.', 'Phew. Still alive.', 'A push. We live.'],
+    fold2: ['Smart fold.', 'Live to fight on.']
+  };
+  /* kind: 'win' | 'big' | 'lose' | 'push' | 'fold'. warm = his usual face for a win is already a smile (so a first tip adds nothing to it). */
+  function react(kind, warm){
+    var L = level(); if(L < 1) return null;
+    if(L === 1){
+      if(warm || (kind !== 'win' && kind !== 'big')) return null;
+      return {mood: 'sm2', hold: 2200, line: line('l1win', LINES.l1win), ms: 1900, hearts: 0, hop: 0};
+    }
+    var s3 = L >= 3;
+    if(kind === 'big') return {mood: 'joy', hold: 3000, line: line('big', s3 ? LINES.big3 : LINES.big2), ms: 2300, hearts: s3 ? 9 : 5, hop: s3 ? 2 : 1};
+    if(kind === 'win') return {mood: 'joy', hold: 2800, line: line('win', s3 ? LINES.win3 : LINES.win2), ms: 2200, hearts: s3 ? 5 : 3, hop: 1};
+    if(kind === 'lose') return {mood: 'aww', hold: 2500, line: line('lose', s3 ? LINES.lose3 : LINES.lose2), ms: 2200, hearts: 0, hop: 0};
+    if(kind === 'push') return {mood: 'sm2', hold: 2200, line: line('push', LINES.push2), ms: 2000, hearts: 0, hop: 0};
+    if(kind === 'fold') return {mood: 'sm2', hold: 2200, line: line('fold', LINES.fold2), ms: 2000, hearts: 0, hop: 0};
+    return null;
+  }
+
+  /* ---------- look: his new faces, the pins on his vest, the button, the little props ---------- */
+  var CSS =
+  '.ds .tr-tip{pointer-events:auto;position:absolute;left:50%;bottom:4px;transform:translateX(-50%);z-index:7;display:inline-flex;align-items:center;gap:6px;height:19px;padding:0 9px 0 6px;margin:0;border-radius:999px;border:1px solid var(--line);' +
+    'background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),var(--panel);color:var(--text-muted);font:600 10.5px/1 "Inter",sans-serif;letter-spacing:.2px;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 1px 0 rgba(255,255,255,0.06) inset,0 3px 6px -3px rgba(0,0,0,0.6);}' +
+  '.ds .tr-tip::before{content:"";position:absolute;inset:-10px -8px;}' +
+  '.ds .tr-tip:hover{border-color:var(--brass);color:var(--text,#e6e8ec);}' +
+  '.ds .tr-tip:focus-visible{outline:2px solid var(--brass-bright);outline-offset:2px;}' +
+  '.ds .tr-tip.off,.ds .tr-tip.busy{opacity:.5;cursor:default;}' +
+  '.ds .tr-tip.off:hover,.ds .tr-tip.busy:hover{border-color:var(--line);color:var(--text-muted);}' +
+  '.ds .tr-tip.nope{animation:trNope 320ms ease;}' +
+  '@keyframes trNope{0%,100%{transform:translateX(-50%);}25%{transform:translateX(calc(-50% - 3px));}60%{transform:translateX(calc(-50% + 3px));}}' +
+  '.tr-tip-chip{flex:none;box-sizing:border-box;width:11px;height:11px;border-radius:50%;border:1.5px dashed #F3F0E6;background:#C8372D;}' +
+  '.tr-tip.pulse .tr-tip-chip{animation:trChip 420ms ease;}' +
+  '@keyframes trChip{0%{transform:translateY(0) scale(1);}40%{transform:translateY(-5px) scale(1.15);}100%{transform:translateY(0) scale(1);}}' +
+  '.tr-tip-tot{display:inline-flex;align-items:center;gap:3px;margin-left:1px;padding-left:7px;border-left:1px solid var(--line);color:var(--brass-bright);font-weight:700;font-variant-numeric:tabular-nums;}' +
+  '.tr-tip-tot[hidden]{display:none;}' +
+  '.tr-tip-tot svg{width:9px;height:8px;fill:#E8788A;}' +
+  /* faces */
+  '.ds[data-mood="joy"] .face-joy,.ds[data-mood="wink"] .face-wink,.ds[data-mood="thx"] .face-thx,.ds[data-mood="aww"] .face-aww{opacity:1;}' +
+  '.ds[data-mood="joy"] .ds-lid,.ds[data-mood="thx"] .ds-lid,.ds[data-mood="wink"] .ds-lid{animation:none;transform:scaleY(0);}' +
+  '.ds[data-mood="aww"] .ds-lid{animation:none;transform:scaleY(.34);}' +
+  '.ds[data-mood="joy"] .ds-head{animation:trJoy 760ms ease-in-out 2;}' +
+  '@keyframes trJoy{0%,100%{transform:translateY(0) rotate(0);}30%{transform:translateY(-2.6px) rotate(-1.6deg);}60%{transform:translateY(.4px) rotate(1.2deg);}}' +
+  '.ds[data-mood="aww"] .ds-head{transform:rotate(-4deg) translateY(1.4px);}' +
+  '.ds[data-mood="thx"] .ds-head{transform:translateY(1.8px) rotate(2deg);}' +
+  '.ds[data-mood="wink"] .ds-head{transform:rotate(2.5deg);}' +
+  '.ds-spark{transform-box:fill-box;transform-origin:50% 50%;opacity:0;}' +
+  '.ds[data-mood="wink"] .ds-spark{animation:trSpark 1000ms ease-out 120ms both;}' +
+  '@keyframes trSpark{0%{opacity:0;transform:scale(.2) rotate(0);}35%{opacity:1;transform:scale(1.25) rotate(20deg);}100%{opacity:0;transform:scale(.7) rotate(50deg);}}' +
+  '.ds-dealer[data-bow="1"] .ds-head{animation:trBow 1150ms ease-in-out both;}' +
+  '@keyframes trBow{0%{transform:translateY(0) rotate(0);}30%,70%{transform:translateY(6px) rotate(4.5deg);}100%{transform:translateY(0) rotate(0);}}' +
+  '.ds-dealer[data-cheer="1"]{animation:trHop 520ms cubic-bezier(.3,.8,.4,1);}' +
+  '.ds-dealer[data-cheer="2"]{animation:trHop 520ms cubic-bezier(.3,.8,.4,1) 2;}' +
+  '@keyframes trHop{0%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}' +
+  /* the pins he wears for you */
+  '.ds-pin .p2,.ds-pin .p3{opacity:0;transition:opacity 300ms ease;}' +
+  '.ds[data-fan="2"] .ds-pin .p2,.ds[data-fan="3"] .ds-pin .p2,.ds[data-fan="3"] .ds-pin .p3{opacity:1;}' +
+  /* props */
+  '.ds-tipchip{position:absolute;box-sizing:border-box;left:-8px;top:51px;width:16px;height:16px;border-radius:50%;border:2px dashed #F3F0E6;background:#C8372D;box-shadow:0 1px 2px rgba(0,0,0,0.55);opacity:0;pointer-events:none;transition:opacity 60ms ease;}' +
+  '.ds-tipchip.on{opacity:1;}' +
+  '.tr-toss{position:absolute;box-sizing:border-box;z-index:8;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px dashed #F3F0E6;background:#C8372D;box-shadow:0 2px 3px rgba(0,0,0,0.5);pointer-events:none;animation:trToss 760ms cubic-bezier(.3,.6,.4,1) forwards;}' +
+  '@keyframes trToss{0%{transform:perspective(240px) translateY(0) rotateX(0);}50%{transform:perspective(240px) translateY(-40px) rotateX(540deg);}100%{transform:perspective(240px) translateY(-4px) rotateX(1080deg);}}' +
+  '.tr-heart{position:absolute;z-index:8;width:13px;height:12px;margin:-6px 0 0 -6px;fill:#E8788A;pointer-events:none;opacity:0;animation:trHeart 1500ms ease-out both;}' +
+  '@keyframes trHeart{0%{opacity:0;transform:translate(0,6px) scale(.4);}18%{opacity:1;transform:translate(calc(var(--dx) * .3),-6px) scale(1);}100%{opacity:0;transform:translate(var(--dx),-40px) scale(.8);}}' +
+  '.ds-tray.tr-hop{animation:trTray 380ms ease;}' +
+  '@keyframes trTray{0%,100%{transform:translateY(0);}35%{transform:translateY(-2px);}}' +
+  '@media (prefers-reduced-motion:reduce){.tr-heart,.tr-toss{animation:none;opacity:0;}.ds[data-mood="joy"] .ds-head,.ds-dealer[data-cheer]{animation:none;}}';
+
+  var FACES =
+  '<g class="face-joy"><ellipse cx="66" cy="46" rx="6" ry="6.4" fill="#EBBB96" style="filter:url(#trSoft)"/><ellipse cx="84" cy="46" rx="6" ry="6.4" fill="#E6B38C" style="filter:url(#trSoft)"/><path d="M60 33.8 q6 -3.6 12 -.4 M78 33.4 q6 -3.2 12 .4" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/>' +
+    '<path d="M61 47.4 q5 -6.2 10 0 M79 47.4 q5 -6.2 10 0" stroke="#2B1D14" stroke-width="2.3" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="59.4" cy="57.2" rx="4.8" ry="2.8" fill="#E58B7C" opacity=".38"/><ellipse cx="90.6" cy="57.2" rx="4.8" ry="2.8" fill="#E58B7C" opacity=".38"/>' +
+    '<path d="M65.4 60.2 Q75 64.6 84.6 60.2 Q83 71.4 75 71.4 Q67 71.4 65.4 60.2 Z" fill="#5A2A22"/><path d="M66.4 61 Q75 64.8 83.6 61 L83.2 63 Q75 66.6 66.8 63 Z" fill="#fff"/><ellipse cx="75" cy="69" rx="3.6" ry="1.7" fill="#D9786C"/></g>' +
+  '<g class="face-wink"><ellipse cx="84" cy="46" rx="6" ry="6.4" fill="#E6B38C" style="filter:url(#trSoft)"/><path d="M60 37.4 q6 -2.8 12 -.2 M78 34 q6 -3.8 12 -.6" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/>' +
+    '<path d="M79.2 47.4 q4.8 -5.8 9.6 0" stroke="#2B1D14" stroke-width="2.3" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="59.6" cy="57.2" rx="4.4" ry="2.6" fill="#E58B7C" opacity=".26"/><ellipse cx="90.4" cy="57.2" rx="4.4" ry="2.6" fill="#E58B7C" opacity=".26"/>' +
+    '<path d="M68.6 62 q7.4 6 14 -2.8" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/>' +
+    '<path class="ds-spark" d="M99 33 l1.7 4.3 4.3 1.7 -4.3 1.7 -1.7 4.3 -1.7 -4.3 -4.3 -1.7 4.3 -1.7 z" fill="#FFF1B8"/></g>' +
+  '<g class="face-thx"><ellipse cx="66" cy="46" rx="6" ry="6.4" fill="#EBBB96" style="filter:url(#trSoft)"/><ellipse cx="84" cy="46" rx="6" ry="6.4" fill="#E6B38C" style="filter:url(#trSoft)"/><path d="M60 36.4 q6 -2.2 12 .2 M78 36.6 q6 -2.4 12 -.2" stroke="#2B1D14" stroke-width="2.1" fill="none" stroke-linecap="round"/>' +
+    '<path d="M61 47.4 q5 -6 10 0 M79 47.4 q5 -6 10 0" stroke="#2B1D14" stroke-width="2.3" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="59.6" cy="57.2" rx="4.6" ry="2.7" fill="#E58B7C" opacity=".32"/><ellipse cx="90.4" cy="57.2" rx="4.6" ry="2.7" fill="#E58B7C" opacity=".32"/>' +
+    '<path d="M67.4 62 q7.6 6.4 15.2 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>' +
+  '<g class="face-aww"><path d="M60 40.6 l11.4 -3.8 M78.6 36.8 l11.4 3.8" stroke="#2B1D14" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M70 66.2 q5 -3.8 10 0" stroke="#8A4B3A" stroke-width="1.9" fill="none" stroke-linecap="round"/></g>';
+  var PINS =
+  '<g class="ds-pin" aria-hidden="true">' +
+    '<path class="p2" d="M47 85 c-3.8 -2.7 -5.3 -4.4 -5.3 -6.3 0 -1.6 1.2 -2.7 2.7 -2.7 1 0 2 .5 2.6 1.5 .6 -1 1.6 -1.5 2.6 -1.5 1.5 0 2.7 1.1 2.7 2.7 0 1.9 -1.5 3.6 -5.3 6.3 z" fill="#E8788A" stroke="#F6D6DC" stroke-width=".6"/>' +
+    '<polygon class="p3" points="103,73 104.9,77.2 109.4,77.6 106,80.6 107,85 103,82.7 99,85 100,80.6 96.6,77.6 101.1,77.2" style="fill:var(--brass-bright)" stroke="#7A5A18" stroke-width=".5"/>' +
+  '</g>';
+
+  function cssOnce(){
+    if(D.getElementById('tr-tip-css')) return;
+    var s = D.createElement('style'); s.id = 'tr-tip-css'; s.textContent = CSS; (D.head || D.documentElement).appendChild(s);
+  }
+  function svgFrag(markup){
+    var t = D.createElementNS('http://www.w3.org/2000/svg', 'svg'); t.innerHTML = markup;
+    var out = []; while(t.firstChild){ out.push(t.firstChild); t.removeChild(t.firstChild); } return out;
+  }
+  function artOnce(stage){
+    var svg = stage.querySelector('.ds-svg'), defs = svg && svg.querySelector('defs');
+    if(defs && !svg.querySelector('#trSoft')) svgFrag('<filter id="trSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation=".6"/></filter>').forEach(function(n){ defs.appendChild(n); });
+    var face = stage.querySelector('.ds-face');
+    if(face && !face.querySelector('.face-joy')) svgFrag(FACES).forEach(function(n){ face.appendChild(n); });
+    var head = stage.querySelector('.ds-head');
+    if(head && head.parentNode && !stage.querySelector('.ds-pin')){
+      var wrap = head.parentNode;           /* the group that lifts the head: the pins go on the vest, behind it */
+      svgFrag(PINS).forEach(function(n){ wrap.parentNode.insertBefore(n, wrap); });
+    }
+    var fore = stage.querySelector('.ds-fore');
+    if(fore && !fore.querySelector('.ds-tipchip')){ var c = D.createElement('div'); c.className = 'ds-tipchip'; fore.appendChild(c); }
+  }
+
+  /* ---------- the button ---------- */
+  var btn = null, stageEl = null;
+  var HEART = '<svg viewBox="0 0 12 11" aria-hidden="true"><path d="M6 10.4C2 7.4.6 5.6.6 3.6.6 2 1.8.9 3.3.9c1.1 0 2.1.6 2.7 1.6C6.6 1.5 7.6.9 8.7.9c1.5 0 2.7 1.1 2.7 2.7 0 2-1.4 3.8-5.4 6.8z"/></svg>';
+  function B(){ return W.TRDealer || null; }
+  function bank(){ try{ return W.G && isFinite(G.bankroll) ? G.bankroll : 0; }catch(e){ return 0; } }
+  function afford(){ var b = B(); return !!b && bank() - (b.pending ? b.pending() : 0) >= TIP + 5; }
+  function why(){
+    var b = B(); if(!b) return '';
+    if(!afford() && b.canTip && b.canTip()) return 'Not enough in your bankroll to tip.';
+    return 'Tips go in between hands.';
+  }
+  function tipTitle(){
+    var L = level();
+    return 'Tip the dealer ' + money(TIP) + ' — just for fun, it never changes the cards. Resets with your session.' +
+      (st.total ? ' Tipped so far: ' + money(st.total) + (L >= 3 ? ' (he’s your biggest fan).' : L >= 2 ? ' (he’s a fan).' : '.') : '');
+  }
+  function paint(){
+    if(!btn) return;
+    var b = B(), ok = !!(b && !busyGest && b.canTip && b.canTip() && afford());
+    btn.classList.toggle('off', !ok && !busyGest); btn.classList.toggle('busy', !!busyGest);
+    btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
+    var tot = btn.querySelector('.tr-tip-tot'), L = level();
+    if(st.total){ tot.hidden = false; tot.innerHTML = (L >= 2 ? HEART : '') + money(st.total); } else tot.hidden = true;
+    btn.title = ok || busyGest ? tipTitle() : why() + ' ' + (st.total ? 'Tipped so far: ' + money(st.total) + '.' : '');
+    btn.setAttribute('aria-label', 'Tip the dealer ' + money(TIP) + (st.total ? ', ' + money(st.total) + ' tipped this session' : ''));
+    if(stageEl && stageEl.getAttribute('data-fan') !== String(L)) stageEl.setAttribute('data-fan', String(L));
+  }
+  function sync(){
+    var b = B(), stage = D.getElementById('dealer-stage');
+    if(!b || !stage) return;
+    stageEl = stage;
+    if(!stage.querySelector('.ds-svg')) return;
+    cssOnce(); artOnce(stage);
+    if(!stage.querySelector('.tr-tip')){
+      btn = D.createElement('button'); btn.type = 'button'; btn.className = 'tr-tip'; btn.id = 'btn-tip-dealer';
+      btn.innerHTML = '<i class="tr-tip-chip" aria-hidden="true"></i><span class="tr-tip-lbl">Tip ' + money(TIP) + '</span><b class="tr-tip-tot" hidden></b>';
+      btn.addEventListener('click', onClick);
+      stage.appendChild(btn);
+    } else btn = stage.querySelector('.tr-tip');
+    paint();
+  }
+  function onClick(e){
+    if(e && e.stopPropagation) e.stopPropagation();
+    var b = B(); if(!b) return;
+    if(busyGest) return;
+    if(!(b.canTip && b.canTip() && afford())){ btn.classList.remove('nope'); void btn.offsetWidth; btn.classList.add('nope'); setTimeout(function(){ if(btn) btn.classList.remove('nope'); }, 340); return; }
+    tip();
+  }
+
+  /* ---------- a tip: the money, then the dealer ---------- */
+  function tip(){
+    var b = B(), prev = level();
+    b.spend(TIP);
+    st.total += TIP; st.n++; save();
+    var now = level();
+    paint();
+    thank(prev, now);
+  }
+
+  /* where things are on his stage (stage pixels) */
+  function geometry(stage){
+    var sr = stage.getBoundingClientRect(), d = stage.querySelector('.ds-dealer'), tr = stage.querySelector('.ds-tray'), bt = stage.querySelector('.tr-tip');
+    function dp(fx, fy){ return {x: d.offsetLeft + fx * d.offsetWidth, y: d.offsetTop + fy * d.offsetHeight}; }
+    var br = bt.getBoundingClientRect(), tt = tr ? tr.getBoundingClientRect() : null, H = stage.clientHeight || 140, Wd = stage.clientWidth || 300;
+    return {
+      btn: {x: br.left - sr.left + br.width / 2, y: br.top - sr.top + br.height / 2},
+      tray: tt ? {x: tt.left - sr.left + tt.width * .55, y: tt.top - sr.top - 5} : dp(.2, .9),
+      rail: {x: Wd / 2 + 34, y: H - 25},
+      head: dp(.5, .3), salute: dp(.69, .13), chest: dp(.55, .78), pump: dp(.8, -.12), toss: dp(.72, .46),
+      centre: {x: Wd / 2, y: H - 87}
+    };
+  }
+  function hearts(stage, geo, n){
+    var d = stage.querySelector('.ds-dealer'); if(!d || !n) return;
+    for(var i = 0; i < n; i++){
+      (function(i){
+        var h = D.createElementNS('http://www.w3.org/2000/svg', 'svg'); h.setAttribute('viewBox', '0 0 12 11'); h.setAttribute('class', 'tr-heart'); h.setAttribute('aria-hidden', 'true');
+        h.innerHTML = '<path d="M6 10.4C2 7.4.6 5.6.6 3.6.6 2 1.8.9 3.3.9c1.1 0 2.1.6 2.7 1.6C6.6 1.5 7.6.9 8.7.9c1.5 0 2.7 1.1 2.7 2.7 0 2-1.4 3.8-5.4 6.8z"/>';
+        h.style.left = (geo.head.x + (rnd() - .5) * 44) + 'px'; h.style.top = (geo.head.y - 16 + (rnd() - .5) * 10) + 'px';
+        h.style.setProperty('--dx', ((rnd() - .5) * 30).toFixed(1) + 'px'); h.style.animationDelay = (i * 85) + 'ms';
+        var s = h.style; s.width = (10 + Math.floor(rnd() * 6)) + 'px'; s.height = (9 + Math.floor(rnd() * 5)) + 'px';
+        stage.appendChild(h); setTimeout(function(){ if(h.parentNode) h.parentNode.removeChild(h); }, 1700 + i * 85);
+      })(i);
+    }
+  }
+  function hop(stage, n){
+    var d = stage.querySelector('.ds-dealer'); if(!d || !n) return;
+    d.removeAttribute('data-cheer'); void d.offsetWidth; d.setAttribute('data-cheer', String(n));
+    setTimeout(function(){ if(d) d.removeAttribute('data-cheer'); }, 1200);
+  }
+  /* what he does with his face when your hand ends (the game calls this beside setMood) */
+  function cheer(fr){
+    try{
+      var b = B(), stage = b && b.stage(); if(!stage || !fr || !b.fx()) return;
+      if(fr.hearts) hearts(stage, geometry(stage), fr.hearts);
+      if(fr.hop) hop(stage, fr.hop);
+    }catch(e){}
+  }
+
+  /* the thank-you: a different one each time, a bigger one when he becomes a fan */
+  var KNOCK_LINES = ['Thank you! Tip for the dealers.', 'Thanks, boss! For the dealers.'];
+  var POOL = {
+    tray: ['Into the tray it goes.', 'Appreciate it.', 'Thank you, boss.'],
+    salute: ['Much appreciated.', 'Thank you kindly.', 'You’re a gentleman.'],
+    heart: ['You’re too kind.', 'That means a lot.', 'Truly. Thank you.'],
+    flip: ['Lucky chip.', 'Heads, you win.', 'I’ll put this to work.'],
+    wink: ['I won’t forget this.', 'Noted. Fondly.', 'Big heart, that one.'],
+    knock: KNOCK_LINES
+  };
+  var KINDS = ['knock', 'tray', 'salute', 'heart', 'flip', 'wink'];
+
+  function thank(prev, now){
+    var b = B(), stage = b && b.stage(); if(!stage) return;
+    var kind;
+    if(now > prev && now >= 2) kind = now >= 3 ? 'super' : 'fan';
+    else if(st.n === 1) kind = 'knock';
+    else { do { kind = KINDS[Math.floor(rnd() * KINDS.length)]; } while(kind === lastKind && KINDS.length > 1); }
+    if(kind !== 'fan' && kind !== 'super') lastKind = kind;
+    run(kind, stage);
+  }
+
+  function run(kind, stage){
+    var b = B(), g = {recs: [], kind: kind}, fxOn = b.fx(), L = level();
+    kinds.push(kind);
+    var wasAway = b.hold(g);
+    busyGest = g; paint();
+    var geo = geometry(stage), fanKind = kind === 'fan' || kind === 'super';
+    var said = fanKind ? (kind === 'super' ? 'Best player at the table!' : 'You’re my favorite player now.') : line('say-' + kind, POOL[kind]);
+    function at(ms, fn){ g.recs.push(b.later(function(){ if(b.current() !== g) return; try{ fn(); }catch(e){} }, ms)); }
+    function chip(on){ var c = stage.querySelector('.ds-tipchip'); if(c) c.classList.toggle('on', !!on); }
+    function arm(p, ms){ b.arm(p.x, p.y, ms); }
+    function sfx(n, o){ b.sfx(n, o); }
+    function toTray(ms){ arm(geo.tray, ms); }
+    function drop(){ chip(false); sfx('chipLight'); var t = stage.querySelector('.ds-tray'); if(t){ t.classList.remove('tr-hop'); void t.offsetWidth; t.classList.add('tr-hop'); } }
+    function bowOn(){ var d = stage.querySelector('.ds-dealer'); if(d){ d.removeAttribute('data-bow'); void d.offsetWidth; d.setAttribute('data-bow', '1'); } }
+    var end = 0;
+    if(!fxOn){      /* no motion: his face and a word, nothing travels */
+      at(60, function(){ sfx('chip'); b.mood(fanKind ? 'joy' : kind === 'wink' ? 'wink' : kind === 'heart' ? 'thx' : 'sm2', 1800); b.say(said, 1800); if(fanKind) hearts(stage, geo, 0); });
+      end = 1900;
+    } else {
+      var t0 = wasAway ? 480 : 60;
+      at(t0, function(){ var p = geo.btn; b.look(p.x, p.y); arm({x: p.x, y: p.y - 9}, 230); });
+      at(t0 + 300, function(){ chip(true); sfx('chip'); if(btn){ btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse'); } });
+      var t1 = t0 + 440;
+      if(kind === 'knock'){
+        at(t1, function(){ arm(geo.rail, 240); b.mood('sm2', 1900); });
+        at(t1 + 260, function(){ arm({x: geo.rail.x, y: geo.rail.y + 3}, 70); sfx('knock'); });
+        at(t1 + 400, function(){ arm({x: geo.rail.x, y: geo.rail.y - 9}, 80); });
+        at(t1 + 540, function(){ arm({x: geo.rail.x, y: geo.rail.y + 3}, 70); sfx('knock'); });
+        at(t1 + 320, function(){ b.say(said, 2000); });
+        at(t1 + 720, function(){ toTray(280); });
+        at(t1 + 1030, drop);
+        end = t1 + 1700;
+      } else if(kind === 'tray'){
+        at(t1, function(){ toTray(300); });
+        at(t1 + 330, function(){ drop(); b.mood('sm1', 1500); b.say(said, 1800); });
+        end = t1 + 1500;
+      } else if(kind === 'salute'){
+        at(t1, function(){ toTray(260); });
+        at(t1 + 280, drop);
+        at(t1 + 450, function(){ arm(geo.salute, 260); b.mood('sm2', 1500); b.say(said, 1800); var d = stage.querySelector('.ds-dealer'); if(d){ d.removeAttribute('data-nod'); void d.offsetWidth; d.setAttribute('data-nod', '1'); } });
+        end = t1 + 1700;
+      } else if(kind === 'heart'){
+        at(t1, function(){ toTray(260); });
+        at(t1 + 280, drop);
+        at(t1 + 450, function(){ arm(geo.chest, 260); b.mood('thx', 1500); bowOn(); b.say(said, 1900); });
+        end = t1 + 1800;
+      } else if(kind === 'flip'){
+        at(t1, function(){ arm(geo.toss, 200); b.mood('grin', 1600); });
+        at(t1 + 230, function(){
+          chip(false); sfx('chipLight');
+          var c = D.createElement('div'); c.className = 'tr-toss'; c.style.left = geo.toss.x + 'px'; c.style.top = (geo.toss.y - 4) + 'px'; stage.appendChild(c);
+          g.toss = c; setTimeout(function(){ if(c.parentNode) c.parentNode.removeChild(c); }, 820); b.say(said, 1700);
+        });
+        at(t1 + 800, function(){ arm({x: geo.toss.x, y: geo.toss.y - 6}, 160); });
+        at(t1 + 980, function(){ chip(true); sfx('chip'); });
+        at(t1 + 1100, function(){ toTray(260); });
+        at(t1 + 1400, drop);
+        end = t1 + 2000;
+      } else if(kind === 'wink'){
+        at(t1, function(){ toTray(260); });
+        at(t1 + 280, drop);
+        at(t1 + 450, function(){ b.look(geo.centre.x + 20, geo.centre.y + 90); b.mood('wink', 1700); b.say(said, 1900); });
+        end = t1 + 1800;
+      } else {       /* fan, super: a fist in the air, hearts, and a hop */
+        var s3 = kind === 'super';
+        at(t1, function(){ toTray(260); });
+        at(t1 + 280, drop);
+        at(t1 + 450, function(){ arm(geo.pump, 240); b.mood('joy', 3000); sfx('chime'); b.say(said, 2300); hearts(stage, geo, s3 ? 10 : 6); hop(stage, s3 ? 2 : 1); });
+        at(t1 + 1350, function(){ arm(geo.chest, 300); });
+        if(!s3) at(t1 + 2500, function(){ b.say('Cards stay honest, though.', 1900); });
+        end = t1 + (s3 ? 2400 : 3000);
+      }
+    }
+    at(end - 60, function(){ finish(g); });
+    g.wd = setTimeout(function(){ if(b.current() === g) finish(g); else cleanup(); }, end + 1200);   /* safety net: if his timers were cut (a skip, a reset), he is released anyway */
+  }
+  function finish(g){ var b = B(); if(g && g.wd){ clearTimeout(g.wd); g.wd = 0; } if(b) b.release(g); cleanup(); }
+  function cleanup(){
+    busyGest = null;
+    try{
+      if(stageEl){
+        var c = stageEl.querySelector('.ds-tipchip'); if(c) c.classList.remove('on');
+        var t = stageEl.querySelector('.tr-toss'); if(t && t.parentNode) t.parentNode.removeChild(t);
+      }
+    }catch(e){}
+    paint();
+  }
+
+  /* ---------- the session: a fresh session is a fresh tip jar ---------- */
+  function reset(){
+    st = {total: 0, n: 0}; save(); lastKind = '';
+    var b = B(); if(b && b.current && b.current()) b.release(b.current());
+    cleanup();
+    if(stageEl) stageEl.setAttribute('data-fan', '0');
+    paint();
+  }
+  D.addEventListener('click', function(e){
+    var t = e.target && e.target.closest ? e.target.closest('#btn-reset-stats, #btn-reset-bankroll, #btn-reset-bankroll-settings') : null;
+    if(!t) return;
+    var id = t.id;
+    setTimeout(function(){ var b = B(); if(id === 'btn-reset-stats' || !b || !b.settled || b.settled()) reset(); }, 0);   /* mid-hand the game ignores a bankroll reset, and so does the jar */
+  }, true);
+
+  load();
+  W.TRTip = {
+    kinds: function(){ return kinds.slice(); }, react: react, cheer: cheer, level: level, total: function(){ return st.total; }, reset: reset, cleanup: cleanup, sync: sync,
+    fan: function(){ return level() >= 2; }, tip: function(){ var b = B(); if(b && b.canTip && b.canTip() && afford() && !busyGest) tip(); }
+  };
+  var tries = 0;
+  function tick(){ try{ sync(); }catch(e){} }
+  tick();
+  setInterval(tick, 350);
+  W.addEventListener('load', tick);
+})();
+
+</script>
+<script id="tr-manners">
+/* Table Ready: the real-table rehearsal.
+   One shared "Table manners" panel for all five games. It turns each game's existing Table manners pop-up into a short walk-through:
+   one move at a time, a big drawing, a plain sentence, and (where the game lets you try it) a line saying how.
+   It reuses the game's own #manners-overlay and #btn-manners-close, so the way the pop-up opens and closes is still the game's own.
+   Craps never had one: this builds it there. It never touches a rule, a bet or a result. */
+(function(){
+  'use strict';
+  var W = window, D = document;
+  if(W.TRManners) return;
+  function $(id){ return D.getElementById(id); }
+
+  /* ---------- which game ---------- */
+  var path = (W.location && W.location.pathname) || '';
+  var KEY = $('spot-tie') ? 'baccarat' : $('spot-fortune') ? 'paigow' : ($('spot-blind') && $('spot-trips')) ? 'uth'
+          : ($('btn-roll') && $('felt')) ? 'craps' : $('set-tablesignals') ? 'blackjack'
+          : /ultimate-texas-holdem/.test(path) ? 'uth' : /pai-gow/.test(path) ? 'paigow' : /baccarat/.test(path) ? 'baccarat' : /craps/.test(path) ? 'craps' : /blackjack/.test(path) ? 'blackjack' : '';
+  if(!KEY) return;
+
+  /* ---------- the words: five games, four moves each, the same shape everywhere ---------- */
+  var GAMES = {
+    blackjack: { name: 'Blackjack', at: 'blackjack', sub: 'The strategy matters, and so does not looking like a first-timer. Four habits worth knowing.',
+      items: [
+        { ic: 'hand',  t: 'Signal, don’t just say it', d: 'Tap the felt for hit, wave a flat hand over your cards for stand. The dealer and the cameras rely on the gesture.', tr: 'Try it here: with Table show on, tap your hand to hit and swipe across it to stand.' },
+        { ic: 'lock',  t: 'Hands off once they’re dealt', d: 'When your cards are face up, leave them alone. The dealer moves everything. You only touch chips.' },
+        { ic: 'chips', t: 'Chips go in the circle', d: 'Never hand chips straight to the dealer. Set them in the betting circle and the dealer takes it from there.' },
+        { ic: 'cup',   t: 'Keep the felt clear', d: 'Drinks and phones stay off the felt. Most dealers will ask you to move them.' } ] },
+    baccarat: { name: 'Baccarat', at: 'baccarat', sub: 'Mostly watching and waiting. Four habits worth knowing.',
+      items: [
+        { ic: 'cards', t: 'Let the dealer flip', d: 'At mini-baccarat the dealer turns every card, so don’t touch them. At bigger tables the largest bettor may be offered the squeeze. Check it’s allowed first.', tr: 'Try it here: with Table show on, the hand for your side is passed to you. Tap the cards to peel them.' },
+        { ic: 'stop',  t: '“No more bets” means hands off', d: 'Once the dealer calls it, leave your chips alone until the hand resolves.' },
+        { ic: 'chips', t: 'Chips go in the marked area', d: 'Never hand them straight to the dealer.' },
+        { ic: 'coin',  t: 'Know how commission works', d: 'At many tables the dealer keeps a running tab of the 5% Banker commission and you settle when you leave or when asked. Some tables simply take it every hand.' } ] },
+    paigow: { name: 'Pai Gow', at: 'pai gow', sub: 'Setting your hand is the whole game. Four habits worth knowing.',
+      items: [
+        { ic: 'cards', t: 'Seven cards, two hands', d: 'Keep the Low Hand (two cards) apart from the High Hand (five). In a casino the Low Hand goes in front.' },
+        { ic: 'lock',  t: 'Set it once, then hands off', d: 'After you set your hand, don’t touch it again. The dealer compares the hands and your cards are locked.' },
+        { ic: 'nocard', t: 'Leave the dealer’s cards alone', d: 'Don’t touch the dealer’s cards or the deck.' },
+        { ic: 'chips', t: 'Chips go in the marked area', d: 'Never handed to the dealer. The dealer pays and collects.' } ] },
+    uth: { name: 'Ultimate Texas Hold’em', at: 'Ultimate Texas Hold’em', sub: 'It’s you against the dealer. Four habits worth knowing.',
+      items: [
+        { ic: 'eye',   t: 'Shield your hole cards', d: 'Look only at your own, and keep them covered from other players and the overhead camera. Standard practice.' },
+        { ic: 'users', t: 'Other seats don’t matter', d: 'You only play the dealer. No bluffing, and no folding to protect anyone but yourself.' },
+        { ic: 'lock',  t: 'Check or bet is final', d: 'Once you act there’s no taking it back, so think before you act, not after.' },
+        { ic: 'chips', t: 'Ante and Blind stay equal', d: 'Chips go in the marked circles, never to the dealer. Your Play bet gets its own spot once you commit it.' } ] },
+    craps: { name: 'Craps', at: 'craps', sub: 'Loud, fast, and friendly. Four habits worth knowing.',
+      items: [
+        { ic: 'hand',  t: 'Shoot with one hand', d: 'Throw the dice with a single hand, and keep that hand over the table while the dice are in play.' },
+        { ic: 'wall',  t: 'Hit the far wall', d: 'Both dice should reach the back wall. Throwing them off the table is a no roll, and the stickman will let you know.' },
+        { ic: 'mouth', t: 'Call your bet out loud', d: 'For Place, Buy and one-roll bets, say the bet (“place the six”, “hard eight”) and the dealer places it for you.' },
+        { ic: 'dice',  t: 'Some players never say “seven”', d: 'They call it “big red” instead. It’s a superstition, not a rule, but you’ll hear it.' } ] }
+  };
+  var G = GAMES[KEY];
+
+  /* the big drawings: bold, simple, one idea each. pathLength lets every line draw itself in. */
+  var ART = {
+    hand:  '<path d="M42 74V34a9 9 0 0118 0v26m0-12V24a9 9 0 0118 0v34m0-26a9 9 0 0118 0v44m0-30a9 9 0 0118 0v34c0 28-15 44-40 44-19 0-29-9-38-23l-17-27a10 10 0 0116-11l7 8"/><path d="M104 14c8 3 14 9 17 17M112 6c12 4 21 13 25 25" opacity=".55"/>',
+    lock:  '<rect x="38" y="56" width="74" height="56" rx="10"/><path d="M54 56V42a21 21 0 0142 0v14"/><circle cx="75" cy="82" r="6"/><path d="M75 88v10"/>',
+    chips: '<circle cx="75" cy="82" r="38" stroke-dasharray="6 7" opacity=".5"/><ellipse cx="75" cy="76" rx="22" ry="8"/><path d="M53 76v10c0 4.4 9.8 8 22 8s22-3.6 22-8V76M53 86v10c0 4.4 9.8 8 22 8s22-3.6 22-8V86"/><path d="M75 28v18M67 38l8 8 8-8"/>',
+    cup:   '<path d="M48 24h54l-6 76a8 8 0 01-8 7H62a8 8 0 01-8-7l-6-76z"/><path d="M51 52h48"/><path d="M112 40l20 20M132 40l-20 20" opacity=".6"/>',
+    cards: '<rect x="36" y="26" width="52" height="74" rx="8"/><path d="M72 26l8-6a9 9 0 0113 3l26 48a9 9 0 01-4 12l-17 8"/>',
+    stop:  '<circle cx="75" cy="65" r="40"/><path d="M52 65h46"/>',
+    nocard:'<rect x="48" y="28" width="54" height="76" rx="9"/><path d="M62 46h26M62 58h14" opacity=".6"/><circle cx="75" cy="66" r="48"/><path d="M41 100L109 32"/>',
+    coin:  '<circle cx="75" cy="65" r="40"/><path d="M75 40v50M62 55h20a8 8 0 010 16H68a8 8 0 000 16h22"/>',
+    eye:   '<path d="M14 65s24-38 61-38 61 38 61 38-24 38-61 38S14 65 14 65z"/><circle cx="75" cy="65" r="16"/><path d="M25 104L125 26" opacity=".5"/>',
+    users: '<circle cx="75" cy="48" r="16"/><path d="M42 106c3-20 16-30 33-30s30 10 33 30"/><circle cx="28" cy="58" r="10" opacity=".5"/><circle cx="122" cy="58" r="10" opacity=".5"/>',
+    wall:  '<path d="M16 112V40l59-22 59 22v72"/><path d="M16 76h118M46 52v24M104 52v24M75 76v36"/><circle cx="44" cy="100" r="6" opacity=".6"/>',
+    mouth: '<path d="M24 24h102v62H66l-30 24V86H24z"/><path d="M48 46h54M48 62h34"/>',
+    dice:  '<rect x="30" y="34" width="56" height="56" rx="12"/><circle cx="48" cy="52" r="4"/><circle cx="68" cy="72" r="4"/><circle cx="58" cy="62" r="4"/><rect x="82" y="26" width="42" height="42" rx="9" transform="rotate(14 103 47)" opacity=".7"/>',
+    ok:    '<circle cx="75" cy="65" r="42"/><path d="M54 66l15 15 29-32"/>'
+  };
+  function art(ic){
+    var i = 0;
+    var s = (ART[ic] || ART.ok).replace(/<(path|circle|rect|ellipse)\b([^>]*)>/g, function(m, tag, attrs){
+      var dashed = /stroke-dasharray/.test(attrs);          // a dashed ring keeps its own dashes and fades in instead of drawing
+      return '<' + tag + (dashed ? '' : ' pathLength="1"') + ' style="--i:' + (i++) + '"' + attrs + '>';
+    });
+    return '<svg viewBox="0 0 150 130" aria-hidden="true" focusable="false">' + s + '</svg>';
+  }
+  function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  /* ---------- the look ---------- */
+  var CSS = [
+    /* the pop-up itself: a full-screen scrim (Blackjack, Baccarat, Craps) or the game's own dialog shell (Pai Gow, Ultimate Texas Hold'em) */
+    '#manners-overlay.rt-fixed{position:fixed !important;inset:0 !important;z-index:90 !important;border-radius:0 !important;background:rgba(6,7,8,.66) !important;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);padding:16px !important;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center !important;overflow-y:auto;overscroll-behavior:contain;text-align:left !important;}',
+    '#manners-back{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}',
+    '.dlg#manners-overlay.rt{background:none;border:0;padding:0;box-shadow:none;max-width:520px;width:100%;overflow-x:hidden;overflow-y:auto;border-radius:22px;max-height:calc(100dvh - 24px);}',
+    '.rt-sr{position:absolute !important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}',
+    /* the card */
+    '.rt-card{position:relative;width:min(520px,100%);margin:auto;box-sizing:border-box;background:linear-gradient(180deg,#1A1D22,var(--panel,#15171B));border:1px solid rgba(237,238,240,.12);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -30px #000;text-align:left;color:var(--text,#EDEEF0);font-family:Inter,system-ui,-apple-system,sans-serif;animation:rtIn 320ms cubic-bezier(.34,1.56,.64,1) both;}',
+    '@keyframes rtIn{from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:none;}}',
+    '.rt-card *{box-sizing:border-box;}',
+    '.rt-art{position:relative;height:clamp(112px,24dvh,168px);display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse 70% 90% at 50% 100%,rgba(255,255,255,.06),transparent 70%),linear-gradient(180deg,#0E1013,#13161A);border-bottom:1px solid rgba(237,238,240,.09);}',
+    '.rt-art .rt-pic{grid-area:1/1;display:grid;place-items:center;opacity:0;visibility:hidden;transform:translateY(8px) scale(.96);transition:opacity 200ms ease,transform 320ms cubic-bezier(.16,1,.3,1),visibility 0s linear 200ms;}',
+    '.rt-art .rt-pic.on{opacity:1;visibility:visible;transform:none;transition:opacity 260ms ease 60ms,transform 420ms cubic-bezier(.34,1.56,.64,1) 60ms,visibility 0s;}',
+    '.rt-art svg{width:min(150px,38%);min-width:104px;height:auto;aspect-ratio:150/130;stroke:var(--brass-bright,#F0C46B);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}',
+    '.rt-art svg > *{stroke-dasharray:1;stroke-dashoffset:1;}',
+    '.rt-art svg > [stroke-dasharray]{stroke-dasharray:6 7;stroke-dashoffset:0;opacity:0;}',
+    '.rt-art .rt-pic.on svg > *{animation:rtDraw 780ms cubic-bezier(.4,0,.2,1) forwards;animation-delay:calc(120ms + var(--i,0) * 90ms);}',
+    '.rt-art .rt-pic.on svg > [stroke-dasharray]{animation:rtFade 600ms ease forwards;animation-delay:calc(120ms + var(--i,0) * 90ms);}',
+    '@keyframes rtDraw{to{stroke-dashoffset:0;}}',
+    '@keyframes rtFade{to{opacity:.5;}}',
+    '.rt-kick{font:700 10.5px "Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-bright,#F0C46B);}',
+    '.rt-art .rt-kick{position:absolute;left:18px;top:16px;z-index:2;}',
+    '.rt-x{position:absolute;right:12px;top:10px;z-index:3;width:34px;height:34px;min-height:0 !important;padding:0 !important;display:grid;place-items:center;border-radius:11px;background:rgba(237,238,240,.06);border:1px solid transparent;color:var(--text-muted,#8A8F98);font-size:20px;line-height:1;cursor:pointer;transition:background 140ms,color 140ms;}',
+    '.rt-x:hover{background:rgba(237,238,240,.12);color:var(--text,#EDEEF0);}',
+    '.rt-txts{display:grid;padding:20px 26px 6px;}',
+    '.rt-txt{grid-area:1/1;opacity:0;visibility:hidden;transform:translateX(14px);transition:opacity 180ms ease,transform 260ms cubic-bezier(.16,1,.3,1),visibility 0s linear 180ms;}',
+    '.rt-card[data-dir="back"] .rt-txt{transform:translateX(-14px);}',
+    '.rt-txt.on{opacity:1;visibility:visible;transform:none;transition:opacity 260ms ease 70ms,transform 380ms cubic-bezier(.16,1,.3,1) 70ms,visibility 0s;}',
+    '.rt-card h2.rt-h{font:700 21px/1.25 "Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:-.3px;margin:0 0 6px;color:var(--text,#EDEEF0);text-wrap:balance;}',
+    '#manners-overlay .rt-card p.rt-p{margin:0;max-width:none !important;font-size:13.5px !important;line-height:1.6;color:var(--text-muted,#8A8F98);}',
+    '#manners-overlay .rt-card p.rt-try{margin:11px 0 0;font-size:12.5px !important;line-height:1.5;color:var(--sage-bright,#65C7A3);display:flex;gap:8px;align-items:flex-start;}',
+    '.rt-try::before{content:"";width:6px;height:6px;margin-top:6px;border-radius:50%;background:var(--sage-bright,#65C7A3);flex:0 0 auto;}',
+    '.rt-tip{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12.5px;color:var(--text-muted,#8A8F98);}',
+    '.rt-tip i{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.28);background:radial-gradient(circle,transparent 38%,rgba(255,255,255,.3) 39% 46%,transparent 47%),#3A3D44;flex:0 0 auto;}',
+    '.rt-nav{display:flex;align-items:center;gap:12px;padding:12px 22px 20px 26px;}',
+    '.rt-dots{display:flex;gap:6px;margin-right:auto;align-items:center;}',
+    '.rt-dot{width:7px;height:7px;min-height:0 !important;padding:0 !important;border:0;border-radius:99px;background:rgba(237,238,240,.18);cursor:pointer;transition:width 200ms ease,background 200ms ease;position:relative;}',
+    '.rt-dot::after{content:"";position:absolute;inset:-9px -3px;}',
+    '.rt-dot.on{width:20px;background:var(--brass-bright,#F0C46B);}',
+    '.rt-card .rt-back,.rt-card .rt-next{font:600 13px Inter,system-ui,sans-serif;border-radius:10px;padding:9px 16px;cursor:pointer;transition:border-color 140ms,background 140ms,transform 120ms;}',
+    '.rt-card .rt-back{background:var(--panel-2,#1D2025);color:var(--text,#EDEEF0);border:1px solid rgba(237,238,240,.09);}',
+    '.rt-card .rt-back:hover:not(:disabled){border-color:rgba(237,238,240,.22);}',
+    '.rt-card .rt-back:disabled{visibility:hidden;}',
+    '.rt-card .rt-next{background:var(--brass,#D6A94B);color:#20160A;border:0;min-width:84px;}',
+    '.rt-card .rt-next:hover{background:var(--brass-bright,#F0C46B);}',
+    '.rt-card .rt-back:active,.rt-card .rt-next:active{transform:scale(.97);}',
+    '.rt-card button:focus-visible{outline:2px solid var(--brass-bright,#F0C46B);outline-offset:2px;}',
+    '@media (max-width:520px){.rt-txts{padding:16px 20px 4px;}.rt-nav{padding:10px 16px 16px 20px;}.rt-card h2.rt-h{font-size:19px;}.rt-card{border-radius:20px;}.rt-art .rt-kick{left:16px;top:14px;}.rt-card .rt-back,.rt-card .rt-next{min-height:44px;padding:9px 18px;}}',
+    '@media (max-height:460px){.rt-art{height:84px;}.rt-art svg{min-width:0;width:auto;height:66px;}.rt-txts{padding-top:12px;}.rt-nav{padding-bottom:12px;}}',
+    '@media (prefers-reduced-motion:reduce){.rt-card,.rt-art .rt-pic,.rt-txt,.rt-dot{animation:none !important;transition:none !important;}.rt-art svg > *{stroke-dashoffset:0 !important;animation:none !important;}.rt-art svg > [stroke-dasharray]{opacity:.5 !important;}}'
+  ].join('\n');
+
+  /* ---------- state ---------- */
+  var S = { i: 0, last: 0, open: false, opener: null, force: false, own: false, dlg: false, ov: null, back: null, btn: null, built: false, els: {} };
+
+  function go(i, dir){
+    if(!S.built) return;
+    i = Math.max(0, Math.min(S.last, i));
+    var E = S.els;
+    if(dir) E.card.setAttribute('data-dir', dir < 0 ? 'back' : 'fwd');
+    for(var k = 0; k <= S.last; k++){
+      var on = k === i;
+      E.pics[k].classList.toggle('on', on); E.txts[k].classList.toggle('on', on);
+      E.pics[k].setAttribute('aria-hidden', on ? 'false' : 'true'); E.txts[k].setAttribute('aria-hidden', on ? 'false' : 'true');
+      E.dots[k].classList.toggle('on', on);
+      if(on) E.dots[k].setAttribute('aria-current', 'step'); else E.dots[k].removeAttribute('aria-current');
+    }
+    E.kick.textContent = i < S.last ? 'Move ' + (i + 1) + ' of ' + S.last : G.name;
+    E.back.disabled = i === 0;
+    S.btn.textContent = i === S.last ? 'Got it' : 'Next';
+    S.i = i;
+  }
+
+  function build(){
+    var ov = S.ov, btn = S.btn, n = G.items.length;
+    S.last = n;
+    if(btn.parentNode) btn.parentNode.removeChild(btn);      // the game's own button lives on: it is still what closes the pop-up
+    var pics = '', txts = '', dots = '';
+    G.items.forEach(function(it, i){
+      pics += '<div class="rt-pic" data-i="' + i + '">' + art(it.ic) + '</div>';
+      txts += '<div class="rt-txt" data-i="' + i + '"><h2 class="rt-h">' + esc(it.t) + '</h2><p class="rt-p">' + esc(it.d) + '</p>' + (it.tr ? '<p class="rt-try">' + esc(it.tr) + '</p>' : '') + '</div>';
+      dots += '<button type="button" class="rt-dot" tabindex="-1" data-i="' + i + '" aria-label="Move ' + (i + 1) + ' of ' + n + '"></button>';
+    });
+    pics += '<div class="rt-pic" data-i="' + n + '">' + art('ok') + '</div>';
+    txts += '<div class="rt-txt" data-i="' + n + '"><h2 class="rt-h">You’re ready to sit down</h2><p class="rt-p">That’s every habit that matters at a real ' + esc(G.at) + ' table. The rest you pick up by watching.</p><div class="rt-tip"><i aria-hidden="true"></i><span>Tipping the dealer is optional.</span></div></div>';
+    dots += '<button type="button" class="rt-dot" tabindex="-1" data-i="' + n + '" aria-label="The last card"></button>';
+    ov.innerHTML =
+      '<h2 class="rt-sr" id="manners-title">Table manners</h2><p class="rt-sr" id="manners-sub">' + esc(G.sub) + '</p>' +
+      '<div class="rt-card" data-dir="fwd">' +
+        '<div class="rt-art"><span class="rt-kick" aria-hidden="true"></span><button type="button" class="rt-x" aria-label="Close">&times;</button>' + pics + '</div>' +
+        '<div class="rt-txts" aria-live="polite">' + txts + '</div>' +
+        '<div class="rt-nav"><div class="rt-dots">' + dots + '</div><button type="button" class="rt-back">Back</button></div>' +
+      '</div>';
+    var card = ov.querySelector('.rt-card'), nav = ov.querySelector('.rt-nav');
+    btn.className = 'primary rt-next'; btn.type = 'button';
+    nav.appendChild(btn);
+    S.els = {
+      card: card, kick: ov.querySelector('.rt-kick'), back: ov.querySelector('.rt-back'), x: ov.querySelector('.rt-x'),
+      pics: [].slice.call(ov.querySelectorAll('.rt-pic')), txts: [].slice.call(ov.querySelectorAll('.rt-txt')), dots: [].slice.call(ov.querySelectorAll('.rt-dot'))
+    };
+    ov.classList.add('rt');
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'manners-title'); ov.setAttribute('aria-describedby', 'manners-sub'); ov.setAttribute('tabindex', '-1');
+    S.built = true;
+    go(0);
+  }
+
+  /* ---------- open, close ---------- */
+  function visible(){
+    if(S.dlg) return !!S.back && !S.back.hidden;
+    var d = S.ov.style.display; return !!d && d !== 'none';
+  }
+  function closeNow(){ S.force = true; try{ S.btn.click(); }finally{ S.force = false; } }
+
+  function sync(){
+    var v = visible();
+    if(v && !S.open){
+      S.open = true;
+      if(!S.dlg){
+        var take = function(){ try{ S.btn.focus({ preventScroll: true }); }catch(e){} };
+        take();
+        setTimeout(function(){ if(S.open && !S.ov.contains(D.activeElement)) take(); }, 0);   // a page that hands focus back after a click (Craps does) must not take it from here
+      }
+    }
+    else if(!v && S.open){
+      S.open = false;
+      go(0);                                               // every visit starts at the first move, however it was opened
+      if(!S.dlg){ var o = S.opener; S.opener = null; try{ if(o && o.focus && D.body.contains(o)) o.focus({ preventScroll: true }); }catch(e){} }
+    }
+  }
+
+  function focusables(){ return [].slice.call(S.ov.querySelectorAll('button:not([disabled])')).filter(function(b){ return b.offsetParent !== null || b === S.btn; }); }
+  function onKey(e){
+    if(!S.open) return;
+    var k = e.key, inside = S.ov.contains(e.target);
+    if(k === 'ArrowRight' || k === 'ArrowLeft'){
+      e.preventDefault(); e.stopPropagation();
+      if(k === 'ArrowRight'){ if(S.i < S.last) go(S.i + 1, 1); } else go(S.i - 1, -1);
+      return;
+    }
+    if(S.dlg) return;                                        // Pai Gow and Ultimate Texas Hold'em: their dialog helper keeps focus in and closes on Escape
+    if(k === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeNow(); return; }
+    if(k === 'Tab'){
+      var f = focusables(); if(!f.length){ e.preventDefault(); return; }
+      var a = D.activeElement, first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && (a === first || !S.ov.contains(a))){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && (a === last || !S.ov.contains(a))){ e.preventDefault(); first.focus(); }
+      return;
+    }
+    if((k === ' ' || k === 'Enter') && !inside){ e.preventDefault(); e.stopPropagation(); }       // the table behind must not deal or roll while this is open
+    else if(k === ' ' && inside){ e.stopPropagation(); }
+  }
+  function onKeyUp(e){
+    if(!S.open || S.dlg) return;
+    if(e.key === ' ' || e.key === 'Enter'){ if(!S.ov.contains(e.target)){ e.preventDefault(); e.stopPropagation(); } else e.stopPropagation(); }
+  }
+
+  /* ---------- start ---------- */
+  function start(){
+    var link = $('btn-manners');
+    if(!link) return;
+    var css = D.createElement('style'); css.id = 'tr-manners-css'; css.textContent = CSS; D.head.appendChild(css);
+    var ov = $('manners-overlay'), btn = $('btn-manners-close');
+    if(!ov || !btn){                                         // Craps had no Table manners: build the pop-up here, with the same shape as the others
+      ov = D.createElement('div'); ov.id = 'manners-overlay'; ov.style.display = 'none'; D.body.appendChild(ov);
+      btn = D.createElement('button'); btn.id = 'btn-manners-close'; btn.type = 'button';
+      S.own = true;
+    }
+    S.ov = ov; S.btn = btn; S.back = $('manners-back'); S.dlg = !!S.back && S.back.contains(ov);
+    if(!S.dlg){
+      ov.classList.add('rt-fixed');
+      if(ov.parentNode !== D.body) D.body.appendChild(ov);   // out of any panel that clips or transforms, so it can cover the page
+    }
+    build();
+    if(S.own){
+      link.addEventListener('click', function(e){ e.preventDefault(); S.opener = link; ov.style.display = 'flex'; });
+      btn.addEventListener('click', function(){ ov.style.display = 'none'; });
+    }
+
+    /* remember what opened it, so focus can go back there */
+    D.addEventListener('click', function(e){ var l = e.target && e.target.closest ? e.target.closest('#btn-manners') : null; if(l) S.opener = l; }, true);
+    /* the walk-through: Next goes on until the last card, where the same button is the game's own "Got it" */
+    ov.addEventListener('click', function(e){
+      var t = e.target;
+      if(t === S.btn){
+        if(!S.force && S.i < S.last){ e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); go(S.i + 1, 1); }
+        return;
+      }
+      var b = t.closest ? t.closest('button') : null;
+      if(b === S.els.back){ go(S.i - 1, -1); }
+      else if(b === S.els.x){ closeNow(); }
+      else if(b && b.classList.contains('rt-dot')){ var j = +b.getAttribute('data-i'); go(j, j < S.i ? -1 : 1); }
+      else if(t === ov && !S.dlg){ closeNow(); }             // a tap on the dim area
+    }, true);
+    D.addEventListener('keydown', onKey, true);
+    D.addEventListener('keyup', onKeyUp, true);
+
+    if(typeof MutationObserver === 'function'){
+      var mo = new MutationObserver(sync);
+      if(S.dlg) mo.observe(S.back, { attributes: true, attributeFilter: ['hidden', 'style'] });
+      else mo.observe(ov, { attributes: true, attributeFilter: ['style'] });
+    }
+    sync();
+  }
+
+  W.TRManners = { go: go, close: function(){ closeNow(); }, state: function(){ return { i: S.i, last: S.last, open: S.open }; }, game: KEY };
+  try{ start(); }catch(e){ try{ console.warn('[manners]', e); }catch(x){} }
+})();
+
 </script>
 </body>
 </html>

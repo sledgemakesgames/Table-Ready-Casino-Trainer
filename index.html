@@ -236,12 +236,328 @@ h1 em{font-style:normal;color:var(--brass-bright)}
   .stage.rest .vname{opacity:0}
   .stage.rest .nm{opacity:1;transform:none;left:24px;bottom:24px;font-size:clamp(20px,calc(var(--ow) * .04),30px);white-space:normal;max-width:calc(100% - 40px);color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.35)}
 }
+
+/* the coin picks a game: hold it and it charges, then flies to a table */
+.coin{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.coin.charging .coin-hop{animation:coinCharge 560ms ease-in forwards}
+@keyframes coinCharge{0%{transform:scale(1);filter:none}100%{transform:scale(.8);filter:brightness(1.35) drop-shadow(0 0 7px var(--brass-bright))}}
+.coin.away .coin-hop{visibility:hidden}
+.coin-fly{position:fixed;z-index:90;pointer-events:none;perspective:700px;will-change:transform}
+.coin-fly .coin-hop{transition:none}
+.coin-fly .coin-in{transition:none}
+.pick-ring{position:absolute;inset:0;z-index:5;border-radius:inherit;pointer-events:none;animation:pickRing 1200ms ease-out forwards}
+@keyframes pickRing{0%{box-shadow:inset 0 0 0 4px var(--brass-bright),inset 0 0 46px 8px color-mix(in srgb,var(--brass-bright) 55%,transparent)}100%{box-shadow:inset 0 0 0 0 transparent,inset 0 0 0 0 transparent}}
+.coin-tip{position:fixed;z-index:70;max-width:236px;padding:10px 14px 11px;border-radius:12px;background:var(--panel,#17191d);color:var(--text,#fff);border:1px solid var(--line,rgba(255,255,255,.16));box-shadow:0 14px 34px -10px rgba(0,0,0,.65);font-size:13.5px;line-height:1.4;opacity:0;transform:translateY(-4px);transition:opacity .25s,transform .25s;pointer-events:none}
+.coin-tip.in{opacity:1;transform:none}
+.coin-tip::before{content:"";position:absolute;left:var(--ax,18px);top:-6px;width:10px;height:10px;background:inherit;border-left:1px solid var(--line,rgba(255,255,255,.16));border-top:1px solid var(--line,rgba(255,255,255,.16));transform:rotate(45deg)}
+.xp-line .snd-state{font-variant-numeric:normal}
+@media (prefers-reduced-motion:reduce){.coin.charging .coin-hop{animation:none;transform:scale(.88)}.pick-ring{animation:none;box-shadow:inset 0 0 0 3px var(--brass-bright);opacity:.9}.coin-tip{transition:none}}
 </style>
+<script id="tr-sound">
+/*tr-sound:start*/
+/* Table Ready sound: everything is synthesised with WebAudio (no audio files). One switch for the whole site. */
+(function(W){
+  'use strict';
+  var D = W.document, KEY = 'house_edge_sound_v1';
+  var AC = W.AudioContext || W.webkitAudioContext;
+  var S = { ctx:null, master:null, bus:null, enabled:true, unlocked:false, active:0, listeners:[], hiddenSuspended:false };
+  try{ var v = W.localStorage.getItem(KEY); if(v === '0') S.enabled = false; S.stored = (v === '0' || v === '1'); }catch(e){ S.stored = false; }
+
+  /* ---------- small helpers ---------- */
+  function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function noiseBuffer(c){
+    if(c.__trNoise) return c.__trNoise;
+    var n = (c.sampleRate * 2) | 0, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), s = 20240607;
+    for(var i = 0; i < n; i++){ s = (Math.imul(s, 1664525) + 1013904223) >>> 0; d[i] = s / 2147483648 - 1; }
+    c.__trNoise = b; return b;
+  }
+  function track(node){ S.active++; node.onended = function(){ S.active = Math.max(0, S.active - 1); try{ node.disconnect(); }catch(e){} }; }
+  /* a short burst of filtered noise with a fast attack and an exponential decay */
+  function burst(c, out, t, p, R){
+    var src = c.createBufferSource(); src.buffer = noiseBuffer(c);
+    var f = c.createBiquadFilter(); f.type = p.type || 'bandpass'; f.frequency.setValueAtTime(p.f, t); if(p.to) f.frequency.exponentialRampToValueAtTime(p.to, t + p.dur); f.Q.value = p.q == null ? 0.9 : p.q;
+    var g = c.createGain(), a = p.a == null ? 0.002 : p.a;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(p.g, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + p.dur);
+    src.connect(f); f.connect(g); g.connect(out);
+    src.start(t, R() * 1.5); src.stop(t + p.dur + 0.03); track(src);
+  }
+  /* a decaying tone, optionally gliding from f to p.to */
+  function ping(c, out, t, p){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = p.type || 'sine'; o.frequency.setValueAtTime(p.f, t); if(p.to) o.frequency.exponentialRampToValueAtTime(p.to, t + p.dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(p.g, t + (p.a || 0.001)); g.gain.exponentialRampToValueAtTime(0.0001, t + p.dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + p.dur + 0.03); track(o);
+  }
+
+  /* ---------- the sounds ---------- */
+  var RECIPES = {};
+  /* one clay chip on another: a tick of noise, a few inharmonic partials, a little body */
+  function clack(c, out, t, R, v, pitch){
+    var b = pitch || (2050 + R() * 500);
+    burst(c, out, t, { f:4300 + R() * 600, q:1.4, dur:0.012, g:0.2 * v, a:0.0005 }, R);
+    ping(c, out, t, { f:b, g:0.10 * v, dur:0.05 });
+    ping(c, out, t, { f:b * 1.59, g:0.055 * v, dur:0.034 });
+    ping(c, out, t, { f:b * 2.33, g:0.03 * v, dur:0.024 });
+    ping(c, out, t, { f:900, to:600, g:0.06 * v, dur:0.022 });
+  }
+  RECIPES.chip = function(c, o, t, R, v){ clack(c, o, t, R, v == null ? 1 : v); };
+  RECIPES.chipLight = function(c, o, t, R, v){ clack(c, o, t, R, 0.55 * (v == null ? 1 : v), 2500 + R() * 600); };
+  /* several chips set down or stacked: n clacks, a little uneven, tapering off */
+  RECIPES.chips = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 3, at = t;
+    for(var i = 0; i < n; i++){ clack(c, o, at, R, (0.95 - i * 0.1 / Math.max(1, n - 1) * 3) * v, 1900 + R() * 900); at += 0.032 + R() * 0.03; }
+  };
+  /* a payout or a rake: a run of chips falling over one another */
+  RECIPES.cascade = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 7, at = t;
+    for(var i = 0; i < n; i++){ clack(c, o, at, R, (0.55 + R() * 0.45) * v * (1 - i / (n * 1.6)), 1700 + R() * 1400); at += 0.026 + R() * 0.034; }
+  };
+  /* a card sliding off the shoe and landing: a swish, then a slap and a soft thump */
+  RECIPES.card = function(c, o, t, R, v){
+    burst(c, o, t, { f:3600 * (0.92 + R() * 0.2), to:1500, q:0.7, dur:0.075, g:0.15 * v, a:0.006 }, R);
+    burst(c, o, t + 0.052, { f:1500, q:1.1, dur:0.028, g:0.2 * v, a:0.001 }, R);
+    ping(c, o, t + 0.052, { f:150, to:92, g:0.12 * v, dur:0.07 });
+  };
+  RECIPES.land = function(c, o, t, R, v){
+    burst(c, o, t, { f:1400, q:1.1, dur:0.03, g:0.2 * v, a:0.001 }, R);
+    burst(c, o, t, { f:520, q:0.9, dur:0.055, g:0.11 * v, a:0.001 }, R);
+    ping(c, o, t, { f:140, to:90, g:0.1 * v, dur:0.07 });
+  };
+  /* a card turned over: a dry papery flick */
+  RECIPES.flip = function(c, o, t, R, v){
+    burst(c, o, t, { f:4200, type:'highpass', q:0.5, dur:0.03, g:0.11 * v, a:0.001 }, R);
+    burst(c, o, t + 0.012, { f:2600 * (0.9 + R() * 0.2), to:1300, q:0.8, dur:0.06, g:0.12 * v, a:0.003 }, R);
+  };
+  RECIPES.slide = function(c, o, t, R, v){ burst(c, o, t, { f:2600, to:1700, q:0.7, dur:0.1, g:0.07 * v, a:0.01 }, R); };
+  /* a deck being riffled: fast flicks that speed up and slow down, and a thump when the halves are bridged and squared */
+  RECIPES.riffle = function(c, o, t, R, v, op){
+    var at = t, gap = 0.055, N = (op && op.n) || 22;
+    for(var i = 0; i < N; i++){
+      burst(c, o, at, { f:2400 + R() * 1800, q:1.2, dur:0.016, g:(0.07 + R() * 0.04) * v, a:0.0008 }, R);
+      gap = i < 9 ? gap * 0.93 : gap * 1.07; at += gap * (0.8 + R() * 0.4);
+    }
+    burst(c, o, at + 0.04, { f:900, type:'lowpass', q:0.7, dur:0.09, g:0.14 * v, a:0.002 }, R);
+    ping(c, o, at + 0.04, { f:130, to:80, g:0.1 * v, dur:0.09 });
+    return at - t + 0.2;
+  };
+  /* a fingertip tapping the felt (hit), and a hand waved flat over it (stand) */
+  RECIPES.tap = function(c, o, t, R, v){
+    burst(c, o, t, { f:1100, type:'lowpass', q:0.7, dur:0.04, g:0.2 * v, a:0.001 }, R);
+    ping(c, o, t, { f:190, to:130, g:0.13 * v, dur:0.05 });
+  };
+  RECIPES.knock = function(c, o, t, R, v){ RECIPES.tap(c, o, t, R, v); RECIPES.tap(c, o, t + 0.1, R, v * 0.8); };
+  RECIPES.swish = function(c, o, t, R, v){ burst(c, o, t, { f:2800, to:700, q:0.6, dur:0.22, g:0.07 * v, a:0.02 }, R); };
+  /* a heavy, dull thump: a bust */
+  RECIPES.thud = function(c, o, t, R, v){ burst(c, o, t, { f:230, to:90, q:0.8, dur:0.16, g:0.2 * v, a:0.004 }, R); burst(c, o, t, { f:700, type:'lowpass', q:0.7, dur:0.05, g:0.1 * v, a:0.002 }, R); ping(c, o, t, { f:78, to:55, g:0.14 * v, dur:0.18 }); };   // the little mid knock is for phone speakers, which cannot play the low end
+  RECIPES.pat = function(c, o, t, R, v){ burst(c, o, t, { f:700, type:'lowpass', q:0.7, dur:0.06, g:0.14 * v, a:0.002 }, R); ping(c, o, t, { f:120, to:85, g:0.12 * v, dur:0.08 }); };
+  /* the dealer clearing a losing bet: a rake across the felt, a thump and a couple of loose chips */
+  RECIPES.sweep = function(c, o, t, R, v){
+    burst(c, o, t, { f:2200, to:600, q:0.6, dur:0.24, g:0.11 * v, a:0.03 }, R);
+    clack(c, o, t + 0.2, R, 0.5 * v, 2000);
+    clack(c, o, t + 0.25, R, 0.35 * v, 2300);
+    ping(c, o, t + 0.05, { f:95, to:70, g:0.08 * v, dur:0.16 });
+  };
+  RECIPES.lose = function(c, o, t, R, v){ RECIPES.sweep(c, o, t, R, v); };
+  RECIPES.win = function(c, o, t, R, v){
+    RECIPES.cascade(c, o, t, R, 0.8 * v, { n:6 });
+    bell(c, o, t + 0.12, 1568, 0.032 * v, 0.55); bell(c, o, t + 0.2, 2093, 0.02 * v, 0.45);
+  };
+  RECIPES.bigwin = function(c, o, t, R, v){
+    RECIPES.cascade(c, o, t, R, v, { n:12 });
+    [1175, 1568, 1976, 2349].forEach(function(f, i){ bell(c, o, t + 0.1 + i * 0.09, f, 0.04 * v, 0.7); });
+  };
+  RECIPES.push = function(c, o, t, R, v){ clack(c, o, t, R, 0.7 * v, 2300); clack(c, o, t + 0.07, R, 0.5 * v, 2100); };
+  function bell(c, out, t, f, g, dur){
+    ping(c, out, t, { f:f, g:g, dur:dur });
+    ping(c, out, t, { f:f * 2.76, g:g * 0.4, dur:dur * 0.45 });
+    ping(c, out, t, { f:f * 5.4, g:g * 0.15, dur:dur * 0.2 });
+  }
+  RECIPES.chime = function(c, o, t, R, v){ [784, 988, 1175, 1568].forEach(function(f, i){ bell(c, o, t + i * 0.085, f, 0.04 * v, 0.45); }); };
+  RECIPES.ding = function(c, o, t, R, v){ bell(c, o, t, 1175, 0.045 * v, 0.5); bell(c, o, t + 0.09, 1568, 0.036 * v, 0.6); };
+  RECIPES.point = function(c, o, t, R, v){ bell(c, o, t, 880, 0.04 * v, 0.4); bell(c, o, t + 0.08, 1175, 0.04 * v, 0.5); };
+  /* the pitboss: a few unhurried footfalls on carpet, and a low "hm" or sigh */
+  RECIPES.step = function(c, o, t, R, v){
+    for(var i = 0; i < 3; i++){
+      var at = t + i * 0.27, g = (0.55 + i * 0.2) * v;
+      burst(c, o, at, { f:260, type:'lowpass', q:0.6, dur:0.075, g:0.2 * g, a:0.004 }, R);
+      ping(c, o, at, { f:78 - i * 4, to:55, g:0.14 * g, dur:0.11 });
+    }
+  };
+  function voiced(c, out, t, f0, f1, dur, g, f1a, f2a){
+    var f = c.createBiquadFilter(), f2 = c.createBiquadFilter(), gn = c.createGain(), lp = c.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = f1a; f.Q.value = 5; f2.type = 'bandpass'; f2.frequency.value = f2a; f2.Q.value = 7;
+    lp.type = 'lowpass'; lp.frequency.value = 1500;
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(g, t + dur * 0.25); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    [0, 1].forEach(function(k){
+      var o = c.createOscillator(); o.type = 'sawtooth'; o.detune.value = k ? 9 : -9;
+      o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f1, t + dur);
+      o.connect(f); o.connect(f2); o.start(t); o.stop(t + dur + 0.03); track(o);
+    });
+    f.connect(lp); f2.connect(lp); lp.connect(gn); gn.connect(out);
+  }
+  RECIPES.hm = function(c, o, t, R, v){ voiced(c, o, t, 118, 104, 0.26, 0.11 * v, 480, 1000); voiced(c, o, t + 0.2, 104, 92, 0.3, 0.1 * v, 440, 950); };
+  RECIPES.sigh = function(c, o, t, R, v){
+    voiced(c, o, t, 150, 92, 0.46, 0.09 * v, 700, 1150);
+    burst(c, o, t, { f:900, to:500, q:0.5, dur:0.5, g:0.06 * v, a:0.12 }, R);
+  };
+  /* dice: shaken in the hand, thrown, then bouncing off the felt and the back wall */
+  RECIPES.rattle = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 0.38, n = Math.max(6, Math.round(dur * 55)), at = t;
+    for(var i = 0; i < n; i++){
+      burst(c, o, at, { f:1100 + R() * 1900, q:1.5, dur:0.013 + R() * 0.01, g:(0.09 + R() * 0.12) * v, a:0.0006 }, R);
+      if(R() < 0.45) ping(c, o, at, { f:360 + R() * 300, g:0.05 * v, dur:0.018 });
+      at += dur / n * (0.5 + R());
+    }
+    return dur;
+  };
+  RECIPES.bounce = function(c, o, t, R, v, op){
+    var n = (op && op.n) || 5, at = t, gap = 0.12, g = 1;
+    for(var i = 0; i < n; i++){
+      burst(c, o, at, { f:1300 + R() * 500, q:1, dur:0.026, g:0.16 * g * v, a:0.0008 }, R);
+      ping(c, o, at, { f:230 + R() * 40, to:120, g:0.16 * g * v, dur:0.05 });
+      at += gap; gap *= 0.7; g *= 0.68;
+    }
+    return at - t;
+  };
+  RECIPES.wall = function(c, o, t, R, v){
+    burst(c, o, t, { f:900, type:'lowpass', q:0.6, dur:0.05, g:0.2 * v, a:0.001 }, R);
+    burst(c, o, t, { f:3200, q:1.2, dur:0.016, g:0.1 * v, a:0.0006 }, R);
+    ping(c, o, t, { f:420, to:260, g:0.12 * v, dur:0.06 });
+  };
+  RECIPES.dice = function(c, o, t, R, v){
+    RECIPES.rattle(c, o, t, R, 0.8 * v, { dur:0.28 });
+    burst(c, o, t + 0.26, { f:2000, to:900, q:0.6, dur:0.12, g:0.05 * v, a:0.02 }, R);
+    RECIPES.wall(c, o, t + 0.42, R, v);
+    RECIPES.bounce(c, o, t + 0.5, R, v, { n:5 });
+  };
+  RECIPES.lift = function(c, o, t, R, v){ RECIPES.rattle(c, o, t, R, 0.5 * v, { dur:0.09 }); };
+  /* the logo coin: a bright ring that dies away; a toss is a ring with a flutter, then a few coin-on-coin settling clinks */
+  function ring(c, out, t, g, dur, f){
+    [1, 1.47, 2.12, 2.89].forEach(function(m, i){ ping(c, out, t, { f:f * m, g:g / (1 + i * 0.9), dur:dur / (1 + i * 0.5) }); });
+  }
+  RECIPES.coin = function(c, o, t, R, v){
+    burst(c, o, t, { f:5200, q:1.2, dur:0.012, g:0.1 * v, a:0.0005 }, R);
+    ring(c, o, t, 0.07 * v, 0.55, 3300 + R() * 150);
+  };
+  RECIPES.toss = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 1.5;
+    burst(c, o, t, { f:5200, q:1.2, dur:0.014, g:0.12 * v, a:0.0005 }, R);
+    var lfo = c.createOscillator(), depth = c.createGain(), amp = c.createGain();
+    amp.gain.setValueAtTime(0.0001, t); amp.gain.linearRampToValueAtTime(0.05 * v, t + 0.01); amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    lfo.frequency.value = 17; depth.gain.value = 0.028 * v; lfo.connect(depth); depth.connect(amp.gain);
+    [3300, 4850, 7000].forEach(function(f, i){
+      var os = c.createOscillator(), gg = c.createGain();
+      os.type = 'sine'; os.frequency.setValueAtTime(f * 0.97, t); os.frequency.linearRampToValueAtTime(f * 1.03, t + dur * 0.5); os.frequency.linearRampToValueAtTime(f * 0.98, t + dur);
+      gg.gain.value = 1 / (1 + i * 1.2); os.connect(gg); gg.connect(amp); os.start(t); os.stop(t + dur + 0.05); track(os);
+    });
+    amp.connect(o); lfo.start(t); lfo.stop(t + dur + 0.05); track(lfo);
+    return dur;
+  };
+  RECIPES.coinLand = function(c, o, t, R, v){
+    var at = t, gap = 0.1, g = 1;
+    for(var i = 0; i < 4; i++){ ring(c, o, at, 0.07 * g * v, 0.35 * g, 3300 + i * 120); burst(c, o, at, { f:5000, q:1.2, dur:0.012, g:0.08 * g * v, a:0.0005 }, R); at += gap; gap *= 0.62; g *= 0.62; }
+  };
+  RECIPES.charge = function(c, o, t, R, v, op){
+    var dur = (op && op.dur) || 0.5, os = c.createOscillator(), g = c.createGain();
+    os.type = 'triangle'; os.frequency.setValueAtTime(260, t); os.frequency.exponentialRampToValueAtTime(980, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.035 * v, t + dur * 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.04);
+    os.connect(g); g.connect(o); os.start(t); os.stop(t + dur + 0.08); track(os); return dur;
+  };
+  RECIPES.ui = function(c, o, t, R, v){ ping(c, o, t, { f:1320, g:0.05 * v, dur:0.035 }); ping(c, o, t + 0.04, { f:1760, g:0.04 * v, dur:0.04 }); };
+
+  /* ---------- the context, the switch and the page wiring ---------- */
+  function makeContext(){
+    if(!AC) return null;
+    var c = new AC();
+    var master = c.createGain(); master.gain.value = S.enabled ? 0.9 : 0;
+    var comp = c.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 12; comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.2;
+    master.connect(comp); comp.connect(c.destination);
+    S.ctx = c; S.master = master; return c;
+  }
+  function ready(){
+    if(!AC) return null;
+    if(!S.ctx){ if(!S.unlocked) return null; makeContext(); }
+    var c = S.ctx;
+    if(c.state === 'suspended'){ try{ c.resume(); }catch(e){} return null; }
+    return c.state === 'running' ? c : null;
+  }
+  function unlock(){
+    if(!AC) return;
+    S.unlocked = true;
+    if(!S.ctx) makeContext();
+    try{ if(S.ctx.state !== 'running') S.ctx.resume(); }catch(e){}
+  }
+  function play(name, o){
+    if(!S.enabled) return false;
+    var r = RECIPES[name]; if(!r) return false;
+    var c = ready(); if(!c || S.active > 90) return false;
+    try{ r(c, S.master, c.currentTime + 0.004, Math.random, (o && o.v != null) ? o.v : 1, o || {}); return true; }catch(e){ return false; }
+  }
+  function setEnabled(on, quiet){
+    on = !!on; var was = S.enabled; S.enabled = on; S.stored = true;
+    try{ W.localStorage.setItem(KEY, on ? '1' : '0'); }catch(e){}
+    if(S.master){ try{ var n = S.ctx.currentTime; S.master.gain.cancelScheduledValues(n); S.master.gain.setValueAtTime(S.master.gain.value, n); S.master.gain.linearRampToValueAtTime(on ? 0.9 : 0, n + 0.04); }catch(e){} }
+    if(on && !was && !quiet) play('ui');
+    if(on !== was) S.listeners.slice().forEach(function(fn){ try{ fn(on); }catch(e){} });
+  }
+  function onChange(fn){ S.listeners.push(fn); }
+  /* legacy code that makes its own nodes can still send them through the master (so the switch and the limiter apply) */
+  function dest(c){ return (S.ctx && c === S.ctx && S.master) ? S.master : c.destination; }
+  /* a settings checkbox that mirrors the switch (first run: keep the choice the player made in an older version) */
+  function adopt(box, apply){
+    if(!box) return;
+    if(!S.stored && box.checked === false) setEnabled(false, true);
+    box.checked = S.enabled;
+    box.addEventListener('change', function(){ setEnabled(box.checked); });
+    onChange(function(on){ box.checked = on; if(apply) apply(on); });
+    if(apply) apply(S.enabled);
+  }
+  var ICON_ON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z" fill="currentColor"/><path d="M15.2 8.6a4.6 4.6 0 0 1 0 6.8M17.6 6.2a8 8 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.6L12 18.5v-13L7.6 9.5H4z" fill="currentColor"/><path d="M15.6 9.4l5 5.2M20.6 9.4l-5 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  function paint(btn){
+    btn.setAttribute('aria-pressed', S.enabled ? 'true' : 'false');
+    btn.setAttribute('aria-label', S.enabled ? 'Sound on. Press to mute' : 'Sound off. Press to turn on');
+    btn.setAttribute('title', S.enabled ? 'Sound on' : 'Sound off');
+    btn.innerHTML = S.enabled ? ICON_ON : ICON_OFF;
+  }
+  function mountButton(btn){
+    if(!btn) return;
+    if(!D.getElementById('tr-snd-css')){
+      var st = D.createElement('style'); st.id = 'tr-snd-css';
+      st.textContent = '.snd-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border-radius:50%;border:1px solid var(--line,rgba(255,255,255,.18));background:transparent;color:var(--text-muted,var(--muted,#9aa0a8));cursor:pointer;flex:0 0 auto;transition:color .15s,border-color .15s,background .15s}.snd-btn:hover{color:var(--text,#fff);border-color:currentColor}.snd-btn:focus-visible{outline:2px solid var(--accent,var(--brass-bright,#d8b24a));outline-offset:2px}.snd-btn[aria-pressed="true"]{color:var(--text,#fff)}@media (pointer:coarse){.snd-btn{width:44px;height:44px}}';
+      (D.head || D.documentElement).appendChild(st);
+    }
+    btn.classList.add('snd-btn'); btn.type = 'button'; paint(btn);
+    btn.addEventListener('click', function(){ unlock(); setEnabled(!S.enabled); });
+    onChange(function(){ paint(btn); });
+  }
+  function context(){ return ready(); }
+  function render(name, seed, dur, opts){
+    var OAC = W.OfflineAudioContext || W.webkitOfflineAudioContext;
+    if(!OAC) return Promise.reject(new Error('no OfflineAudioContext'));
+    var sr = 44100, c = new OAC(1, Math.max(1, Math.round(dur * sr)), sr), R = mulberry(seed || 1);
+    RECIPES[name](c, c.destination, 0.01, R, 1, opts || {});
+    return c.startRendering().then(function(b){ return b.getChannelData(0); });
+  }
+  /* sleeping tabs make no noise */
+  if(D && D.addEventListener) D.addEventListener('visibilitychange', function(){
+    if(!S.ctx) return;
+    try{ if(D.hidden){ if(S.ctx.state === 'running'){ S.hiddenSuspended = true; S.ctx.suspend(); } } else if(S.hiddenSuspended){ S.hiddenSuspended = false; S.ctx.resume(); } }catch(e){}
+  });
+  /* the first touch, key or click on the page is what lets the browser start the audio */
+  function firstGesture(){ unlock(); if(S.ctx && S.ctx.state === 'running'){ ['pointerdown', 'keydown', 'touchend'].forEach(function(t){ D.removeEventListener(t, firstGesture, true); }); } }
+  if(D && D.addEventListener) ['pointerdown', 'keydown', 'touchend'].forEach(function(t){ D.addEventListener(t, firstGesture, true); });
+
+  W.TRSound = { play:play, set:setEnabled, toggle:function(){ setEnabled(!S.enabled); }, enabled:function(){ return S.enabled; }, onChange:onChange, dest:dest, context:context, unlock:unlock, adopt:adopt, mountButton:mountButton, render:render, recipes:RECIPES, names:function(){ return Object.keys(RECIPES); }, _state:S };
+})(window);
+/*tr-sound:end*/
+</script>
 </head>
 <body>
 <header class="top">
   <div class="lft"><span class="brandwrap"><button type="button" class="coin" id="brand-coin" aria-label="Flip the coin"><span class="coin-hop"><span class="coin-in"><span class="mark front" aria-hidden="true"></span><span class="mark back" aria-hidden="true"><b class="suit">♠</b></span></span></span></button><a class="brand" href="/">Table Ready</a></span>
-    <nav class="nav" aria-label="Site"><a href="/learn/">Learn to play</a><a href="/learn/glossary/">Glossary</a></nav></div>
+    <nav class="nav" aria-label="Site"><a href="/learn/">Learn to play</a><a href="/learn/glossary/">Glossary</a><a href="/report/">My report</a></nav></div>
   <div class="rgt"><div class="themes" role="group" aria-label="Table theme"><button type="button" data-th="graphite" aria-pressed="true" aria-label="Graphite theme" title="Graphite" style="--sw:#1D2025"></button><button type="button" data-th="emerald" aria-pressed="false" aria-label="Emerald Felt theme" title="Emerald Felt" style="--sw:#0F3D36"></button><button type="button" data-th="midnight" aria-pressed="false" aria-label="Midnight theme" title="Midnight" style="--sw:#1B2233"></button><button type="button" data-th="crimson" aria-pressed="false" aria-label="Crimson theme" title="Crimson" style="--sw:#2E1920"></button></div>
   <div class="bank" role="group" aria-label="Bankroll"><i aria-hidden="true"></i><span>Bankroll</span><b id="bankroll-amount">$1,000</b></div></div>
 </header>
@@ -295,7 +611,8 @@ h1 em{font-style:normal;color:var(--brass-bright)}
   </nav></div>
 </main>
 <footer>
-  <div><a href="/learn/">Learn to play</a> &nbsp;&nbsp; <a href="/learn/glossary/">Glossary</a></div>
+  <div><a href="/learn/">Learn to play</a> &nbsp;&nbsp; <a href="/learn/glossary/">Glossary</a> &nbsp;&nbsp; <a href="/report/">My report</a></div>
+  <div class="xp-line" id="snd-line"><span>Sound: <span class="snd-state" id="snd-state">on</span></span><button type="button" class="xp-change" id="snd-foot" aria-pressed="true">Turn off</button></div>
   <div class="xp-line" id="xp-status-line"><span id="xp-status-text"></span><button type="button" class="xp-change" id="xp-change"></button></div>
   <div>For education only — free practice tables, not real-money gambling.<br>© 2026 SledgeMakesGames. All rights reserved.</div>
 </footer>
@@ -344,6 +661,8 @@ renderBankroll();
   var SUITS = ['\u2660', '\u2665', '\u2666', '\u2663'], angle = 0;
   var calm = false; try{ calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){}
   coin.addEventListener('click', function(){
+    if(coin.__eat){ coin.__eat = false; return; }                       /* the release at the end of a long press is not also a flip */
+    if(window.TRSound) window.TRSound.play('coin');
     angle += 180;
     if((angle / 180) % 2 === 1 && suit) suit.textContent = SUITS[Math.floor(Math.random() * SUITS.length)];
     inner.style.transform = 'rotateY(' + angle + 'deg)';
@@ -601,6 +920,7 @@ function hoverCapable(){ return !window.matchMedia || window.matchMedia('(hover:
     });
     p.addEventListener('auxclick', function(){ routePane(p); if(learnFirst(game)) markLearned(game); });
   });
+  window.TR_STAGE = { open: open, close: close, panes: panes };
   panes.forEach(function(p){ p.setAttribute('aria-current', 'false'); });
   stage.addEventListener('mouseleave', function(){ if(hoverCapable()) close(); });
   stage.addEventListener('focusout', function(e){ if(!e.relatedTarget || !stage.contains(e.relatedTarget)) close(); });
@@ -616,6 +936,149 @@ maybeAskExperience();
 // Coming back via the back button (or from another tab) must show up-to-date labels.
 window.addEventListener('pageshow', applyRouting);
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyRouting(); });
+</script>
+
+<script id="coin-pick">
+(function(){
+  'use strict';
+  var T = window.TRSound, coin = document.getElementById('brand-coin'), S = window.TR_STAGE;
+  function snd(n, o){ try{ if(T) T.play(n, o); }catch(e){} }
+  /* ---- the footer switch (the same switch as in every game) ---- */
+  var sb = document.getElementById('snd-foot'), st = document.getElementById('snd-state');
+  function paintSound(){
+    var on = !!(T && T.enabled());
+    if(st) st.textContent = on ? 'on' : 'off';
+    if(sb){ sb.textContent = on ? 'Turn off' : 'Turn on'; sb.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  }
+  if(T && sb){ sb.addEventListener('click', function(){ T.unlock(); T.toggle(); }); T.onChange(paintSound); paintSound(); }
+  else { var line = document.getElementById('snd-line'); if(line) line.hidden = true; }
+  if(!coin || !S || !S.panes || !S.panes.length) return;
+  var inner = coin.querySelector('.coin-in'), hop = coin.querySelector('.coin-hop'), suit = coin.querySelector('.suit');
+  if(!inner || !hop) return;
+  var calm = false; try{ calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){}
+  var HOLD = 560, timer = null, busy = false, lastPick = -1, keyHeld = false, tipEl = null, tipTimer = null;
+  var TIP_KEY = 'house_edge_cointip_v1';
+  coin.setAttribute('aria-label', 'Flip the coin. Hold it to let the coin pick a game');
+  var live = document.createElement('div'); live.className = 'sr'; live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite'); live.id = 'pick-live'; document.body.appendChild(live);
+
+  function gone(){ if(tipEl){ var t = tipEl; tipEl = null; t.classList.remove('in'); setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 300); } clearTimeout(tipTimer); }
+  function seenTip(){ try{ localStorage.setItem(TIP_KEY, '1'); }catch(e){} }
+
+  function arm(){
+    if(busy || timer) return;
+    gone(); seenTip();
+    coin.classList.add('charging'); snd('charge', { dur: HOLD / 1000 });
+    timer = setTimeout(go, HOLD);
+  }
+  function disarm(){ if(timer){ clearTimeout(timer); timer = null; } coin.classList.remove('charging'); }
+
+  /* roll the dice of fate, then take the coin there */
+  function go(){
+    timer = null; coin.classList.remove('charging'); coin.__eat = true; busy = true;
+    var n = S.panes.length, k = Math.floor(Math.random() * n);
+    if(n > 1 && k === lastPick) k = (k + 1 + Math.floor(Math.random() * (n - 1))) % n;     /* never the table it picked last time */
+    lastPick = k;
+    var pane = S.panes[k], nmEl = pane.querySelector('.nm'), name = nmEl ? nmEl.textContent.trim() : 'a game';
+    S.close();
+    snd('toss', { dur: 1.2 });
+    var done = false;
+    function land(){
+      if(done) return; done = true;
+      coin.classList.remove('away');
+      if(fly && fly.parentNode) fly.parentNode.removeChild(fly);
+      snd('coinLand');
+      S.open(k);
+      var ring = document.createElement('i'); ring.className = 'pick-ring'; ring.setAttribute('aria-hidden', 'true'); pane.appendChild(ring);
+      setTimeout(function(){ if(ring.parentNode) ring.parentNode.removeChild(ring); }, 1300);
+      live.textContent = ''; setTimeout(function(){ live.textContent = 'The coin picked ' + name + '.'; }, 30);
+      if(!calm){ hop.classList.remove('hop'); void hop.offsetWidth; hop.classList.add('hop'); }
+      busy = false;
+    }
+    var fly = null;
+    if(calm || typeof document.body.animate !== 'function'){
+      var q = pane.getBoundingClientRect(), vh0 = window.innerHeight || 800;
+      if(q.top < 70 || q.bottom > vh0 - 10){ try{ pane.scrollIntoView({ block: 'center' }); }catch(e){} }
+      setTimeout(land, 700); return;
+    }
+    /* the page glides to the table while the coin is in the air, so the coin is aimed at where the table will be */
+    var r0 = coin.getBoundingClientRect(), r1 = pane.getBoundingClientRect(), vh = window.innerHeight || 800, dyScroll = 0;
+    if(r1.top < 70 || r1.bottom > vh - 10){
+      var max = Math.max(0, (document.documentElement.scrollHeight || 0) - vh), now = window.pageYOffset;
+      var want = Math.max(0, Math.min(max, now + r1.top + r1.height / 2 - vh / 2));
+      dyScroll = want - now;
+      try{ window.scrollTo({ top: want, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, want); }
+    }
+    var y0 = Math.max(r0.top, 6);
+    fly = document.createElement('div'); fly.className = 'coin-fly'; fly.setAttribute('aria-hidden', 'true');
+    fly.style.cssText = 'left:' + r0.left + 'px;top:' + y0 + 'px;width:' + r0.width + 'px;height:' + r0.height + 'px;--cs:' + r0.width + 'px';
+    fly.appendChild(hop.cloneNode(true));
+    var fin = fly.querySelector('.coin-in'); fin.style.transform = 'none'; fin.style.transition = 'none';
+    var back = Math.random() < 0.5, fs = fly.querySelector('.suit'), SU = ['♠', '♥', '♦', '♣'];
+    if(fs) fs.textContent = SU[Math.floor(Math.random() * SU.length)];
+    document.body.appendChild(fly); coin.classList.add('away');
+    var tx = r1.left + r1.width / 2, ty = r1.top + r1.height / 2 - dyScroll - Math.min(r1.height * .12, 36);
+    var dx = tx - (r0.left + r0.width / 2), dy = ty - (y0 + r0.height / 2);
+    var dur = 1250, peak = Math.min(4.2, Math.max(2.6, r1.width / r0.width * .16));
+    var a = fly.animate([
+      { transform: 'translate(0,0) scale(1)', offset: 0 },
+      { transform: 'translate(' + (dx * .38) + 'px,' + (dy * .38 - 26) + 'px) scale(' + peak + ')', offset: .4, easing: 'ease-out' },
+      { transform: 'translate(' + (dx * .86) + 'px,' + (dy * .86) + 'px) scale(' + (peak * .62) + ')', offset: .82, easing: 'ease-in' },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(1.25)', offset: 1 }
+    ], { duration: dur, easing: 'linear', fill: 'forwards' });
+    fin.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(' + (1080 + (back ? 180 : 0)) + 'deg)' }], { duration: dur, easing: 'cubic-bezier(.25,.55,.3,1)', fill: 'forwards' });
+    a.onfinish = land; setTimeout(land, dur + 400);
+  }
+
+  /* ---- hold with a finger or a mouse ---- */
+  var px = 0, py = 0;
+  coin.addEventListener('pointerdown', function(e){
+    if(e.button > 0) return;
+    coin.__eat = false; px = e.clientX; py = e.clientY; arm();
+  });
+  coin.addEventListener('pointermove', function(e){ if(timer && (Math.abs(e.clientX - px) > 14 || Math.abs(e.clientY - py) > 14)) disarm(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(t){ coin.addEventListener(t, function(){ if(!keyHeld) disarm(); }); });
+  coin.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  /* ---- hold Enter or Space ---- */
+  coin.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault(); coin.__eat = false;
+    if(e.repeat || keyHeld) return;
+    keyHeld = true; arm();
+  });
+  coin.addEventListener('keyup', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if(!keyHeld) return;
+    keyHeld = false;
+    var fired = !timer && busy;                    // the hold ran its course: the pick is already under way
+    disarm();
+    if(!fired) coin.click();                       // a quick press is the ordinary flip
+  });
+  coin.addEventListener('blur', function(){ if(keyHeld){ keyHeld = false; disarm(); } });
+
+  /* ---- a one-time tip, once nothing else is asking for attention ---- */
+  var seen = false; try{ seen = localStorage.getItem(TIP_KEY) === '1'; }catch(e){ seen = true; }
+  if(!seen && !calm){
+    var tries = 0;
+    (function wait(){
+      var ov = document.getElementById('xp-overlay');
+      if((ov && !ov.hidden) || busy){ if(++tries < 60) setTimeout(wait, 1000); return; }
+      setTimeout(function(){
+        if(busy || (ov && !ov.hidden)) return;
+        var r = coin.getBoundingClientRect(); if(r.bottom < 0 || r.top > window.innerHeight) return;
+        tipEl = document.createElement('div'); tipEl.className = 'coin-tip'; tipEl.setAttribute('role', 'note');
+        tipEl.textContent = 'Tip: press and hold the coin and it will pick a game for you.';
+        document.body.appendChild(tipEl);
+        var left = Math.max(10, Math.min(r.left - 6, (window.innerWidth || 360) - 246));
+        tipEl.style.left = left + 'px'; tipEl.style.top = (r.bottom + 12) + 'px'; tipEl.style.setProperty('--ax', Math.max(8, r.left + r.width / 2 - left - 5) + 'px');
+        void tipEl.offsetWidth; tipEl.classList.add('in'); seenTip();
+        tipTimer = setTimeout(gone, 8000);
+        ['pointerdown', 'keydown'].forEach(function(t){ document.addEventListener(t, gone, { once: true, capture: true }); });
+      }, 1800);
+    })();
+  }
+  window.TR_COIN_PICK = { go: function(){ if(!busy) go(); }, busy: function(){ return busy; } };
+})();
 </script>
 </body>
 </html>
