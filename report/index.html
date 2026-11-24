@@ -629,12 +629,14 @@ function buildSim(host, P, T){
 }
 
 /* ===================== leaks card ===================== */
+/* blackjack hands and Hold'em pre-flop spots can be rebuilt as practice questions from what the log keeps; the practice mode there replays them */
+function replayable(l){ var k = l.d && l.d[0]; return (l.g === 'blackjack' && (k === 'hard' || k === 'soft' || k === 'pair')) || (l.g === 'ultimate-texas-holdem' && k === 'pre'); }
 function leaksBlock(L, T){
   if(!L.length) return '<div class="clean"><b>No costly decisions logged yet.</b> Keep playing: every time a choice costs you money against perfect strategy, it lands here with a price tag.</div>';
   var max = L[0].cost, per = function(c){ return T.hands ? c / T.hands * 1000 : 0; };
   return '<div class="leaks">' + L.slice(0, 6).map(function(l, i){
     var tt = leakTitle(l.g, l.d), spots = Object.keys(l.spots).sort(function(a, b){ return l.spots[b] - l.spots[a]; }).slice(0, 3);
-    return '<div class="leak" style="--w:' + Math.max(6, l.cost / max * 100).toFixed(0) + '%"><div class="rk">' + (i + 1) + '</div><div><h3><span class="gm">' + esc(GAMES[l.g].name) + '</span>' + esc(tt.t) + '</h3><p>' + l.n + (l.n === 1 ? ' time' : ' times') + (spots.length ? ' · mostly ' + esc(spots.join('; ')) : '') + (tt.s ? '. ' + esc(tt.s) : '') + '</p><a class="leak-go" href="/' + l.g + '/#practice">Drill this at the table →</a></div><div class="cost">' + fmt(l.cost) + '<small>≈ ' + fmt(per(l.cost)) + ' per 1,000</small></div></div>';
+    return '<div class="leak" style="--w:' + Math.max(6, l.cost / max * 100).toFixed(0) + '%"><div class="rk">' + (i + 1) + '</div><div><h3><span class="gm">' + esc(GAMES[l.g].name) + '</span>' + esc(tt.t) + '</h3><p>' + l.n + (l.n === 1 ? ' time' : ' times') + (spots.length ? ' · mostly ' + esc(spots.join('; ')) : '') + (tt.s ? '. ' + esc(tt.s) : '') + '</p>' + (replayable(l) ? '<a class="leak-go" href="/' + l.g + '/#practice-mine">Replay my mistakes in practice →</a>' : '<a class="leak-go" href="/' + l.g + '/#practice">Drill this at the table →</a>') + '</div><div class="cost">' + fmt(l.cost) + '<small>≈ ' + fmt(per(l.cost)) + ' per 1,000</small></div></div>';
   }).join('') + '</div>';
 }
 

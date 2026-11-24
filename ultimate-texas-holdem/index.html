@@ -5,6 +5,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script id="tr-boot">
+/* Table Ready: the first moment. On a desktop-size window the table is sized to your window once the page has loaded, and a page that is already showing would visibly jump to that size. So on those windows the page stays hidden for a moment, is sized, and then fades in already settled.
+   It only ever waits as long as the page is still changing (a quiet moment ends it), and never longer than a second and a bit, so a slow connection or an error cannot leave you looking at nothing. */
+(function(){
+  'use strict';
+  var W = window, D = document, R = D.documentElement;
+  if(W.TRBoot) return;
+  var craps = /\/craps\//.test((W.location && W.location.pathname) || '');
+  var on = false;
+  try{ on = !!(W.matchMedia && W.matchMedia(craps ? '(min-width:1320px) and (min-height:600px)' : '(min-width:1200px) and (min-height:600px)').matches); }catch(e){}
+  if(!on){ W.TRBoot = { active: false, release: function(){} }; return; }
+  var st = D.createElement('style'); st.id = 'tr-boot-css';
+  st.textContent = 'html.tr-boot body{visibility:hidden !important;}html.tr-in body{animation:trBootIn 240ms ease-out both;}@keyframes trBootIn{from{opacity:0;}to{opacity:1;}}@media (prefers-reduced-motion:reduce){html.tr-in body{animation:none;}}';
+  (D.head || R).appendChild(st);
+  R.classList.add('tr-boot');
+  var fin = false, mo = null, quiet = 0, ready = false, hard = 0;
+  function finish(){
+    if(fin) return; fin = true;
+    if(mo){ try{ mo.disconnect(); }catch(e){} }
+    clearTimeout(quiet); clearTimeout(hard);
+    R.classList.remove('tr-boot'); R.classList.add('tr-in');
+    setTimeout(function(){ R.classList.remove('tr-in'); }, 420);
+  }
+  function settle(){ clearTimeout(quiet); if(ready) quiet = setTimeout(function(){ requestAnimationFrame(function(){ requestAnimationFrame(finish); }); }, 110); }
+  /* the page calls this when it has been sized and its fonts and resources are in; the page then has to be quiet for a moment */
+  W.TRBoot = { active: true, release: function(){ ready = true; settle(); } };
+  function watch(){
+    if(!W.MutationObserver || !D.body) return;
+    mo = new MutationObserver(settle);
+    mo.observe(D.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+  }
+  if(D.body) watch(); else D.addEventListener('DOMContentLoaded', watch);
+  hard = setTimeout(finish, 1250);
+})();
+</script>
+<script id="tr-dim">
+/* Table Ready: cached element sizes for the dealer's animation maths.
+   Reading clientWidth / offsetWidth right after the page has been changed makes the browser stop and lay the whole page out again; the dealer reads them many times a second.
+   An element's size is read once and kept until the browser says it changed. */
+(function(){
+  'use strict';
+  if(window.TRDim) return;
+  var M = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var RO = (M && typeof ResizeObserver === 'function') ? new ResizeObserver(function(es){ for(var i = 0; i < es.length; i++){ var m = M.get(es[i].target); if(m) m.dirty = true; } }) : null;
+  function rec(el){
+    if(!RO) return { w: el.clientWidth, h: el.clientHeight, ow: el.offsetWidth };
+    var m = M.get(el);
+    if(!m){ m = { dirty: true }; M.set(el, m); try{ RO.observe(el); }catch(e){} }
+    if(m.dirty){ m.w = el.clientWidth; m.h = el.clientHeight; m.ow = el.offsetWidth; m.dirty = false; }
+    return m;
+  }
+  window.TRDim = {
+    w: function(el){ return el ? rec(el).w : 0; },
+    h: function(el){ return el ? rec(el).h : 0; },
+    ow: function(el){ return el ? rec(el).ow : 0; }
+  };
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#08090B">
@@ -1107,7 +1166,8 @@ details.src summary:hover{color:var(--text);}
 details.src p{margin:6px 0 0;}
 @media (min-width:1200px) and (min-height:600px){
   body{padding:12px 20px 12px;}
-  .wrap{max-width:1360px;}
+  .table-felt{min-height:var(--felt-min,0px);}
+  .wrap{max-width:clamp(1360px,92vw,1740px);}
   .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:end;margin-bottom:10px;}
   .topbar .back-link{grid-column:1 / -1;margin-bottom:4px;font-size:12px;}
   .topbar header{display:contents;}
@@ -1117,7 +1177,7 @@ details.src p{margin:6px 0 0;}
   .topbar header > div:last-child > a,.topbar header > div:last-child > .mini-link{font-size:12px;}
   .topbar .bankroll-pill{padding:6px 12px 6px 10px;}
   .topbar #btn-toggle-settings{padding:7px 12px;font-size:12.5px;}
-  .layout-grid{display:grid;grid-template-columns:minmax(0,920px) minmax(330px,1fr);gap:16px;align-items:start;}
+  .layout-grid{display:grid;grid-template-columns:minmax(0,clamp(920px,64vw,1160px)) minmax(330px,1fr);gap:16px;align-items:start;}
   .table-felt{margin-bottom:8px;}
   .side-panels{display:flex;flex-direction:column;gap:8px;position:sticky;top:12px;}
   .side-panels .panel{margin:0;padding:11px 14px 12px;border-radius:14px;}
@@ -1138,41 +1198,42 @@ details.src p{margin:6px 0 0;}
   .topbar{margin-bottom:6px;}
 }
 @media (min-width:1200px) and (min-height:600px){
+  :root{--f:var(--fit,.4);}
   .table-felt{padding:12px 20px 0;}
-  .rows{--cw:max(46px,min(80px,calc((100cqw - 40px) / 6.6),calc((100dvh - 740px) / 2.9)));--ch:calc(var(--cw) * 1.4);--cg:8px;}
-  body.show-on #dealer-band{height:104px;margin:0 0 2px;}
-  body.show-on .ds{height:104px;}
-  .ds-dealer{width:148px;height:111px;margin-left:-74px;}
-  .ds-svg{width:148px;height:111px;}
-  .ds-idle{top:27px;left:calc(max(0px, 50% - 176px) + 117px);right:calc(max(0px, 50% - 178px) + 94px);width:auto;max-width:none;transform:none;font-size:11.5px;line-height:1.4;text-wrap:balance;}
+  .rows{--cw:max(32px,min(calc(34px + 64px * var(--f)),calc((100cqw - 40px) / 6.6)));--ch:calc(var(--cw) * 1.4);--cg:calc(5px + 5px * var(--f));}
+  body.show-on #dealer-band{height:calc(66px + 46px * var(--f));margin:0 0 calc(0px + 3px * var(--f));}
+  body.show-on .ds{height:calc(66px + 46px * var(--f));}
+  .ds-dealer{width:calc(108px + 40px * var(--f));height:calc(81px + 30px * var(--f));margin-left:calc(-54px - 20px * var(--f));}
+  .ds-svg{width:calc(108px + 40px * var(--f));height:calc(81px + 30px * var(--f));}
+  .ds-idle{top:max(0px,calc(40px * var(--f) - 29px));line-height:1.3;left:calc(max(0px, 50% - 176px) + 117px);right:calc(max(0px, 50% - 178px) + 94px);width:auto;max-width:none;transform:none;font-size:11.5px;line-height:1.4;text-wrap:balance;}
   .ds-say{left:calc(50% + 34px);top:0;max-width:min(150px, calc(50% - 40px));}
   .mini-paytable{padding:7px 10px;font-size:10px;}
   .mini-paytable .mp-title{margin-bottom:3px;}
   .mini-paytable .mp-row{padding:1px 0;}
-  .seat-board{margin-top:4px;}
-  .seat-you{margin-top:2px;}
-  .seat-head{margin-bottom:8px;min-height:14px;}
-  .grp{gap:3px;}
+  .seat-board{margin-top:calc(2px + 4px * var(--f));}
+  .seat-you{margin-top:calc(0px + 6px * var(--f));}
+  .seat-head{margin-bottom:calc(4px + 6px * var(--f));min-height:14px;}
+  .grp{gap:calc(2px + 3px * var(--f));}
   .grp-label{flex-direction:row;gap:8px;justify-content:center;align-items:baseline;min-height:18px;}
   .gl-v{font-size:13px;line-height:1.2;}
   .gl-q{font-size:10.5px;line-height:1.2;}
   body.outs-on .board-outs{min-height:16px;margin-top:3px;}
-  .status-line{min-height:calc(1.45em * 1);margin-top:4px;font-size:12.5px;}
-  .outcome-badge{min-height:20px;margin:2px 0 2px;font-size:16px;}
-  .bet-zone{margin:2px 0 2px;}
-  .bet-spots{margin-bottom:4px;gap:10px;}
-  .bet-spot{min-height:68px;padding:7px 14px 6px;}
+  .status-line{min-height:calc(1.45em * 1);margin-top:calc(2px + 5px * var(--f));font-size:12.5px;}
+  .outcome-badge{min-height:calc(16px + 8px * var(--f));margin:calc(0px + 2px * var(--f)) 0 calc(0px + 3px * var(--f));font-size:16px;}
+  .bet-zone{margin:calc(0px + 4px * var(--f)) 0 2px;}
+  .bet-spots{margin-bottom:calc(2px + 5px * var(--f));gap:10px;}
+  .bet-spot{min-height:max(var(--spot-min,0px),calc(42px + 48px * var(--f)));padding:calc(4px + 5px * var(--f)) 14px calc(4px + 4px * var(--f));}
   .bet-spot .spot-label{font-size:13px;margin-bottom:1px;}
   .bet-spot .spot-odds{margin-bottom:2px;font-size:10.5px;}
   .bet-spot .spot-chips{margin-bottom:2px;min-height:14px;}
   .bet-spot .spot-amt{min-height:16px;font-size:14px;}
-  .chip-row{margin:2px 0;padding:2px 0;}
-  .chip{width:36px;height:36px;font-size:11px;}
-  .chip-hint{margin:0 0 2px !important;font-size:11px;}
-  .deal-row{min-height:64px;margin:4px -20px 0;padding:6px 20px 8px;}
-  .deal-row button{min-height:38px;}
-  .deal-row button.primary{padding:7px 22px;}
-  .strategy-hint{padding:7px 12px 8px;min-height:58px;line-height:1.4;margin:4px 0 2px;}
+  .chip-row{margin:calc(0px + 3px * var(--f)) 0;padding:calc(0px + 3px * var(--f)) 0;}
+  .chip-hint{margin:0 0 calc(0px + 3px * var(--f)) !important;font-size:11px;}
+  .deal-row{min-height:calc(48px + 17px * var(--f));margin:calc(1px + 5px * var(--f)) -20px 0;padding:calc(3px + 5px * var(--f)) 20px calc(6px + 4px * var(--f));}
+  .deal-row button{min-height:calc(32px + 6px * var(--f));}
+  .deal-row button.primary{padding:calc(3px + 4px * var(--f)) 22px;}
+  .deal-row button:not(.primary){padding-top:calc(3px + 4px * var(--f));padding-bottom:calc(3px + 4px * var(--f));}
+  .strategy-hint{padding:calc(5px + 3px * var(--f)) 12px calc(6px + 3px * var(--f));min-height:calc(36px + 24px * var(--f));line-height:1.4;margin:calc(2px + 3px * var(--f)) 0 calc(0px + 3px * var(--f));}
   .strategy-hint .coach-label{margin-bottom:1px;}
   .coach-why{top:5px;}
   .coach-more{position:absolute;left:0;right:0;bottom:calc(100% + 6px);margin:0;padding:10px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 30px -12px rgba(0,0,0,.75);z-index:40;max-height:42vh;overflow-y:auto;}
@@ -1184,27 +1245,46 @@ details.src p{margin:6px 0 0;}
   #chart-context{margin:0 0 6px;font-size:12.5px;line-height:1.4;}
   .chart-legend{margin-top:6px;}
 }
-/* a shorter window (a laptop): the cards and the spacing give up a little so the whole table still fits */
-@media (min-width:1200px) and (min-height:600px) and (max-height:830px){
-  .rows{--cw:max(42px,min(80px,calc((100cqw - 40px) / 6.6),calc((100dvh - 700px) / 2.9)));--ch:calc(var(--cw) * 1.4);--cg:6px;}
-  body.show-on #dealer-band{height:92px;}
-  body.show-on .ds{height:92px;}
-  .bet-spot{min-height:58px;padding:5px 14px 4px;}
-  .deal-row{min-height:60px;padding:4px 20px 6px;margin-top:2px;}
-  .strategy-hint{min-height:52px;padding:5px 12px 6px;margin:2px 0 0;}
-  .seat-head{margin-bottom:4px;}
-  .grp-label{min-height:14px;}
-  .bet-spot .spot-chips{min-height:8px;margin-bottom:0;}
-  .bet-spot .spot-amt{min-height:14px;font-size:13px;}
-  .bet-spot .spot-label{margin-bottom:0;}
-  .chip-row{margin:0;padding:0;}
-  .chip{width:32px;height:32px;}
-  .wrap > p.foot-note,.wrap > footer,.wrap > footer p.foot-note{margin:2px 10px 0 !important;}
-  .outcome-badge{min-height:16px;margin:0;}
-  .status-line{margin-top:2px;}
-  .seat-you{margin-top:0;}
-  .seat-board{margin-top:2px;}
-  .side-panels{max-height:calc(100dvh - 116px);overflow-y:auto;scrollbar-width:thin;}
+</style>
+<style id="tr-brand">
+/* the way home: the Table Ready coin and name, big enough to see (same coin as the Learn page) */
+.back-link .back-dot{position:relative;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--brass-bright),var(--brass) 72%);box-shadow:0 0 14px -2px color-mix(in srgb,var(--brass) 60%,transparent);transition:transform 240ms cubic-bezier(.34,1.56,.64,1);}
+.back-link .back-dot::before{content:"";position:absolute;inset:7%;border-radius:50%;border:2px dashed rgba(32,22,10,.34);}
+.back-link .back-dot::after{content:"";position:absolute;inset:28.5%;border-radius:50%;border:1.5px solid rgba(32,22,10,.3);}
+@media (hover:hover){.back-link:hover .back-dot{transform:translateY(-1px) rotate(24deg) scale(1.06);}}
+@media (min-width:701px){
+  html .back-link,html .topbar .back-link,html .wrap > .back-link{gap:11px;font-size:clamp(16px,2.4vh,20px);letter-spacing:-.25px;color:var(--text);margin-bottom:clamp(4px,1vh,10px);}
+  html .back-link:hover{color:var(--brass-bright);}
+  html .back-link .back-dot{--cs:clamp(24px,3.4vh,30px);width:var(--cs);height:var(--cs);}
+}
+@media (max-width:700px), (max-height:520px) and (pointer:coarse){
+  html .topbar .back-link .back-dot{width:26px;height:26px;}
+}
+@media (prefers-reduced-motion:reduce){.back-link .back-dot{transition:none;}}
+
+/* desktop: the way home, a divider and the game's name share one row, so the table gets the height it used to lose to a header */
+@media (min-width:1200px) and (min-height:600px){
+  html .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 22px;margin-bottom:clamp(6px,1.2vh,12px);}
+  html .topbar .back-link{margin:0;position:relative;padding-right:22px;flex:0 0 auto;}
+  html .topbar .back-link::after{content:"";position:absolute;right:0;top:50%;width:1px;height:24px;background:var(--line,rgba(237,238,240,.16));transform:translateY(-50%);}
+  html .topbar header > div:first-child{min-width:0;}
+  html .topbar header > div:last-child{margin-left:auto;}
+  html .topbar h1{margin:0;line-height:1.1;}
+}
+@media (min-width:1200px) and (min-height:600px){
+  html .topbar .tagline{display:none;}   /* the one-line description goes; the title, the way home and the controls share one row */
+}
+
+/* craps: its header is not inside a .topbar; the same single row */
+@media (min-width:1320px) and (min-height:600px){
+  html .wrap > .back-link{margin:0;position:relative;padding-right:22px;}
+  html .wrap > .back-link::after{content:"";position:absolute;right:0;top:50%;width:1px;height:24px;background:var(--line,rgba(237,238,240,.16));transform:translateY(-50%);}
+}
+
+/* craps on a phone: its way home is as easy to see as in the other games */
+@media (max-width:700px){
+  html .wrap > .back-link{font-size:17px;gap:10px;letter-spacing:-.2px;color:var(--text);}
+  html .wrap > .back-link .back-dot{width:26px;height:26px;}
 }
 </style>
 </head>
@@ -1214,7 +1294,7 @@ details.src p{margin:6px 0 0;}
 <div class="wrap" id="app">
 
 <div class="topbar" id="topbar">
-<a class="back-link" href="/"><span class="back-dot"></span><span class="bl-txt">Table Ready</span></a>
+<a class="back-link" href="/"><span class="back-dot" aria-hidden="true"></span><span class="bl-txt">Table Ready</span></a>
 <header>
   <div>
     <h1>Ultimate Texas Hold'em</h1>
@@ -3756,7 +3836,7 @@ var PitBoss = (function(){
   function dealerBox(){ var a = api(), d = a && a.dealer && a.dealer(); return d ? rel(d.getBoundingClientRect()) : null; }
   var LEAN = 5;
   function place(){
-    var d = dealerBox(), sw = S.st.clientWidth || 440, sh = S.st.clientHeight || 140;
+    var d = dealerBox(), sw = TRDim.w(S.st) || 440, sh = TRDim.h(S.st) || 140;
     var kk = (d && d.w) ? clamp(d.w / 168, .6, 1.2) : 1, bs = kk * 1.12;          // he is bigger than the dealer: he is standing, leaning over him
     var cx = d && d.w ? d.x : sw / 2;
     S.k = kk;
@@ -3771,7 +3851,7 @@ var PitBoss = (function(){
   function marker(cls){ var e = $('.' + cls, S.el); return e ? rel(e.getBoundingClientRect()) : null; }
   function shoulder(){
     var m = marker('pb-sh'); if(m && (m.x || m.y)) return m;
-    var sw = S.st.clientWidth || 440, sh = S.st.clientHeight || 140; return {x: sw / 2 - 40, y: sh - 60};
+    var sw = TRDim.w(S.st) || 440, sh = TRDim.h(S.st) || 140; return {x: sw / 2 - 40, y: sh - 60};
   }
   var L1 = 64, L2 = 66;
   function armTo(tx, ty, hand, ms){
@@ -3794,7 +3874,7 @@ var PitBoss = (function(){
   }
   function armRest(){ if(!S.up) return; S.el.setAttribute('data-arm', 'rest'); var sh = shoulder(); S.el.style.setProperty('--pb-arm-ms', Math.round(300 * k()) + 'ms'); S.up.style.transform = 'translate(' + sh.x.toFixed(1) + 'px,' + sh.y.toFixed(1) + 'px) rotate(8deg)'; S.fore.style.transform = 'rotate(10deg)'; S.fore.style.setProperty('--fa', '18deg'); S.hand.setAttribute('data-hand', 'open'); }
   function pt(name){
-    var d = dealerBox(), sw = S.st.clientWidth || 440, sh = S.st.clientHeight || 140, a = api(), el;
+    var d = dealerBox(), sw = TRDim.w(S.st) || 440, sh = TRDim.h(S.st) || 140, a = api(), el;
     if(name === 'dealer'){ return d ? {x: d.l + d.w * 0.2, y: d.t + d.h * 0.66} : null; }                 // the dealer's near shoulder
     if(name === 'collar'){ return d ? {x: d.x - d.w * 0.04, y: d.t + d.h * 0.7} : null; }               // his bow tie
     if(name === 'chest'){ return marker('pb-chest'); }
@@ -3833,12 +3913,12 @@ var PitBoss = (function(){
     var a = api(); if(a && a.chat && a.chat() === 'off') return;
     var say = S.say, bs = parseFloat(S.el.style.getPropertyValue('--pbk')) || 1;
     say.classList.remove('on', 'side'); say.style.maxWidth = ''; say.textContent = text;
-    var head = marker('pb-eyes') || {x: 120, y: 50}, sw = S.st.clientWidth || 440;
+    var head = marker('pb-eyes') || {x: 120, y: 50}, sw = TRDim.w(S.st) || 440;
     var phone = (W.innerWidth || 1000) <= 560;                                  // a phone: the stage has no room above it (the page's own bar is there), so he speaks from the side
     if(phone){
       say.classList.add('side'); say.style.maxWidth = Math.max(84, Math.round(head.x - 44 * bs - 6)) + 'px';
       var h2 = say.offsetHeight || 34, lo = Math.max(2, barClear() + 3);       // never under the page's own sticky bar, which sits over the top of the stage when the page is scrolled a little
-      say.style.left = '2px'; say.style.top = Math.round(clamp(head.y - h2 * 0.5 - 4, lo, Math.max(lo, (S.st.clientHeight || 104) - h2 - 24))) + 'px';
+      say.style.left = '2px'; say.style.top = Math.round(clamp(head.y - h2 * 0.5 - 4, lo, Math.max(lo, (TRDim.h(S.st) || 104) - h2 - 24))) + 'px';
     } else {
       var bw = say.offsetWidth || Math.min(158, text.length * 7 + 24), bh = say.offsetHeight || 30;
       var left = clamp(head.x - bw * 0.62, 2, Math.max(2, sw - bw - 2));
@@ -4226,7 +4306,7 @@ var Show = (function(){
     try{ if(S.dealer){ S.dealer.removeAttribute('data-bow'); S.dealer.removeAttribute('data-cheer'); } held(false); }catch(e){}
     try{ if(W.TRTip) TRTip.cleanup(); }catch(e){}
     if(quiet) return;
-    try{ setArmMs(300); restPose(); look((S.st.clientWidth || 300) / 2, 90); setMood(baseMood()); }catch(e){}
+    try{ setArmMs(300); restPose(); look((TRDim.w(S.st) || 300) / 2, 90); setMood(baseMood()); }catch(e){}
     presence();
   }
   W.TRDealer = {
@@ -4282,8 +4362,8 @@ var Show = (function(){
 
   /* ---------- the arm (two jointed segments, solved toward a target) ---------- */
   var L1 = 52, L2 = 54;
-  function dk(){ var w = S.dealer && S.dealer.offsetWidth; return w ? w / 168 : 1; }            // the dealer is drawn smaller on a phone: his shoulder moves with him
-  function shoulder(){ var k = dk(); return {x: (S.st.clientWidth || 300) / 2 + 46 * k, y: (S.st.clientHeight || 140) - 43 * k}; }
+  function dk(){ var w = S.dealer && TRDim.ow(S.dealer); return w ? w / 168 : 1; }            // the dealer is drawn smaller on a phone: his shoulder moves with him
+  function shoulder(){ var k = dk(); return {x: (TRDim.w(S.st) || 300) / 2 + 46 * k, y: (TRDim.h(S.st) || 140) - 43 * k}; }
   function stageXY(el){ var sr = S.st.getBoundingClientRect(), r = el.getBoundingClientRect(); return {x: r.left + r.width / 2 - sr.left, y: r.top + r.height / 2 - sr.top}; }
   function setArmMs(ms){ S.st.style.setProperty('--arm-ms', Math.round(ms * tk()) + 'ms'); }
   function armTo(tx, ty, tucked){
@@ -4305,7 +4385,7 @@ var Show = (function(){
   function held(v, stack){ if(S.held){ S.held.classList.toggle('on', !!v); S.held.classList.toggle('stack', !!(v && stack)); } }
   function look(x, y){
     if(!S.dealer) return;
-    var cx = (S.st.clientWidth || 300) / 2, cy = (S.st.clientHeight || 140) - 87 * dk();
+    var cx = (TRDim.w(S.st) || 300) / 2, cy = (TRDim.h(S.st) || 140) - 87 * dk();
     var dx = x - cx, dy = y - cy, d = Math.sqrt(dx * dx + dy * dy) || 1, k = Math.min(1, d / 120);
     S.dealer.style.setProperty('--lx', (dx / d * 2.3 * k).toFixed(2) + 'px');
     S.dealer.style.setProperty('--ly', (dy / d * 1.9 * k).toFixed(2) + 'px');
@@ -4313,7 +4393,7 @@ var Show = (function(){
   }
   function lookAt(el){ if(!S.st || !el) return; var p = stageXY(el); look(p.x, p.y); }
   function reachTo(el, ms){ if(!S.st || !el) return; var p = stageXY(el); setArmMs(ms || 140); armTo(p.x, p.y); look(p.x, p.y); }
-  function armHome(){ if(!S.st) return; setArmMs(300); held(false); restPose(); look((S.st.clientWidth || 300) / 2, 90); }
+  function armHome(){ if(!S.st) return; setArmMs(300); held(false); restPose(); look((TRDim.w(S.st) || 300) / 2, 90); }
 
   /* ---------- easter egg: wander over his chip tray ---------- */
   function overlayOpen(){ return !!(W.Dlg && Dlg.isOpen()); }
@@ -4326,7 +4406,7 @@ var Show = (function(){
     if(quiet) return;
     setMood(baseMood());
     if(S.say) S.say.classList.remove('on');
-    if(S.st) look((S.st.clientWidth || 300) / 2, 90);
+    if(S.st) look((TRDim.w(S.st) || 300) / 2, 90);
     presence();
   }
   function eggStart(e){
@@ -5395,11 +5475,53 @@ window.TRPractice = (function(){
       '#tr-prac .pp-miss{margin-top:14px;display:grid;gap:8px}' +
       '#tr-prac .pp-miss div{background:var(--panel-2,#1D2025);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45}' +
       '#tr-prac .pp-miss b{color:var(--sage-bright,#65C7A3)}' +
+      '#tr-prac .pp-hist{margin-top:9px;padding-top:9px;border-top:1px solid var(--line,rgba(237,238,240,.12));font-size:12.5px;line-height:1.45;color:var(--text-muted,#8A8F98)}' +
+      '#tr-prac .pp-hist b{color:var(--brass-bright,#F0C46B);font-weight:600}' +
+      '#tr-prac .pp-note{margin:0 0 14px;color:var(--text-muted,#8A8F98);font-size:14px;line-height:1.5}' +
       '@media (max-width:520px){#tr-prac .pp{padding:18px 16px 16px;border-radius:16px}#tr-prac .pp-opts.two{grid-template-columns:1fr}#tr-prac .pc-card{width:34px;height:47px}}';
     document.head.appendChild(s);
   }
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
   function save(game, score){ try{ var d = load(), r = d[game] || {runs: 0, best: 0}; r.runs++; r.last = score; r.best = Math.max(r.best, score); d[game] = r; localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
+  /* spots the player has re-learned in the mistakes drill: a logged mistake only counts if it happened after the spot was last cleared */
+  function fixedMap(game){ var d = load(); return (d._fixed && d._fixed[game]) || {}; }
+  function markFixed(game, key){ try{ var d = load(); d._fixed = d._fixed || {}; (d._fixed[game] = d._fixed[game] || {})[key] = Date.now(); localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
+  /* every costly decision in this browser's session log for the game, grouped by spot (kind + context), costliest first */
+  function mistakes(game){
+    var out = {}, fx = fixedMap(game), L = null;
+    try{ L = window.TRLog && window.TRLog.all(); }catch(e){}
+    if(!L || !L.s) return [];
+    L.s.forEach(function(s){
+      if(s.g !== game) return;
+      window.TRLog.rows(s).forEach(function(r){
+        (r.d || []).forEach(function(x){
+          if(x[0] === 'side' || x[0] === 'ins' || !(x[3] > 0)) return;
+          var ctx = String(x[4] || '').replace(/\s*\$\d+/, '').trim(); if(!ctx) return;
+          var key = x[0] + '|' + ctx.toLowerCase();
+          if(fx[key] && r.t <= fx[key]) return;
+          var m = out[key] || (out[key] = {key: key, kind: x[0], ctx: ctx, best: x[2], chose: {}, cost: 0, n: 0});
+          m.cost += x[3]; m.n++; m.chose[x[1]] = (m.chose[x[1]] || 0) + 1;
+        });
+      });
+    });
+    return Object.keys(out).map(function(k){ return out[k]; }).sort(function(a, b){ return b.cost - a.cost; });
+  }
+  /* the spots a game can turn back into a question (cfg.fromMistake), each with its question already built */
+  function spots(cfg){
+    var out = [];
+    if(!cfg || !cfg.fromMistake) return out;
+    mistakes(cfg.game).forEach(function(m){
+      var q = null; try{ q = cfg.fromMistake(m); }catch(e){}
+      if(q){ q.from = {key: m.key, n: m.n, cost: m.cost, chose: m.chose}; out.push({m: m, q: q}); }
+    });
+    return out;
+  }
+  function money(x){ return '$' + x.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+  function histText(q, cfg, cleared){
+    var f = q.from, lab = cfg.choseLabel || function(x){ return x; };
+    var parts = Object.keys(f.chose).sort(function(a, b){ return f.chose[b] - f.chose[a]; }).map(function(c){ return esc(lab(c)) + ' &times;' + f.chose[c]; });
+    return 'At the table you got this spot wrong <b>' + f.n + (f.n === 1 ? ' time' : ' times') + '</b> (' + parts.join(', ') + '), costing about <b>' + money(f.cost) + '</b>.' + (cleared ? ' Cleared from your list.' : '');
+  }
   function el(){
     if(root) return root;
     root = document.createElement('div'); root.id = 'tr-prac'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Practice');
@@ -5408,22 +5530,22 @@ window.TRPractice = (function(){
     document.addEventListener('keydown', onKey, true);
     return root;
   }
-  function close(){ if(!root) return; root.classList.remove('on'); root.innerHTML = ''; st = null; try{ if(prevFocus && prevFocus.focus) prevFocus.focus(); }catch(e){} if(location.hash === '#practice'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} } }
+  function close(){ if(!root) return; root.classList.remove('on'); root.innerHTML = ''; st = null; try{ if(prevFocus && prevFocus.focus) prevFocus.focus(); }catch(e){} if(location.hash === '#practice' || location.hash === '#practice-mine'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} } }
   function onKey(e){
     if(!st || !root || !root.classList.contains('on')) return;
     if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); close(); return; }
-    if(st.phase === 'ask' && /^[1-9]$/.test(e.key)){ var b = root.querySelectorAll('.pp-opt')[+e.key - 1]; if(b){ e.preventDefault(); b.click(); } }
+    if((st.phase === 'ask' || st.phase === 'choose') && /^[1-9]$/.test(e.key)){ var b = root.querySelectorAll('.pp-opt')[+e.key - 1]; if(b){ e.preventDefault(); b.click(); } }
     else if(st.phase === 'fb' && (e.key === 'Enter' || e.key === ' ')){ var nx = root.querySelector('#pp-next'); if(nx){ e.preventDefault(); e.stopPropagation(); nx.click(); } }
   }
   function bar(){
     var h = '';
-    for(var i = 0; i < N; i++){ var r = st.res[i]; h += '<i class="' + (r === 1 ? 'ok' : r === 0 ? 'no' : (i === st.firstIdx ? 'now' : '')) + '"></i>'; }
+    for(var i = 0; i < st.total; i++){ var r = st.res[i]; h += '<i class="' + (r === 1 ? 'ok' : r === 0 ? 'no' : (i === st.firstIdx ? 'now' : '')) + '"></i>'; }
     return '<div class="pp-bar" aria-hidden="true">' + h + '</div>';
   }
   function top(){ return '<div class="pp-top"><h2>' + esc(st.cfg.title) + '</h2><button type="button" class="pp-x" aria-label="Close practice">&times;</button></div>'; }
   function paint(){
     var q = st.cur, h = top() + bar();
-    h += '<div class="pp-meta"><span>' + (q.retry ? 'Second look' : 'Question ' + (st.asked + 1) + ' of ' + st.total) + '</span><span>Score ' + st.score + '</span></div>';
+    h += '<div class="pp-meta"><span>' + (q.retry ? 'Second look' : (st.mode === 'mine' ? 'Your mistake ' : 'Question ') + (st.asked + 1) + ' of ' + st.total) + '</span><span>Score ' + st.score + '</span></div>';
     h += '<p class="pp-q">' + q.prompt + '</p>';
     if(q.scene) h += '<div class="pp-scene">' + q.scene + '</div>';
     h += '<div class="pp-opts' + (q.options.length === 2 ? ' two' : '') + '">' + q.options.map(function(o, i){ return '<button type="button" class="pp-opt" data-k="' + esc(o.k) + '"><kbd>' + (i + 1) + '</kbd><span>' + o.label + (o.sub ? '<small>' + o.sub + '</small>' : '') + '</span></button>'; }).join('') + '</div>';
@@ -5440,12 +5562,14 @@ window.TRPractice = (function(){
       b.disabled = true; var bk = b.getAttribute('data-k');
       if(bk === q.answer) b.classList.add('right'); else if(bk === k) b.classList.add('wrong');
     });
+    var cleared = false;
     if(!q.retry){
       st.res[st.asked] = ok ? 1 : 0; if(ok) st.score++; else st.misses.push(q);
       if(!ok) st.queue.push(Object.assign({}, q, {retry: true}));
+      if(ok && st.mode === 'mine' && q.from){ markFixed(st.cfg.game, q.from.key); st.cleared++; cleared = true; }
     }
     var last = !st.queue.length;
-    var fb = '<div class="pp-fb ' + (ok ? 'ok' : 'no') + '"><b class="v">' + (ok ? 'Correct' : 'Not quite') + '</b>' + (typeof q.explain === 'function' ? q.explain(k, ok) : q.explain) + '</div>' +
+    var fb = '<div class="pp-fb ' + (ok ? 'ok' : 'no') + '"><b class="v">' + (ok ? 'Correct' : 'Not quite') + '</b>' + (typeof q.explain === 'function' ? q.explain(k, ok) : q.explain) + (q.from ? '<div class="pp-hist">' + histText(q, st.cfg, cleared) + '</div>' : '') + '</div>' +
       '<div class="pp-act"><button type="button" class="pp-btn pri" id="pp-next">' + (last ? 'See my score' : 'Next') + '</button></div>';
     root.querySelector('#pp-fb').innerHTML = fb;
     var nx = root.querySelector('#pp-next'); nx.onclick = next; try{ nx.focus({preventScroll:true}); nx.scrollIntoView({block:'nearest'}); }catch(e){}
@@ -5456,36 +5580,77 @@ window.TRPractice = (function(){
     st.cur = st.queue.shift(); st.firstIdx = st.asked; paint();
   }
   function summary(){
-    st.phase = 'done'; save(st.cfg.game, st.score);
-    var d = load()[st.cfg.game] || {}, msg = st.score === N ? 'A clean sweep. That is how the table plays it.' : st.score >= 8 ? 'Strong. A couple of spots to tighten.' : st.score >= 5 ? 'Getting there. The misses below are the money.' : 'Worth another pass. Read the reasons below, then go again.';
-    var h = top() + '<div class="pp-score"><div class="pc-big">' + st.score + ' / ' + N + '</div><p>' + msg + (d.best ? ' Best so far: ' + d.best + '/' + N + '.' : '') + '</p></div>';
+    var mine = st.mode === 'mine', T = st.total;
+    st.phase = 'done'; if(!mine) save(st.cfg.game, st.score);
+    var d = load()[st.cfg.game] || {}, ratio = T ? st.score / T : 0;
+    var msg = mine
+      ? (st.score === T ? 'All of these spots are cleared from your list. If you slip on one at the table, it comes back.' : 'The spots you missed stay on your list until you get them right first time.')
+      : (st.score === T ? 'A clean sweep. That is how the table plays it.' : ratio >= .8 ? 'Strong. A couple of spots to tighten.' : ratio >= .5 ? 'Getting there. The misses below are the money.' : 'Worth another pass. Read the reasons below, then go again.');
+    var h = top() + '<div class="pp-score"><div class="pc-big">' + st.score + ' / ' + T + '</div><p>' + msg + (!mine && d.best ? ' Best so far: ' + d.best + '/' + N + '.' : '') + '</p></div>';
     if(st.misses.length){ h += '<div class="pp-miss">' + st.misses.map(function(q){ return '<div>' + (q.tag ? '<b style="color:var(--text)">' + q.tag + '</b> — ' : '') + 'right answer: <b>' + q.answerLabel + '</b></div>'; }).join('') + '</div>'; }
-    h += '<div class="pp-act">' + (st.misses.length ? '<button type="button" class="pp-btn" id="pp-again-miss">Drill only my misses</button>' : '') + '<button type="button" class="pp-btn pri" id="pp-again">Practice again</button><button type="button" class="pp-btn" id="pp-done">Back to the table</button></div>';
+    var rem = mine ? spots(st.cfg).length : 0, cfg = st.cfg, md = st.mode;
+    h += '<div class="pp-act">' + (st.misses.length ? '<button type="button" class="pp-btn" id="pp-again-miss">Drill only my misses</button>' : '') +
+      (mine ? (rem ? '<button type="button" class="pp-btn pri" id="pp-more-mine">More of my mistakes (' + rem + ' left)</button>' : '') + '<button type="button" class="pp-btn' + (rem ? '' : ' pri') + '" id="pp-again">Mixed practice</button>'
+            : '<button type="button" class="pp-btn pri" id="pp-again">Practice again</button>') +
+      '<button type="button" class="pp-btn" id="pp-done">Back to the table</button></div>';
     root.innerHTML = '<div class="pp">' + h + '</div>';
     root.querySelector('.pp-x').onclick = close; root.querySelector('#pp-done').onclick = close;
-    root.querySelector('#pp-again').onclick = function(){ start(st.cfg); };
-    var m = root.querySelector('#pp-again-miss'); if(m) m.onclick = function(){ start(st.cfg, st.misses); };
+    root.querySelector('#pp-again').onclick = function(){ start(cfg); };
+    var m = root.querySelector('#pp-again-miss'); if(m) m.onclick = function(){ start(cfg, st.misses, md); };
+    var mm = root.querySelector('#pp-more-mine'); if(mm) mm.onclick = function(){ start(cfg, null, 'mine'); };
   }
-  function start(cfg, only){
+  /* the first screen when the log holds mistakes this game can turn back into questions */
+  function choose(cfg, list){
+    st = {cfg: cfg, phase: 'choose', queue: [], res: [], misses: []};
+    var n = list.length, cost = list.reduce(function(a, s){ return a + s.m.cost; }, 0);
+    var h = top() + '<p class="pp-q">What do you want to work on?</p><div class="pp-opts">' +
+      '<button type="button" class="pp-opt" data-k="mine"><kbd>1</kbd><span>Replay my mistakes<small>' + n + (n === 1 ? ' spot' : ' spots') + ' that cost you at the table, about ' + money(cost) + ' in all. Costliest first, up to ' + N + ' at a time.</small></span></button>' +
+      '<button type="button" class="pp-opt" data-k="mix"><kbd>2</kbd><span>Mixed practice<small>Ten fresh questions, no bets.</small></span></button></div>';
+    root.innerHTML = '<div class="pp">' + h + '</div>'; root.classList.add('on');
+    root.querySelector('.pp-x').onclick = close;
+    root.querySelector('[data-k="mine"]').onclick = function(){ start(cfg, null, 'mine'); };
+    root.querySelector('[data-k="mix"]').onclick = function(){ start(cfg); };
+    try{ root.querySelector('.pp-opt').focus({preventScroll: true}); }catch(e){}
+  }
+  /* asked for the mistakes drill (the Report page's link) with nothing left on the list */
+  function nothing(cfg){
+    st = {cfg: cfg, phase: 'choose', queue: [], res: [], misses: []};
+    root.innerHTML = '<div class="pp">' + top() + '<p class="pp-q">No open mistakes right now.</p><p class="pp-note">Play a few hands and any spot that costs you money lands here for a replay. Until then, a round of mixed questions keeps the strategy sharp.</p><div class="pp-act"><button type="button" class="pp-btn pri" id="pp-mix">Mixed practice</button><button type="button" class="pp-btn" id="pp-done">Back to the table</button></div></div>';
+    root.classList.add('on');
+    root.querySelector('.pp-x').onclick = close; root.querySelector('#pp-done').onclick = close;
+    root.querySelector('#pp-mix').onclick = function(){ start(cfg); };
+    try{ root.querySelector('#pp-mix').focus({preventScroll: true}); }catch(e){}
+  }
+  function start(cfg, only, mode){
     css(); el();
-    st = {cfg: cfg, queue: [], res: [], score: 0, asked: 0, misses: [], phase: 'ask', firstIdx: 0};
+    st = {cfg: cfg, queue: [], res: [], score: 0, asked: 0, misses: [], phase: 'ask', firstIdx: 0, mode: mode === 'mine' ? 'mine' : 'mix', cleared: 0};
     var seen = {};
     if(only && only.length){ only.forEach(function(q){ st.queue.push(Object.assign({}, q, {retry: false})); }); }
+    else if(st.mode === 'mine'){ spots(cfg).slice(0, N).forEach(function(s){ st.queue.push(s.q); }); if(!st.queue.length) return nothing(cfg); }
     else { var guard = 0; while(st.queue.length < N && guard++ < 200){ var q = cfg.make(); if(q && !seen[q.tag + '|' + q.answer + '|' + q.prompt]){ seen[q.tag + '|' + q.answer + '|' + q.prompt] = 1; st.queue.push(q); } } }
     var only10 = st.queue.slice(0, N); st.queue = only10; st.total = only10.length;
     for(var i = 0; i < N; i++) st.res[i] = i < st.total ? undefined : -1;
     root.classList.add('on');
     st.cur = st.queue.shift(); paint();
   }
-  function open(cfg){ prevFocus = document.activeElement; start(cfg); }
+  /* mode 'mine' goes straight to the mistakes drill; otherwise players with mistakes on file choose first */
+  function open(cfg, mode){
+    prevFocus = document.activeElement; css(); el();
+    if(mode === 'mine') return start(cfg, null, 'mine');
+    var L = spots(cfg);
+    if(L.length) return choose(cfg, L);
+    start(cfg);
+  }
   function wire(cfg){
     css();
     var b = document.getElementById('btn-practice');
     if(b) b.addEventListener('click', function(e){ e.preventDefault(); open(cfg); });
-    if(location.hash === '#practice') setTimeout(function(){ open(cfg); }, 700);
-    window.addEventListener('hashchange', function(){ if(location.hash === '#practice') open(cfg); });
+    function route(wait){ var h = location.hash; if(h === '#practice') setTimeout(function(){ open(cfg); }, wait); else if(h === '#practice-mine') setTimeout(function(){ open(cfg, 'mine'); }, wait); }
+    route(700);
+    window.addEventListener('hashchange', function(){ route(0); });
   }
-  return {open: open, wire: wire, card: card, esc: esc};
+  function state(){ return st ? {phase: st.phase, mode: st.mode, total: st.total, asked: st.asked, score: st.score, cleared: st.cleared, answer: st.cur && st.cur.answer, tag: st.cur && st.cur.tag, retry: !!(st.cur && st.cur.retry)} : null; }
+  return {open: open, wire: wire, card: card, esc: esc, mistakes: mistakes, spots: spots, state: state};
 })();
 
 /* ---- practice: ultimate texas hold'em (4x pre-flop, 2x on the flop, 1x or fold at the river) ---- */
@@ -5513,7 +5678,20 @@ window.TRPractice = (function(){
       explain: 'You have ' + name.toLowerCase() + '. Against every hand the dealer could hold, betting is worth <b>' + (rv.bet >= 0 ? '+' : '−') + Math.abs(rv.bet).toFixed(2) + '</b> antes and folding costs <b>2.00</b> (your Ante and Blind), so ' + (act === 'bet' ? 'bet' : 'folding loses less') + '.'};
   }
   function make(){ var r = Math.random(); return r < .4 ? qPre() : r < .7 ? qFlop() : qRiver(); }
-  P.wire({game: 'ultimate-texas-holdem', title: 'Hold’em practice', make: make});
+  /* a pre-flop spot from the session log ("A-K offsuit", "pair of 7s", "9-8 suited") rebuilt as a hand; flop and river spots can't be rebuilt from what the log keeps */
+  var RV = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+  function fromMistake(m){
+    if(m.kind !== 'pre') return null;
+    var SU = ['s','h','d','c'], a, b, s1, s2, p = /^pair of (10|[2-9JQKA])s$/.exec(m.ctx), x = /^(10|[2-9JQKA])-(10|[2-9JQKA]) (suited|offsuit)$/.exec(m.ctx);
+    if(p){ a = b = RV[p[1]]; s1 = SU[Math.floor(Math.random() * 4)]; do { s2 = SU[Math.floor(Math.random() * 4)]; } while(s2 === s1); }
+    else if(x){ a = RV[x[1]]; b = RV[x[2]]; if(a === b) return null; s1 = SU[Math.floor(Math.random() * 4)]; if(x[3] === 'suited') s2 = s1; else { do { s2 = SU[Math.floor(Math.random() * 4)]; } while(s2 === s1); } }
+    else return null;
+    var hole = [{rank: a, suit: s1}, {rank: b, suit: s2}], h = preFlopDecision(hole);
+    return {tag: 'pre-flop ' + holeTxt(hole), answer: h.action, answerLabel: h.action === 'bet' ? 'Raise 4x' : 'Check', prompt: 'Pre-flop. Raise 4x, or check?', scene: row('Your hand', hole),
+      options: [{k: 'bet', label: 'Raise 4x'}, {k: 'check', label: 'Check'}], explain: h.reason + ' (' + holeTxt(hole) + ')'};
+  }
+  var CHOSE = {'4x': 'raised 4x', '3x': 'raised 3x', 'check': 'checked'};
+  P.wire({game: 'ultimate-texas-holdem', title: 'Hold’em practice', make: make, fromMistake: fromMistake, choseLabel: function(c){ return CHOSE[c] || c; }});
 })();
 
 </script>
@@ -6914,6 +7092,106 @@ window.TRPractice = (function(){
 
   W.TRManners = { go: go, close: function(){ closeNow(); }, state: function(){ return { i: S.i, last: S.last, open: S.open }; }, game: KEY };
   try{ start(); }catch(e){ try{ console.warn('[manners]', e); }catch(x){} }
+})();
+
+</script>
+<script id="tr-fit">
+/* Table Ready: the desktop fit.
+   On a desktop-sized window the whole table has to share one screen. Rather than a few fixed sizes for a few window heights,
+   this finds, for the window you actually have, the roomiest setting that still fits, and hands it to the page's CSS as --fit
+   (0 = the tightest layout, 1 = the roomiest). A taller window gets bigger cards, dice and spacing; a shorter one gets less. It
+   only changes sizes: no rule, bet or result is touched. It re-solves when the window changes or the table is set up differently, and never while you
+   play, so nothing grows, shrinks or jumps in the middle of a hand. */
+(function(){
+  'use strict';
+  var W = window, D = document, R = D.documentElement;
+  if(W.TRFit) return;
+  var isCraps = !!(D.getElementById('btn-roll') && D.getElementById('felt')) || /\/craps\//.test((W.location && W.location.pathname) || '');
+  var mq = W.matchMedia ? W.matchMedia(isCraps ? '(min-width:1320px) and (min-height:600px)' : '(min-width:1200px) and (min-height:600px)') : null;
+  var cur = null, busy = false, raf = 0, wrap = null;
+
+  /* The table keeps the height it has while you bet, all through the hand: the chip rack going away or coming back no longer makes the felt jump shorter and taller.
+     (Blackjack's result and strategy note can make it taller still, but it never goes below its betting height; Craps keeps its own.) */
+  var keepsHeight = !isCraps;
+  var owed = false;                                       // a re-fit happened mid-hand: hold the height from the next betting table on
+  function reserve(){
+    if(!keepsHeight) return;
+    var rz = D.getElementById('result-zone'), fz = D.getElementById('feedback-zone');
+    if(!(W.G && W.G.phase === 'betting') || (rz && rz.children.length) || (fz && fz.children.length)){ owed = true; return; }   // only from a clean betting table
+    owed = false;
+    var f = D.querySelector('.table-felt'); if(!f) return;
+    R.style.removeProperty('--felt-min');
+    R.style.setProperty('--felt-min', Math.floor(f.getBoundingClientRect().height) + 'px');
+    var sp = D.querySelector('.bet-spot:not([hidden])');   // the bet boxes hold the height they have while you bet, too: they no longer shrink when the chips go to the felt
+    if(sp && sp.offsetParent){ R.style.removeProperty('--spot-min'); R.style.setProperty('--spot-min', Math.ceil(sp.getBoundingClientRect().height) + 'px'); }
+  }
+  function set(v){ R.style.setProperty('--fit', (Math.round(v * 1000) / 1000).toString()); }
+  function over(){
+    wrap = wrap || D.querySelector('.wrap');
+    if(!wrap) return 0;
+    var pb = parseFloat(getComputedStyle(D.body).paddingBottom) || 0;
+    return wrap.getBoundingClientRect().bottom + pb - W.innerHeight;
+  }
+  var TOL = -0.6, calls = 0;
+  /* Finding the roomiest setting takes few measurements: the page's height rises in a nearly straight line with --fit, so measure the two ends, jump to where the line says it fits,
+     and check. (Every measurement is a full layout, so the fewer the better.) */
+  var KEY = 'tr_fit_v2:' + ((W.location && W.location.pathname) || '').replace(/[^a-z-]/gi, '');
+  function remember(){ try{ localStorage.setItem(KEY, JSON.stringify({ w: W.innerWidth, h: W.innerHeight, f: cur })); }catch(e){} }
+  function recall(){ try{ var o = JSON.parse(localStorage.getItem(KEY) || 'null'); return (o && o.w === W.innerWidth && o.h === W.innerHeight && typeof o.f === 'number') ? o.f : null; }catch(e){ return null; } }
+  function solve(){
+    if(!mq || !mq.matches){ R.style.removeProperty('--fit'); R.style.removeProperty('--felt-min'); R.style.removeProperty('--spot-min'); cur = null; return; }
+    busy = true; R.classList.add('tr-fitting'); R.style.removeProperty('--felt-min'); R.style.removeProperty('--spot-min');   // measure the table as it naturally is, not held at an old height
+    try{
+      var lo = 0, hi = 1, ol, oh;
+      var seen = recall();                                // this window again: the answer from last time, checked with one measurement
+      if(seen != null){ set(seen); var os = over(); if(os <= TOL && (seen >= 1 || TOL - os < 4)){ cur = seen; return; } }
+      set(lo); ol = over();
+      if(ol > TOL){ cur = 0; return; }                    // it does not fit even at its tightest: leave it there (the page scrolls)
+      set(hi); oh = over();
+      if(oh <= TOL){ cur = hi; return; }
+      for(var i = 0; i < 4; i++){                         // lo fits, hi does not
+        var f = lo + (hi - lo) * ((TOL - ol) / (oh - ol));
+        f = Math.max(lo + 0.004, Math.min(hi - 0.004, f));
+        set(f); var o = over();
+        if(o <= TOL){ lo = f; ol = o; if(TOL - o < 1.5) break; } else { hi = f; oh = o; }
+      }
+      set(lo); cur = lo;
+    }finally{ R.classList.remove('tr-fitting'); busy = false; calls++; if(cur != null){ remember(); reserve(); } }
+  }
+  /* the cheap check: does what we have still fit well? (one measurement) */
+  function stillFits(){
+    if(cur == null) return false;
+    set(cur); var o = over();
+    return o <= TOL && (cur >= 1 || TOL - o < 4);
+  }
+  var timer = 0;
+  var loadedF = false, fontsF = !(D.fonts && D.fonts.ready);
+  function release(){ if(loadedF && fontsF && W.TRBoot && W.TRBoot.release) W.TRBoot.release(); }   // sized, loaded, fonts in: the page may show once it has been quiet a moment
+  function later(verify, wait){
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(function(){ timer = 0; if(raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(function(){ raf = 0; if(!(verify && stillFits())) solve(); release(); }); }, wait == null ? 140 : wait);
+  }
+
+  var css = D.createElement('style'); css.id = 'tr-fit-css';
+  css.textContent = 'html.tr-fitting *,html.tr-fitting *::before,html.tr-fitting *::after{transition:none !important;animation-play-state:paused !important;}';
+  D.head.appendChild(css);
+
+  solve();
+  W.addEventListener('resize', function(){ later(false, 160); });
+  W.addEventListener('orientationchange', function(){ later(false, 200); });
+  if(mq && mq.addEventListener) mq.addEventListener('change', function(){ later(false, 0); });
+  if(D.fonts && D.fonts.ready) D.fonts.ready.then(function(){ fontsF = true; later(true, 60); });   // the page's fonts arrived: only if the table no longer fits, or fits loosely, look again
+  if(D.readyState === 'complete') loadedF = true;
+  W.addEventListener('load', function(){ loadedF = true; later(true, 120); });
+  /* it never re-sizes in the middle of a hand: a hand and its result may run longer than the window, as they always have, and the cards stay the size they were dealt at.
+     It looks again only when the window changes, or when you change how the table is set up (bots, hands, settings): then it re-solves for the new table. */
+  var setupSel = '#tablesetup-overlay,#settings-panel,#hands-seg,.seg,.toolbar,#btn-practice';
+  D.addEventListener('click', function(e){ var t = e.target; if(t && t.closest && t.closest(setupSel)) setTimeout(function(){ later(false, 0); }, 450); }, true);
+  D.addEventListener('change', function(e){ var t = e.target; if(t && t.closest && t.closest(setupSel)) setTimeout(function(){ later(false, 0); }, 450); }, true);
+  function settle(){ if(owed && W.G && W.G.phase === 'betting') reserve(); }
+  D.addEventListener('click', function(){ if(owed) setTimeout(settle, 700); }, true);
+  D.addEventListener('keydown', function(){ if(owed) setTimeout(settle, 700); }, true);
+  W.TRFit = { solve: function(){ solve(); }, value: function(){ return cur; }, solves: function(){ return calls; } };
 })();
 
 </script>
