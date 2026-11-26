@@ -35,6 +35,8 @@ function load(seed, opts){
           this.createBuffer = n => ({ getChannelData: () => new Float32Array(n) });
           this.createBufferSource = () => { rec.noise++; return { connect(){}, start(){}, stop(){} }; };
           this.createBiquadFilter = () => ({ frequency:{}, Q:{}, connect(){} });
+          this.createDynamicsCompressor = () => ({ threshold:{}, knee:{}, ratio:{}, attack:{}, release:{}, connect(){} });   // the site's sound engine puts a limiter on the end
+          this.state = 'running'; this.resume = () => Promise.resolve();
         };
       }
       if(opts.noStorage){ Object.defineProperty(w, 'localStorage', { get(){ throw new Error('denied'); } }); return; }
@@ -76,6 +78,7 @@ function domMatchesState(w, label){
   const G = w.G, E = w.E, t = G.table, bad = [];
   if(G.phase !== 'betting') return bad;
   if($(w,'bankroll-amount').textContent !== money(G.bankroll)) bad.push('pill '+$(w,'bankroll-amount').textContent+' vs '+money(G.bankroll));
+  if($(w,'tray-bank-amount').textContent !== money(G.bankroll)) bad.push('rail balance '+$(w,'tray-bank-amount').textContent+' vs '+money(G.bankroll));
   if($(w,'on-table').textContent !== money(E.exposure(t))) bad.push('on-table '+$(w,'on-table').textContent+' vs '+money(E.exposure(t)));
   const ptxt = $(w,'phase-text').textContent;
   if(ptxt !== (t.point===null ? 'Come-out roll' : 'Point is '+t.point)) bad.push('phase '+ptxt);
@@ -107,6 +110,19 @@ function domMatchesState(w, label){
     if(got !== want) bad.push(k+' odds chips show '+got+' vs '+want);
   });
   if($(w,'btn-keep').getAttribute('aria-checked') !== String(!!G.settings.keep)) bad.push('keep switch out of step');
+  {
+    const any = t.bets.filter(b => E.oddsRoom(t,b) > 0);
+    const wantRail = any.length > 0 && Math.floor(G.bankroll) >= 1;
+    if(!$(w,'btn-maxodds').hidden !== wantRail) bad.push('rail Max odds button '+(!$(w,'btn-maxodds').hidden)+' vs '+wantRail);
+    ['pass','dontpass'].forEach(k => {
+      const b = t.bets.find(x => x.type===k), mb = spot(w,k).querySelector('.odds-max');
+      const want = !!b && t.point!==null && Math.min(E.oddsRoom(t,b), Math.floor(G.bankroll)) >= 1;
+      if(!mb.hidden !== want) bad.push(k+' Max odds button '+(!mb.hidden)+' vs '+want);
+    });
+  }
+  if($(w,'set-maxodds').checked !== !!G.settings.maxodds) bad.push('max odds box out of step');
+  if($(w,'btn-work').getAttribute('aria-checked') !== String(!!G.settings.work)) bad.push('bets on/off switch out of step');
+  if([t.opts.placeWork, t.opts.hardWork, t.opts.comeOddsWork].some(v => v !== !!G.settings.work)) bad.push('table rules out of step with the bets on/off setting');
   if($(w,'btn-roll').disabled) bad.push('roll disabled while betting');
   return bad.map(x => label+': '+x);
 }
@@ -136,8 +152,7 @@ function invariants(w, base, label){
     check('starts on the Starter table', w.G.settings.level, 'starter');
     check('Starter shows Pass and Don\'t Pass only', ['pass','dontpass','come','dontcome','field','hard4','any7','boxcars'].map(k => !spot(w,k).hidden), [true,true,false,false,false,false,false,false]);
     check('Starter hides the one-roll corner', $(w,'props').style.display, 'none');
-    truthy('place-bet boxes are not clickable at Starter', w.document.querySelector('.num .spot-hit').style.display === 'none');
-    check('numbers are static at Starter', $(w,'numbers').classList.contains('static'), true);
+    truthy('place-bet boxes are clickable at Starter', w.document.querySelector('.num .spot-hit').style.display !== 'none' && !w.document.querySelector('.num .spot-hit').disabled);
     check('the read-out has a flat 2D die per die and the total', [$(w,'stage-total').className, $(w,'dice-stage').contains($(w,'stage-total'))], ['readout', false]);
     check('keep switch sits with the dice, bottom right', [$(w,'btn-keep').parentNode.className, $(w,'btn-keep').getAttribute('role')], ['stage-wrap', 'switch']);
     check('six faces on each die', [0,1].map(i => $(w,'die-'+i).querySelectorAll('.face').length), [6,6]);
@@ -672,9 +687,9 @@ function invariants(w, base, label){
     check('Place / Buy choices survive a reload', [4,5,6,8,9,10].map(n => w2.G.settings.pb[n]), ['buy','buy','buy','place','buy','buy']);
     check('and the boxes show them', [pbBtn(w2,4,'buy').getAttribute('aria-pressed'), box(w2,5).querySelector('.edge').textContent, box(w2,8).querySelector('.edge').textContent], ['true', '2% edge', '1.52% edge']);
     w2.close();
-    // Starter hides the switch (numbers are display only there)
+    // the Starter table has the same boxes now, switch included
     const ws = load({}); 
-    check('Starter table: no switch, no Press', [$(ws,'numbers').classList.contains('static'), ws.getComputedStyle(box(ws,6).querySelector('.pb-switch')).display], [true, 'none']);
+    check('Starter table: the Place / Buy switch is there', ws.getComputedStyle(box(ws,6).querySelector('.pb-switch')).display, 'inline-flex');
     ws.close();
   }
 
@@ -2064,6 +2079,7 @@ function invariants(w, base, label){
 
     // 4. the real sound path (a fake Web Audio): the cue is scheduled as oscillators, the 7 is a buzz, nothing breaks
     const wa = load({}, { audio:true }); talkative(wa);
+    wa.document.dispatchEvent(new wa.Event('pointerdown'));      // a browser only lets audio start after a touch or a click
     await roll(wa, 4, 3);                       // a 7 on the come-out: a natural, no buzz
     check('a come-out 7 plays no buzz through the audio engine, only rising triangle notes', [wa.__audio.osc.filter(o => o.type === 'sawtooth').length, wa.__audio.osc.filter(o => o.type === 'triangle').length >= 3], [0, true]);
     await roll(wa, 5, 5); await roll(wa, 4, 3);   // the point is 10, then a 7: seven out
@@ -2079,6 +2095,7 @@ function invariants(w, base, label){
     wa.close();
     // audio that throws must not break the table
     const wt = load({}, { audio:{ throws:true } }); talkative(wt);
+    wt.document.dispatchEvent(new wt.Event('pointerdown'));      // the engine does get as far as trying
     await roll(wt, 5, 5); await roll(wt, 4, 3);
     check('an audio engine that throws does not stop the roll finishing', [wt.G.phase, wt.G.table.point, wt.errs.length], ['betting', null, 0]);
     wt.close();
@@ -2096,12 +2113,1031 @@ function invariants(w, base, label){
     wo.close();
   }
 
+  // ======================================================== 29. the betting rail: chips and balance follow you down the table
+  {
+    const w = load({}); turbo(w);
+    const doc = w.document, felt = $(w,'felt'), tray = $(w,'tray'), main = doc.querySelector('.felt-main');
+    const tag = el => el.id || el.className || el.tagName;
+    // --- where things live
+    check('the table holds the main column, the rail and the screen-reader line, and nothing else', [...felt.children].map(tag), ['felt-main', 'tray', 'sr-live']);
+    check('the rail is not inside the main column', main.contains(tray), false);
+    check('the rail comes after the table in the page (so on a phone the bar can stick to the bottom)', !!(main.compareDocumentPosition(tray) & w.Node.DOCUMENT_POSITION_FOLLOWING), true);
+    ['chip-row','btn-undo','btn-clear','btn-rebet','btn-roll','tray-hint','tray-bank','tray-bank-amount','tray-bank-stack'].forEach(id =>
+      check('rail holds #'+id, tray.contains($(w,id)), true));
+    ['board','numbers','props','callout','dice-stage','coach','on-table','phase-pill','table-msg','roll-strip','puck-lane'].forEach(id =>
+      check('main column holds #'+id, main.contains($(w,id)), true));
+    ['bankroll-pill','bankroll-amount','bankroll-chip-stack'].forEach(id => check('#'+id+' stays in the page header', !!$(w,id).closest('header'), true));
+    ['tray-bank-amount','tray-bank-stack','tray','tray-bank'].forEach(id => check('#'+id+' is unique', doc.querySelectorAll('[id="'+id+'"]').length, 1));
+    check('the rail balance is decoration (the header pill is what a screen reader reads)', $(w,'tray-bank').getAttribute('aria-hidden'), 'true');
+    check('chips are still in a labelled group', [$(w,'chip-row').getAttribute('role'), $(w,'chip-row').getAttribute('aria-label')], ['group','Chip value']);
+    check('all seven chips are in the rail', [...tray.querySelectorAll('.chip-btn')].map(b => b.getAttribute('data-chip')), ['5','10','25','50','100','500','1000']);
+    // --- the two balances always say the same thing
+    const same = label => { const a = [$(w,'bankroll-amount').textContent, $(w,'bankroll-chip-stack').innerHTML], b = [$(w,'tray-bank-amount').textContent, $(w,'tray-bank-stack').innerHTML]; check(label, b, a); };
+    same('first load: rail balance and stack match the header');
+    check('first load shows $1,000 in the rail', $(w,'tray-bank-amount').textContent, '$1,000');
+    hit(w,'pass'); same('after a bet: match'); check('after a $25 bet the rail shows $975', $(w,'tray-bank-amount').textContent, '$975');
+    click(w, $(w,'btn-undo')); same('after undo: match'); check('undo gives it back in the rail', $(w,'tray-bank-amount').textContent, '$1,000');
+    // clicking a chip in the rail picks it
+    click(w, $(w,'chip-100'));
+    check('a click on a rail chip selects it', [w.G.chip, $(w,'chip-100').classList.contains('active'), $(w,'chip-25').classList.contains('active')], [100, true, false]);
+    hit(w,'field'); same('a $100 bet with the chip picked from the rail'); check('...shows $900', $(w,'tray-bank-amount').textContent, '$900');
+    w.rollDice(1,1); await settle(w); same('after a losing roll'); check('...shows $900 still (field 2 pays double: +$200)', [$(w,'tray-bank-amount').textContent], [money(w.G.bankroll)]);
+    w.close();
+    // an animated win: the rail counts up with the header, and both light up
+    const wa = load({}); wa.G.settings.sound = false; wa.G.settings.turbo = false; wa.G.settings.keep = false;
+    hit(wa,'pass'); wa.rollDice(3,4);
+    await settle(wa);
+    const boxes = () => [$(wa,'bankroll-pill'), $(wa,'tray-bank')];
+    check('a win lights both balances (bump + up)', boxes().map(b => ['bump','up'].every(c => b.classList.contains(c))), [true, true]);
+    await sleep(250);
+    check('mid count-up the two figures are equal', $(wa,'tray-bank-amount').textContent, $(wa,'bankroll-amount').textContent);
+    check('mid count-up the figure is between before and after', [parseInt($(wa,'tray-bank-amount').textContent.replace(/\D/g,''),10) >= 975, parseInt($(wa,'tray-bank-amount').textContent.replace(/\D/g,''),10) <= 1025], [true, true]);
+    await sleep(1400);
+    check('after the count-up both say $1,025', [$(wa,'bankroll-amount').textContent, $(wa,'tray-bank-amount').textContent], ['$1,025','$1,025']);
+    check('the highlight clears from both', boxes().map(b => ['bump','up','down'].some(c => b.classList.contains(c))), [false, false]);
+    hit(wa,'pass'); wa.rollDice(1,1); await settle(wa);                // craps: the Pass Line loses
+    check('a loss was paid for when the bet went down, so neither balance celebrates', boxes().map(b => b.classList.contains('up')), [false, false]);
+    check('after the loss both say $1,000', [$(wa,'bankroll-amount').textContent, $(wa,'tray-bank-amount').textContent], ['$1,000','$1,000']);
+    // betting during a count-up stops it in both places
+    hit(wa,'pass'); wa.rollDice(3,4); await settle(wa); hit(wa,'pass'); await sleep(120);
+    check('placing a bet mid count-up fixes both figures at the true balance', [$(wa,'bankroll-amount').textContent, $(wa,'tray-bank-amount').textContent], ['$1,000','$1,000']);
+    wa.close();
+    // other ways the balance changes
+    const ws = load({ [K.bank]:{ balance:2500 } });
+    check('a saved balance shows in the rail on load', [$(ws,'bankroll-amount').textContent, $(ws,'tray-bank-amount').textContent], ['$2,500','$2,500']);
+    turbo(ws); ws.G.bankroll = 7; ws.G.shown = 7; ws.renderPill();
+    check('the redraw function updates the rail', [$(ws,'tray-bank-amount').textContent], ['$7']);
+    ws.close();
+    const wb = load({ [K.bank]:{ balance:25 } }); turbo(wb);
+    hit(wb,'pass'); wb.rollDice(1,1); await settle(wb); await sleep(50);
+    check('going bust resets both balances to $1,000', [$(wb,'bankroll-amount').textContent, $(wb,'tray-bank-amount').textContent, wb.G.bankroll], ['$1,000','$1,000',1000]);
+    wb.close();
+    const wr = load({ [K.bank]:{ balance:400 } }); turbo(wr);
+    wr.G.table.bets = []; click(wr, $(wr,'btn-toggle-settings')); click(wr, $(wr,'btn-reset-bankroll-settings'));
+    check('the settings reset puts $1,000 in both', [$(wr,'bankroll-amount').textContent, $(wr,'tray-bank-amount').textContent], ['$1,000','$1,000']);
+    wr.close();
+    // --- the stylesheet: a sticky column on wide screens, a bottom bar on narrow ones
+    const wc = load({}); const css = [...wc.document.querySelectorAll('style')].map(s => s.textContent).join('\n'); wc.close();
+    const mq = head => { const out = []; let i = -1; while((i = css.indexOf(head, i+1)) >= 0){ let d = 0, j = css.indexOf('{', i); const st = j; for(; j < css.length; j++){ if(css[j]==='{') d++; else if(css[j]==='}'){ d--; if(!d) break; } } out.push(css.slice(st+1, j)); } return out.join('\n'); };
+    const wide = mq('@media(min-width:1000px){'), narrow = mq('@media(max-width:999px){'), huge = mq('@media(min-width:1320px){'), short = mq('@media(min-width:1000px) and (max-height:759px){');
+    check('wide: the felt becomes a two-column grid, rail column first', /\.table-felt\{display:grid;grid-template-columns:120px minmax\(0,1fr\);column-gap:16px;/.test(wide), true);
+    check('wide: the main column is column 2', /\.felt-main\{grid-column:2;grid-row:1;min-width:0;\}/.test(wide), true);
+    check('wide: the rail is column 1 and sticks to the top of the screen', /\.tray\{grid-column:1;grid-row:1;align-self:start;position:sticky;top:16px;/.test(wide), true);
+    check('wide: a tall rail scrolls inside itself instead of running off the screen', /\.tray\{[^}]*max-height:calc\(100vh - 32px\);overflow-y:auto;/.test(wide), true);
+    check('wide: chips sit two to a row', /\.chip-row\{display:grid;grid-template-columns:repeat\(2,40px\);/.test(wide), true);
+    check('wide: the actions stack down the rail', /\.tray-actions\{flex-direction:column;/.test(wide), true);
+    check('wide: the page is wide enough for table + rail', /\.wrap\{max-width:1036px;\}/.test(wide), true);
+    check('wider: table column keeps its full width beside the side panels', [/\.wrap\{max-width:1436px;\}/.test(huge), /grid-template-columns:minmax\(0,1036px\) minmax\(320px,1fr\)/.test(huge)], [true, true]);
+    check('wide: the rail leaves the page flow only through sticky, never fixed or absolute', /\.tray\{[^}]*position:(fixed|absolute)/.test(css), false);
+    check('narrow: the rail is a bar stuck to the bottom of the screen', /\.tray\{position:sticky;bottom:10px;z-index:5;/.test(narrow), true);
+    check('narrow: the hint is left out of the bar', /\.tray-hint\{display:none;\}/.test(narrow), true);
+    check('short window: the hint is left out of the rail', /\.tray-hint\{display:none;\}/.test(short), true);
+    check('the page container is not clipped (that would stop the rail sticking)', /\.(table-felt|wrap|layout-grid)\{[^}]*overflow:(hidden|auto|scroll|clip)/.test(css), false);
+    check('the rail balance has the same highlight rules as the header pill', ['bump .amount{animation:bump', 'up .amount{color:var(--sage-bright)', 'down .amount{color:var(--coral)'].map(s => css.includes('.tray-bank.'+s) || css.includes('.tray-bank.'+s.replace(/^(\w+) /, '$1 '))), [true,true,true]);
+  }
+
+  // ======================================================== 30. bets on / off for the come-out roll
+  {
+    const pro = (extra) => Object.assign({ [K.exp]:{ level:'pro' } }, extra || {});
+    const w = load(pro()); turbo(w);
+    const btn = $(w,'btn-work'), opts = () => [w.G.table.opts.placeWork, w.G.table.opts.hardWork, w.G.table.opts.comeOddsWork];
+    hit(w,'place6');                                            // a bet on the table, so the hand is saved and the table's rules can be checked on reload
+    // --- the switch itself
+    check('the switch sits with the dice, top right of them', [btn.parentNode.className, btn.getAttribute('role'), btn.className], ['stage-wrap','switch','work-toggle']);
+    check('off by default: the setting, the switch, its words, the settings box and the table rules agree', [w.G.settings.work, btn.getAttribute('aria-checked'), $(w,'work-text').textContent, $(w,'set-work').checked, opts()], [false,'false','Bets off',false,[false,false,false]]);
+    check('it is visible once Place bets and hardways are on the table', btn.hidden, false);
+    check('its name says what it is for', btn.getAttribute('aria-label'), 'Bets off for the come-out roll');
+    check('its tooltip explains the casino default', /OFF for the come-out roll/.test(btn.title) && /Place, Buy and hardway bets and the odds on Come bets/.test(btn.title), true);
+    click(w, btn);
+    check('a tap turns bets on everywhere', [w.G.settings.work, btn.getAttribute('aria-checked'), $(w,'work-text').textContent, $(w,'set-work').checked, opts(), btn.getAttribute('aria-label')], [true,'true','Bets on',true,[true,true,true],'Bets on for the come-out roll']);
+    check('and says what that means', [/Bets on\./.test($(w,'table-msg').textContent), /a 7 takes them/.test($(w,'table-msg').textContent)], [true,true]);
+    check('the choice is saved with the settings and with the table', [JSON.parse(w.localStorage.getItem(K.sess)).settings.work, JSON.parse(w.localStorage.getItem(K.hand)).table.opts.placeWork], [true,true]);
+    check('its tooltip changes with it', /ON for the come-out roll/.test(btn.title), true);
+    $(w,'set-work').checked = false; $(w,'set-work').dispatchEvent(new w.Event('change', { bubbles:true }));
+    check('the settings box turns it off again, and the switch follows', [w.G.settings.work, btn.getAttribute('aria-checked'), $(w,'work-text').textContent, opts()], [false,'false','Bets off',[false,false,false]]);
+    click(w, btn);
+    const snap = snapshot(w);
+    w.close();
+    const w2 = load(snap);
+    check('it is still on after a reload, and the table rules were rebuilt from it', [w2.G.settings.work, $(w2,'btn-work').getAttribute('aria-checked'), w2.G.table.opts.placeWork, w2.G.table.opts.hardWork, w2.G.table.opts.comeOddsWork], [true,'true',true,true,true]);
+    w2.close();
+    // a table saved before this existed (rules all off) with the setting on: the setting wins
+    const old = JSON.parse(snap[K.hand]); old.table.opts.placeWork = false; old.table.opts.hardWork = false; old.table.opts.comeOddsWork = false;
+    const w3 = load(Object.assign({}, snap, { [K.hand]: JSON.stringify(old) }));
+    check('an older saved table takes its rules from the setting', [w3.G.table.opts.placeWork, w3.G.table.opts.hardWork, w3.G.table.opts.comeOddsWork, w3.errs.length], [true,true,true,0]);
+    w3.close();
+    const sess = JSON.parse(snap[K.sess]); delete sess.settings.work;
+    const w4 = load(Object.assign({}, snap, { [K.sess]: JSON.stringify(sess) }));
+    check('a save with no such setting starts with bets off', [w4.G.settings.work, w4.G.table.opts.placeWork], [false,false]);
+    w4.close();
+    const w5 = load(Object.assign({}, snap, { [K.sess]: JSON.stringify(Object.assign({}, sess, { settings: Object.assign({}, sess.settings, { work:'yes' }) })) }));
+    check('a bad value in the save is ignored', w5.G.settings.work, false);
+    w5.close();
+    // --- who sees it
+    const ws = load({}); const wst = load({ [K.exp]:{ level:'rules' } });
+    check('the starter table with nothing on the numbers: no switch', [ws.G.settings.level, $(ws,'btn-work').hidden], ['starter', true]);
+    check('the standard table has Place bets, so it shows', [wst.G.settings.level, $(wst,'btn-work').hidden], ['standard', false]);
+    ws.G.settings.work = true; ws.renderAll();
+    check('a switch that is on never hides', $(ws,'btn-work').hidden, false);
+    ws.close(); wst.close();
+    // --- it cannot change in the middle of a roll
+    const wl = load(pro()); turbo(wl);
+    hit(wl,'pass'); wl.rollDice(3,4);
+    check('while the dice are in the air the switch is locked', $(wl,'btn-work').disabled, true);
+    wl.setWork(true);
+    check('and a change is ignored', [wl.G.settings.work, wl.G.table.opts.placeWork], [false,false]);
+    await settle(wl);
+    check('it unlocks after the roll', $(wl,'btn-work').disabled, false);
+    wl.close();
+
+    // --- what it does to a roll. Bankroll starts at $1,000 and every bet here is $25.
+    const play = async (on, setup, rolls) => {
+      const p = load(pro()); turbo(p); if(on) p.setWork(true, false);
+      setup(p); const out = [];
+      for(const [a,b] of rolls){ await roll(p, a, b); out.push(p.G.bankroll); }
+      return { p, out };
+    };
+    // Place 6 on a come-out roll: a 6 pays only when bets are on
+    let r = await play(false, p => hit(p,'place6'), [[2,4]]);
+    check('Place 6, bets off: a 6 on the come-out does nothing (bet stays)', [r.out, r.p.G.table.bets.length, r.p.G.session.net], [[975], 1, 0]);
+    r.p.close();
+    r = await play(true, p => hit(p,'place6'), [[2,4]]);
+    check('Place 6, bets on: a 6 on the come-out pays 7:6 ($29) and the bet stays', [r.out, r.p.G.table.bets.length, r.p.G.session.net], [[1004], 1, 29]);
+    r.p.close();
+    r = await play(false, p => hit(p,'place6'), [[3,4]]);
+    check('Place 6, bets off: a come-out 7 leaves it alone', [r.out, r.p.G.table.bets.length], [[975], 1]);
+    r.p.close();
+    r = await play(true, p => hit(p,'place6'), [[3,4]]);
+    check('Place 6, bets on: a come-out 7 takes it', [r.out, r.p.G.table.bets.length, r.p.G.session.net, r.p.G.last.lesson.indexOf('Your bets were on for the come-out, so the 7 also took your Place 6.') > 0], [[975], 0, -25, true]);
+    r.p.close();
+    r = await play(false, p => hit(p,'place6'), [[3,4]]);
+    check('bets off: the lesson says nothing about it', /Your bets were on/.test(r.p.G.last.lesson), false);
+    r.p.close();
+    r = await play(true, p => hit(p,'place6'), [[2,4]]);
+    check('bets on: a win on the come-out is explained', /Your bets were on for the come-out, so your Place 6 paid\.$/.test(r.p.G.last.lesson), true);
+    r.p.close();
+    // Buy 4 pays true odds minus the fee
+    r = await play(true, p => { p.G.chip = 100; hit(p,'buy4'); }, [[1,3]]);
+    check('Buy 4, bets on: a 4 on the come-out pays 2:1 less the 5% fee ($195)', [r.out, r.p.G.table.bets.length], [[900+195], 1]);
+    r.p.close();
+    // hardways
+    r = await play(false, p => hit(p,'hard8'), [[4,4]]);
+    check('Hard 8, bets off: a hard 8 on the come-out does nothing', [r.out, r.p.G.table.bets.length], [[975], 1]);
+    r.p.close();
+    r = await play(true, p => hit(p,'hard8'), [[4,4]]);
+    check('Hard 8, bets on: a hard 8 on the come-out pays 9:1 ($225)', [r.out, r.p.G.table.bets.length], [[975+225], 1]);
+    r.p.close();
+    r = await play(true, p => hit(p,'hard8'), [[3,5]]);
+    check('Hard 8, bets on: an easy 8 on the come-out takes it', [r.out, r.p.G.table.bets.length], [[975], 0]);
+    r.p.close();
+    // odds on a Come bet, on the come-out roll: pass 25, point 4, come 25 goes to the 8, odds 25, point made, then a come-out 7
+    const comeFlow = async (on, last) => {
+      const p = load(pro()); turbo(p); if(on) p.setWork(true, false);
+      hit(p,'pass'); await roll(p, 2, 2);                          // point 4
+      hit(p,'come'); await roll(p, 4, 4);                          // the Come bet travels to the 8
+      const cb = p.G.table.bets.find(b => b.type==='come' && b.number===8);
+      p.addOddsToBet(cb.id);                                       // $25 odds
+      await roll(p, 1, 3);                                         // point made: Pass pays, new come-out
+      const mid = { bank:p.G.bankroll, point:p.G.table.point, odds:(p.G.table.bets.find(b => b.type==='come')||{}).odds };
+      const badge = p.document.querySelector('.num[data-number="8"] .tag .wk');
+      const badgeInfo = badge ? [badge.textContent, badge.className] : null;
+      await roll(p, last[0], last[1]);
+      return { p, mid, badgeInfo, bank:p.G.bankroll, bets:p.G.table.bets.length };
+    };
+    let c = await comeFlow(false, [3,4]);
+    check('Come odds: after the point is made there is a come-out with $25 of odds out', c.mid, { bank:975, point:null, odds:25 });
+    check('Come odds, bets off: the come-out 7 takes the flat bet but the odds come back', [c.bank, c.bets], [1000, 0]);
+    check('Come odds, bets off: the odds carry an OFF marker on the come-out', c.badgeInfo, ['OFF','wk off']);
+    c.p.close();
+    c = await comeFlow(true, [3,4]);
+    check('Come odds, bets on: the come-out 7 takes the flat bet and the odds', [c.bank, c.bets, c.p.G.last.lesson.indexOf('so the 7 also took your odds on your Come 8.') > 0], [975, 0, true]);
+    check('Come odds, bets on: the odds carry an ON marker', c.badgeInfo, ['ON','wk on']);
+    c.p.close();
+    c = await comeFlow(true, [4,4]);                              // an 8 on the come-out: the Come bet wins with its odds
+    check('Come odds, bets on: an 8 on the come-out pays the Come bet and its odds (25 + 25 + 25 + 30)', [c.bank, c.bets], [975 + 25 + 25 + 25 + 30, 0]);
+    c.p.close();
+    c = await comeFlow(false, [4,4]);
+    check('Come odds, bets off: an 8 on the come-out pays the flat bet only and returns the odds', [c.bank, c.bets], [975 + 25 + 25 + 25, 0]);
+    c.p.close();
+    // --- what the table shows
+    const wb = load(pro()); turbo(wb);
+    const mk = (sel) => wb.document.querySelector(sel);
+    check('no bets, no markers', wb.document.querySelectorAll('.wk').length, 0);
+    hit(wb,'place6'); hit(wb,'hard8'); hit(wb,'pass');
+    check('a Place bet on a come-out carries OFF', [mk('.num[data-number="6"] .num-stack .wk').textContent, mk('.num[data-number="6"] .num-stack .wk').className], ['OFF','wk off']);
+    check('a hardway on a come-out carries OFF', [mk('.spot[data-key="hard8"] .spot-chips .wk').textContent], ['OFF']);
+    check('the Pass Line, which always works, carries nothing', mk('.spot[data-key="pass"] .wk'), null);
+    check('the marker explains itself', /Place bets are off on the come-out roll/.test(mk('.num[data-number="6"] .num-stack .wk').title), true);
+    check('amounts are still read cleanly beside the marker', [mk('.num[data-number="6"] .num-stack .amt').textContent, mk('.spot[data-key="hard8"] .spot-chips .amt').textContent], ['$25','$25']);
+    wb.setWork(true, false);
+    check('switched on, they say ON', [mk('.num[data-number="6"] .num-stack .wk').textContent, mk('.spot[data-key="hard8"] .spot-chips .wk').textContent, mk('.num[data-number="6"] .num-stack .wk').className], ['ON','ON','wk on']);
+    await roll(wb, 3, 5);                                          // the 8 is the point
+    check('with a point on, every bet works and the markers go', wb.document.querySelectorAll('.wk').length, 0);
+    wb.close();
+    // --- the fuzz-style safety net: a random walk of switch flips never breaks the books (also checked inside the fuzz below)
+    const wf = load(pro({ [K.bank]:{ balance:100000 } })); turbo(wf);
+    const base = 100000; let bad = [];
+    const R2 = rng(77);
+    for(let i=0;i<60 && bad.length<3;i++){
+      if(R2() < 0.4) wf.setWork(R2() < 0.5, false);
+      wf.G.chip = 25; hit(wf, ['place6','place8','hard6','hard8','pass','come','dontpass'][Math.floor(R2()*7)]);
+      await roll(wf, 1+Math.floor(R2()*6), 1+Math.floor(R2()*6));
+      bad = bad.concat(invariants(wf, base, 'flip '+i), domMatchesState(wf, 'flip '+i));
+    }
+    check('random bets and switch flips: money conserved and the screen agrees', bad.slice(0,3), []);
+    wf.close();
+    // --- the stylesheet
+    const wc = load({}); const css = [...wc.document.querySelectorAll('style')].map(s => s.textContent).join('\n'); wc.close();
+    check('the switch is placed top right of the dice', /\.work-toggle\{right:10px;top:10px;bottom:auto;/.test(css), true);
+    check('it shares the Keep switch look (same pill and same slider)', [css.includes('.keep-toggle,.work-toggle{position:absolute'), css.includes('.keep-toggle .sw,.work-toggle .sw{'), css.includes('.keep-toggle[aria-checked="true"] .sw i,.work-toggle[aria-checked="true"] .sw i{transform:translateX(11px);}')], [true,true,true]);
+    check('hiding it really hides it, and a locked one looks locked', [css.includes('.work-toggle[hidden]{display:none;}'), /\.work-toggle:disabled\{opacity:0\.45;/.test(css)], [true,true]);
+    check('both the ON and OFF markers are styled', [/\.wk\.off\{/.test(css), /\.wk\.on\{/.test(css)], [true,true]);
+    check('on a phone it moves in and shrinks, still top right', /\.work-toggle\{right:8px;top:8px;bottom:auto;font-size:11px;/.test(css), true);
+  }
+
+  // ======================================================== 31. right-click a bet to take it down
+  {
+    const pro = () => load({ [K.exp]:{ level:'pro' } });
+    const rclick = (w, el, init) => {
+      init = init || {};
+      const ev = new w.MouseEvent('contextmenu', { bubbles:true, cancelable:true, button: init.button === undefined ? 2 : init.button, ctrlKey: !!init.ctrlKey });
+      if(init.pointerType) Object.defineProperty(ev, 'pointerType', { value: init.pointerType });
+      el.dispatchEvent(ev);
+      return ev;
+    };
+    const hitEl = (w, key) => spot(w, key).querySelector('.spot-hit');
+    // --- a plain spot: the bet comes down, the chips come back, undo forgets it
+    let w = pro(); turbo(w);
+    hit(w,'field');
+    check('a bet on the Field, $25 out', [w.G.bankroll, !!betOf(w,'field'), $(w,'btn-undo').disabled], [975, true, false]);
+    let ev = rclick(w, hitEl(w,'field'));
+    check('right-click on the spot takes it down and gives the $25 back', [ev.defaultPrevented, betOf(w,'field'), w.G.bankroll, lsBank(w), $(w,'tray-bank-amount').textContent], [true, undefined, 1000, 1000, '$1,000']);
+    check('and undo no longer remembers it', [w.G.undo.length, $(w,'btn-undo').disabled], [0, true]);
+    check('the saved table has no bet', lsTable(w), null);
+    hit(w,'field');
+    ev = rclick(w, spot(w,'field').querySelector('.amt'));
+    check('the chips and the amount on the spot count as the spot', [ev.defaultPrevented, betOf(w,'field'), w.G.bankroll], [true, undefined, 1000]);
+    hit(w,'field'); w.G.chip = 100; hit(w,'field');
+    rclick(w, hitEl(w,'field'));
+    check('a $125 bet comes down whole', [betOf(w,'field'), w.G.bankroll], [undefined, 1000]);
+    w.G.chip = 25;
+    hit(w,'hard8');
+    rclick(w, hitEl(w,'hard8'));
+    check('a hardway comes down the same way', [betOf(w,'hard',8), w.G.bankroll], [undefined, 1000]);
+    hit(w,'any7'); hit(w,'yo'); rclick(w, hitEl(w,'any7'));
+    check('only the bet under the pointer comes down', [betOf(w,'any7'), !!betOf(w,'yo'), w.G.bankroll], [undefined, true, 975]);
+    // --- an empty spot: nothing to take down, and no browser menu either
+    ev = rclick(w, hitEl(w,'boxcars'));
+    check('an empty spot: nothing changes, the browser menu stays away', [ev.defaultPrevented, w.G.bankroll], [true, 975]);
+    // --- things that are not bets keep the browser's own menu
+    const plain = ['callout','btn-roll','chip-100','phase-pill','on-table','tray-bank','btn-work'].map(id => rclick(w, $(w,id)).defaultPrevented);
+    check('right-click elsewhere on the table is left alone', plain, plain.map(() => false));
+    // --- only a real right-click counts
+    hit(w,'field');
+    ev = rclick(w, hitEl(w,'field'), { button:0 });
+    check('the keyboard menu key (no button) does nothing', [ev.defaultPrevented, !!betOf(w,'field')], [false, true]);
+    ev = rclick(w, hitEl(w,'field'), { button:2, pointerType:'touch' });
+    check('a long press on a touch screen does nothing', [ev.defaultPrevented, !!betOf(w,'field')], [false, true]);
+    ev = rclick(w, hitEl(w,'field'), { button:0, ctrlKey:true });
+    check('Control-click (a Mac right-click) takes it down', [ev.defaultPrevented, betOf(w,'field')], [true, undefined]);
+    ev = rclick(w, hitEl(w,'any7'), { button:2, pointerType:'mouse' });
+    check('a mouse right-click takes it down', [ev.defaultPrevented, betOf(w,'any7')], [true, undefined]);
+    w.close();
+
+    // --- Place and Buy numbers, anywhere on the box
+    w = pro(); turbo(w);
+    hit(w,'place6'); hit(w,'buy4'); hit(w,'place8');
+    check('three bets on the numbers', [w.G.bankroll, w.G.table.bets.length], [925, 3]);
+    rclick(w, box(w,6).querySelector('.num-label'));
+    check('right-click on the number takes the Place bet down', [numBetOf(w,6), w.G.bankroll], [undefined, 950]);
+    rclick(w, box(w,4).querySelector('.num-stack'));
+    check('right-click on the chips takes the Buy bet down', [numBetOf(w,4), w.G.bankroll], [undefined, 975]);
+    rclick(w, box(w,8).querySelector('.spot-hit'));
+    check('and so does the hit area', [numBetOf(w,8), w.G.bankroll, w.G.table.bets.length], [undefined, 1000, 0]);
+    ev = rclick(w, box(w,9));
+    check('an empty number: nothing happens', [ev.defaultPrevented, w.G.bankroll], [true, 1000]);
+    // the Press button belongs to the bet beside it
+    await roll(w, 1, 3);                                              // point 4
+    hit(w,'place6'); await roll(w, 2, 4);                              // a 6: Place 6 pays $29 and the bet stays
+    check('a Place 6 that just paid has a Press button', box(w,6).querySelectorAll('.press-row .tag').length, 1);
+    const afterWin = w.G.bankroll;
+    rclick(w, box(w,6).querySelector('.press-row .tag'));
+    check('right-click on its Press button takes the bet down, not a press', [numBetOf(w,6), w.G.bankroll], [undefined, afterWin + 25]);
+    w.close();
+
+    // --- the Pass Line: its odds come down while the bet is locked in
+    w = pro(); turbo(w);
+    hit(w,'pass');
+    rclick(w, hitEl(w,'pass'));
+    check('before a point the Pass Line comes down', [betOf(w,'pass'), w.G.bankroll], [undefined, 1000]);
+    hit(w,'pass'); await roll(w, 2, 2);                                // point 4
+    const pb = () => betOf(w,'pass');
+    w.addOddsToBet(pb().id);
+    check('a point of 4 with $25 odds behind the Pass Line', [w.G.table.point, pb().odds, w.G.bankroll], [4, 25, 950]);
+    rclick(w, spot(w,'pass').querySelector('.odds-row'));
+    check('right-click on the odds takes only the odds down', [pb().amount, pb().odds, w.G.bankroll], [25, 0, 975]);
+    ev = rclick(w, hitEl(w,'pass'));
+    check('the bet itself is locked in: it stays, and the table says so', [ev.defaultPrevented, pb().amount, w.G.bankroll, /locked in/.test($(w,'table-msg').textContent)], [true, 25, 975, true]);
+    w.addOddsToBet(pb().id);
+    rclick(w, hitEl(w,'pass'));
+    check('right-click on a locked bet that has odds takes the odds down', [pb().amount, pb().odds, w.G.bankroll], [25, 0, 975]);
+    check('undo has nothing left to undo for those odds', [w.G.undo.filter(u => u.kind === 'odds').length], [0]);
+    w.close();
+    // Don't Pass can come down at any time, so the pointer decides: on the odds is just the odds, on the bet is all of it
+    w = pro(); turbo(w);
+    hit(w,'dontpass'); await roll(w, 2, 2);                            // point 4
+    const dpb = () => betOf(w,'dontpass');
+    w.addOddsToBet(dpb().id);
+    const laid = dpb().odds, paid = w.G.bankroll;
+    check('Don\'t Pass with odds laid behind it', [dpb().amount, laid > 0, paid], [25, true, 975 - laid]);
+    rclick(w, spot(w,'dontpass').querySelector('.odds-row'));
+    check('right-click on the odds: only the odds come down', [dpb().amount, dpb().odds, w.G.bankroll], [25, 0, 975]);
+    w.addOddsToBet(dpb().id);
+    rclick(w, hitEl(w,'dontpass'));
+    check('right-click on the bet itself: all of it comes down, odds too', [dpb(), w.G.bankroll], [undefined, 1000]);
+    w.close();
+
+    // --- Come and Don't Come bets that have gone to a number
+    w = pro(); turbo(w);
+    hit(w,'pass'); await roll(w, 2, 2);                                // point 4
+    hit(w,'come'); await roll(w, 4, 4);                                // the Come bet goes to the 8
+    const cb = () => w.G.table.bets.find(b => b.type === 'come' && b.number === 8);
+    w.addOddsToBet(cb().id);
+    check('a Come bet on the 8 with $25 odds', [cb().amount, cb().odds, w.G.bankroll], [25, 25, 925]);
+    rclick(w, box(w,8).querySelector('.tag'));
+    check('right-click on it: the flat bet is locked, so the odds come down', [!!cb(), cb().odds, w.G.bankroll], [true, 0, 950]);
+    rclick(w, box(w,8).querySelector('.tag'));
+    check('again: it is locked in and stays', [!!cb(), w.G.bankroll, /locked in/.test($(w,'table-msg').textContent)], [true, 950, true]);
+    hit(w,'dontcome'); await roll(w, 3, 3);                            // the Don't Come bet goes to the 6
+    const dc = () => w.G.table.bets.find(b => b.type === 'dontcome' && b.number === 6);
+    w.addOddsToBet(dc().id);
+    const before = w.G.bankroll;
+    check('a Don\'t Come bet on the 6 with odds laid', [!!dc(), dc().odds > 0], [true, true]);
+    rclick(w, box(w,6).querySelector('.tag.dc'));
+    check('right-click on it takes the whole Don\'t Come bet down, odds and all', [dc(), w.G.bankroll, w.G.table.bets.length], [undefined, before + 25 + 25, 2]);
+    check('the books balance', w.G.bankroll + w.E.exposure(w.G.table), 1000 + w.G.session.net);
+    w.close();
+
+    // --- while the dice are in the air nothing comes down
+    w = pro(); turbo(w);
+    hit(w,'field'); w.rollDice(1,1);
+    ev = rclick(w, hitEl(w,'field'));
+    check('mid-roll: no bet comes down (and still no browser menu)', [w.G.phase, ev.defaultPrevented, w.G.table.bets.length, w.G.bankroll], ['rolling', true, 0, 1050]);
+    await settle(w);
+    hit(w,'hard8'); w.rollDice(1,1);                                 // a hardway is off on the come-out, so it is still there after the roll
+    const hb = w.G.bankroll;
+    rclick(w, hitEl(w,'hard8'));
+    check('mid-roll: a bet that is still on the table stays, and nothing is refunded', [w.G.phase, !!betOf(w,'hard',8), w.G.bankroll], ['rolling', true, hb]);
+    await settle(w);
+    rclick(w, hitEl(w,'hard8'));
+    check('once the dice have stopped it comes down', [betOf(w,'hard',8), w.G.bankroll], [undefined, hb + 25]);
+    w.close();
+
+    // --- the books balance and the screen agrees through a long random walk with right-clicks in it (also in the fuzz below)
+    w = load({ [K.exp]:{ level:'pro' }, [K.bank]:{ balance:100000 } }); turbo(w);
+    const R3 = rng(31); let bad = [];
+    for(let i=0;i<80 && bad.length<3;i++){
+      w.G.chip = [5,10,25,100][Math.floor(R3()*4)];
+      hit(w, ['pass','dontpass','come','dontcome','field','hard6','any7','place6','place8','buy4','buy10'][Math.floor(R3()*11)]);
+      if(R3() < 0.5){
+        const els = [...w.document.querySelectorAll('.spot:not([hidden]), .num')];
+        rclick(w, els[Math.floor(R3()*els.length)]);
+      }
+      if(R3() < 0.35){ const b = w.G.table.bets.filter(x => x.odds === 0 && w.E.oddsRoom(w.G.table, x) > 0 && (x.type==='pass'||x.type==='dontpass'||x.type==='come'||x.type==='dontcome')); if(b.length) w.addOddsToBet(b[0].id); }
+      if(R3() < 0.5) await roll(w, 1+Math.floor(R3()*6), 1+Math.floor(R3()*6));
+      bad = bad.concat(invariants(w, 100000, 'rc '+i), domMatchesState(w, 'rc '+i));
+    }
+    check('random bets, right-clicks and rolls: money conserved and the screen agrees', bad.slice(0,3), []);
+    w.close();
+  }
+
+  // ======================================================== 32. max odds on the Pass Line (Table settings)
+  {
+    const pro = (extra) => load(Object.assign({ [K.exp]:{ level:'pro' } }, extra || {}));
+    const POINT_ROLL = { 4:[1,3], 5:[1,4], 6:[2,4], 8:[2,6], 9:[3,6], 10:[4,6] };
+    const MULT345 = { 4:3, 5:4, 6:5, 8:5, 9:4, 10:3 };
+    let w;
+    const pb = () => betOf(w,'pass');
+    const msg = ww => $(ww,'table-msg').textContent;
+    const setRule = (w, v) => { const s = $(w,'set-odds'); s.value = v; s.dispatchEvent(new w.Event('change', { bubbles:true })); };
+    const tick = (w, on) => { const c = $(w,'set-maxodds'); c.checked = on; c.dispatchEvent(new w.Event('change', { bubbles:true })); };
+
+    // --- the setting itself
+    w = load({}); turbo(w);
+    check('max odds is off by default, and the checkbox is in Table settings', [w.G.settings.maxodds, $(w,'set-maxodds').checked, $(w,'settings-panel').contains($(w,'set-maxodds'))], [false, false, true]);
+    check('its label says what it does', /max odds on the pass line/i.test(w.document.querySelector('label[for="set-maxodds"]').textContent), true);
+    hit(w,'pass'); await roll(w, 2, 2);
+    check('off: a point of 4 leaves the Pass Line without odds', [w.G.table.point, pb().odds, w.G.bankroll], [4, 0, 975]);
+    tick(w, true);
+    check('ticking the box turns it on at once (a point is up, so the odds go behind the bet)', [w.G.settings.maxodds, pb().odds, w.G.bankroll], [true, 75, 900]);
+    check('and it is saved with the other settings', JSON.parse(w.localStorage.getItem(K.sess)).settings.maxodds, true);
+    check('and the screen, the rail balance and the books agree', domMatchesState(w, 'tick').concat(invariants(w, 1000, 'tick')), []);
+    const snap = snapshot(w); w.close();
+    w = load(snap);
+    check('after a reload the box is still ticked and nothing extra is bought', [w.G.settings.maxodds, $(w,'set-maxodds').checked, pb().odds, w.G.bankroll], [true, true, 75, 900]);
+    tick(w, false);
+    check('unticking leaves the odds where they are', [w.G.settings.maxodds, pb().odds, w.G.bankroll], [false, 75, 900]);
+    check('the page had no errors', w.errs, []);
+    w.close();
+
+    // --- ticked at a come-out (nothing to buy yet) it is still saved
+    w = load({}); turbo(w);
+    tick(w, true);
+    check('ticked with no point up: nothing bought, saved, and the table says nothing', [w.G.settings.maxodds, w.G.bankroll, JSON.parse(w.localStorage.getItem(K.sess)).settings.maxodds], [true, 1000, true]);
+    const snap2 = snapshot(w); w.close();
+    w = load(snap2);
+    check('and it is still ticked after a reload', [w.G.settings.maxodds, $(w,'set-maxodds').checked], [true, true]);
+    w.close();
+
+    // --- every point, at the 3-4-5x table: the full multiple of the $25 Pass Line bet
+    for(const p of [4,5,6,8,9,10]){
+      w = pro(); turbo(w); w.setMaxOdds(true);
+      hit(w,'pass'); await roll(w, POINT_ROLL[p][0], POINT_ROLL[p][1]);
+      const o = 25 * MULT345[p];
+      check('point '+p+': '+MULT345[p]+'x the $25 bet goes behind it', [w.G.table.point, pb().odds, w.G.bankroll, w.E.oddsRoom(w.G.table, pb())], [p, o, 1000 - 25 - o, 0]);
+      check('point '+p+': the table says so, the chips show it, and the books balance', [msg(w), spot(w,'pass').querySelector('.odds-stack .amt').textContent, $(w,'on-table').textContent, invariants(w, 1000, 'p'+p).length + domMatchesState(w, 'p'+p).length],
+            ['Max odds: '+money(o)+' behind your Pass Line on the '+p+'.', money(o), money(25 + o), 0]);
+      w.close();
+    }
+
+    // --- a bigger or smaller bet and every odds limit
+    for(const rule of ['1x','2x','5x','10x']){
+      const mult = parseInt(rule, 10);
+      w = pro(); turbo(w); w.setMaxOdds(true); setRule(w, rule); w.G.chip = 50;
+      hit(w,'pass'); await roll(w, 2, 2);
+      check(rule+' table: $50 on the Pass Line takes '+money(50*mult)+' of odds', [pb().odds, w.E.maxOdds(w.G.table, pb()), w.G.bankroll], [50*mult, 50*mult, 1000 - 50 - 50*mult]);
+      w.close();
+    }
+
+    // --- not enough bankroll: as much as fits, and it says so
+    w = pro({ [K.bank]:{ balance:60 } }); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 3, 3);                                    // $25 on the line, $35 left, the 6 would take $125
+    check('short of money: every dollar left goes behind the bet', [pb().odds, w.G.bankroll, w.G.table.point], [35, 0, 6]);
+    check('and the table says it fell short', /only \$35 of the \$125/.test(msg(w)), true);
+    check('the books still balance', invariants(w, 60, 'short').concat(domMatchesState(w, 'short')), []);
+    w.close();
+    w = pro({ [K.bank]:{ balance:25 } }); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 3, 3);
+    check('nothing left at all: no odds, and the table says why', [pb().odds, w.G.bankroll, /no bankroll left/.test(msg(w))], [0, 0, true]);
+    check('a table with money on it is not a bankrupt table', [$(w,'bankruptcy-notice').style.display, w.G.bankroll], ['none', 0]);
+    w.close();
+
+    // --- only when a point is set, only behind the Pass Line
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 3, 4);
+    check('a come-out 7 wins the Pass Line and buys no odds', [w.G.table.bets.length, w.G.bankroll, /Max odds/.test(msg(w))], [0, 1025, false]);
+    hit(w,'pass'); await roll(w, 1, 1);
+    check('a come-out 2 loses the Pass Line and buys no odds', [w.G.table.bets.length, w.G.bankroll], [0, 1000]);
+    hit(w,'pass'); await roll(w, 1, 3);
+    check('a point of 4 buys them', [pb().odds, w.G.bankroll], [75, 900]);
+    await roll(w, 3, 3);                                                    // a 6: nothing decided
+    check('a roll that decides nothing buys nothing more', [pb().odds, w.G.bankroll], [75, 900]);
+    await roll(w, 1, 3);                                                    // the point
+    check('making the point pays the line and the odds', [w.G.table.bets.length, w.G.bankroll], [0, 900 + 25 + 25 + 75 + 150]);
+    hit(w,'pass'); await roll(w, 2, 6);                                     // a point of 8 on the next hand
+    check('a new hand gets its own odds', [w.G.table.point, pb().odds], [8, 125]);
+    await roll(w, 3, 4);
+    check('a seven-out takes the line and its odds', [w.G.table.bets.length, w.G.table.point], [0, null]);
+    w.close();
+
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'hard8'); await roll(w, 1, 3);
+    check('a point with no Pass Line bet: nothing is bought, nothing said', [w.G.table.point, w.G.table.bets.map(b => b.odds), /Max odds/.test(msg(w))], [4, [0], false]);
+    w.close();
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); hit(w,'dontpass'); await roll(w, 1, 3);
+    check('Pass Line and Don\'t Pass together: only the Pass Line gets odds', [pb().odds, betOf(w,'dontpass').odds], [75, 0]);
+    hit(w,'come'); await roll(w, 3, 3);                                     // the Come bet goes to the 6
+    check('a Come bet that travels gets no automatic odds', [w.G.table.bets.filter(b => b.type === 'come' && b.number === 6).map(b => b.odds)], [[0]]);
+    w.close();
+
+    // --- the player stays in charge
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 1, 3);
+    check('undo takes the automatic odds back', [$(w,'btn-undo').disabled, w.G.undo.length], [false, 1]);
+    click(w, $(w,'btn-undo'));
+    check('undone: no odds, the money is back, and nothing buys them again', [pb().odds, w.G.bankroll, w.G.settings.maxodds], [0, 975, true]);
+    w.addOddsToBet(pb().id); w.addOddsToBet(pb().id);
+    check('the player can still add odds by hand', [pb().odds, w.G.bankroll], [50, 925]);
+    w.close();
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 1, 3);
+    w.takeDownOdds('pass');
+    check('odds taken down by hand come back as chips', [pb().odds, w.G.bankroll], [0, 975]);
+    await roll(w, 3, 3);                                                    // a 6: no decision
+    check('and they stay down through the next roll', [pb().odds, w.G.bankroll, w.G.table.point], [0, 975, 4]);
+    await roll(w, 1, 3);                                                    // the point: the Pass Line pays 1:1
+    check('even when the shooter makes the point with them down', [w.G.table.bets.length, w.G.bankroll], [0, 1025]);
+    w.close();
+
+    // --- switching it on or changing the limit in the middle of a hand
+    w = pro(); turbo(w);
+    hit(w,'pass'); w.setMaxOdds(true);
+    check('on at a come-out: nothing to buy yet', [pb().odds, w.G.bankroll], [0, 975]);
+    await roll(w, 2, 4);
+    check('then the 6 takes the full $125', [pb().odds, w.G.bankroll], [125, 850]);
+    setRule(w, '10x');
+    check('a higher limit tops the odds up to it ($250)', [pb().odds, w.G.bankroll, msg(w)], [250, 725, 'Max odds: $250 behind your Pass Line on the 6.']);
+    check('and the screen and the books agree', domMatchesState(w, 'rule').concat(invariants(w, 1000, 'rule')), []);
+    setRule(w, '345');
+    check('a lower limit takes nothing back', [pb().odds, w.G.bankroll], [250, 725]);
+    w.close();
+    w = pro(); turbo(w); setRule(w, '10x');
+    hit(w,'pass'); await roll(w, 2, 4);
+    setRule(w, '345');
+    check('with the box unticked a change of limit buys nothing', [pb().odds, w.G.bankroll], [0, 975]);
+    w.addOddsToBet(pb().id);
+    w.setMaxOdds(true);
+    check('odds already behind the bet are topped up, not doubled ($25 by hand, then the rest of $125)', [pb().odds, w.G.bankroll, w.G.undo.map(u => u.amount)], [125, 850, [25, 100]]);
+    w.setMaxOdds(true);
+    check('ticking again when it is full changes nothing', [pb().odds, w.G.bankroll], [125, 850]);
+    w.close();
+
+    // --- ticked while the dice are in the air: it counts for that roll
+    w = pro(); turbo(w);
+    hit(w,'pass'); w.rollDice(2, 2);
+    w.setMaxOdds(true);
+    check('mid-roll: nothing is bought until the dice stop', [w.G.phase, w.G.table.bets.map(b => b.odds)], ['rolling', [0]]);
+    await settle(w);
+    check('then the point of 4 takes the full $75', [w.G.table.point, pb().odds, w.G.bankroll], [4, 75, 900]);
+    w.close();
+
+    // --- a new limit while the dice are in the air waits for them too
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); w.rollDice(2, 2);
+    setRule(w, '10x');
+    check('mid-roll: a new limit buys nothing until the dice stop', [w.G.phase, w.G.table.bets.map(b => b.odds)], ['rolling', [0]]);
+    await settle(w);
+    check('then the point takes the new limit ($250)', [pb().odds, w.G.bankroll], [250, 725]);
+    w.close();
+
+    // --- with the other automatic features
+    w = pro(); turbo(w); w.G.settings.keep = true; w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 2, 2);                                     // point 4, $75 odds
+    await roll(w, 3, 4);                                                    // seven out: the Pass Line is kept out for the next hand
+    check('keep bets out puts the Pass Line back after a seven-out', [pb().amount, pb().odds, w.G.table.point], [25, 0, null]);
+    await roll(w, 3, 3);                                                    // a 6 on the come-out: a point
+    check('and the new point gets its max odds with no clicks', [pb().odds, w.G.table.point, w.G.bankroll], [125, 6, 750]);
+    w.close();
+
+    w = pro(); turbo(w); w.setWork(true, false); w.G.settings.autopress = true; w.setMaxOdds(true);
+    hit(w,'pass'); hit(w,'place6'); await roll(w, 3, 3);                    // bets work on the come-out: the Place 6 pays $29 as the 6 becomes the point
+    check('auto-press and max odds in one roll: both are told', [/Auto-press: the 6 \+\$29\./.test(msg(w)), /Max odds: \$125 behind your Pass Line on the 6\./.test(msg(w))], [true, true]);
+    check('the Place 6 was pressed and the odds are full', [numBetOf(w,6).amount, pb().odds], [54, 125]);
+    check('and the books balance', invariants(w, 1000, 'combo').concat(domMatchesState(w, 'combo')), []);
+    w.close();
+
+    // --- the coach and the starter table
+    w = pro(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 2, 2);
+    check('the coach says the odds are in', /^Max odds are on: \$75 sits behind your Pass Line, the most this table allows/.test($(w,'coach-next').textContent), true);
+    w.takeDownOdds('pass');
+    check('with the odds down the coach goes back to suggesting them', /^Point is 4\. Take odds behind your Pass Line \(up to \$75\)/.test($(w,'coach-next').textContent), true);
+    w.close();
+    w = pro(); turbo(w);
+    hit(w,'pass'); await roll(w, 2, 2); w.addOddsToBet(pb().id); w.addOddsToBet(pb().id); w.addOddsToBet(pb().id);
+    check('odds put out by hand up to the limit: the coach does not claim the setting did it', [pb().odds, /^Your line bet rides until the shooter rolls the 4/.test($(w,'coach-next').textContent)], [75, true]);
+    w.close();
+    w = load({}); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 3, 3);
+    check('it works on the Starter table too', [w.G.settings.level, pb().odds, w.G.bankroll, spot(w,'pass').querySelector('.odds-row').classList.contains('show')], ['starter', 125, 850, true]);
+    check('and the Starter table has no errors', w.errs, []);
+    w.close();
+  }
+
+  // ======================================================== 33. the Starter numbers, and the Pass Line card
+  {
+    const std = () => load({ [K.exp]:{ level:'rules' } });
+    const how = (w, k) => spot(w,k).querySelector('.spot-hit').title;      // the plain words are the hover text
+    const payLine = (w, k) => spot(w,k).querySelector('.spot-pay').textContent;
+    const rclick = (w, el) => el.dispatchEvent(new w.MouseEvent('contextmenu', { bubbles:true, cancelable:true, button:2 }));
+
+    // --- the numbers are live on the Starter table
+    let w = load({}); turbo(w);
+    check('Starter: every number box can be tapped', [4,5,6,8,9,10].map(n => { const b = box(w,n).querySelector('.spot-hit'); return !b.disabled && b.style.display !== 'none'; }), Array(6).fill(true));
+    check('Starter: the boxes show what they pay, the edge and the Place / Buy switch', [4,5,6,8,9,10].map(n => !!box(w,n).querySelector('.num-sub').textContent && !!box(w,n).querySelector('.edge') && w.getComputedStyle(box(w,n).querySelector('.pb-switch')).display !== 'none'), Array(6).fill(true));
+    check('Starter: the boxes are not the flat display-only kind any more', $(w,'numbers').className, 'numbers');
+    hit(w,'place6'); hit(w,'buy4');
+    check('Starter: a tap puts a Place bet on the 6 and a Buy bet on the 4', [numBetOf(w,6).type, numBetOf(w,6).amount, numBetOf(w,4).type, numBetOf(w,4).amount, w.G.bankroll], ['place', 25, 'buy', 25, 950]);
+    check('Starter: the chips show on the boxes and the books balance', [box(w,6).querySelector('.num-stack .amt').textContent, box(w,4).querySelector('.num-stack .amt').textContent, invariants(w, 1000, 's1').length + domMatchesState(w, 's1').length], ['$25', '$25', 0]);
+    check('Starter: the bets-on/off switch turns up once there is a Place bet', $(w,'btn-work').hidden, false);
+    rclick(w, box(w,6).querySelector('.spot-hit'));
+    check('Starter: right-click takes a number bet down', [numBetOf(w,6), w.G.bankroll], [undefined, 975]);
+    w.takeDown('buy4');
+    check('Starter: and so does the little ×', [w.G.table.bets.length, w.G.bankroll, $(w,'btn-work').hidden], [0, 1000, true]);
+    hit(w,'pass'); hit(w,'place6'); await roll(w, 2, 2);               // point 4
+    check('Starter: a point of 4 with the line bet and a Place 6 out', [w.G.table.point, w.G.bankroll], [4, 950]);
+    await roll(w, 2, 4);                                              // a 6: the Place 6 pays 7:6 = $29
+    check('Starter: the Place 6 pays like it does everywhere else, and offers a Press', [w.G.bankroll, box(w,6).querySelectorAll('.press-row .tag').length], [979, 1]);
+    check('Starter: every bet there still agrees with the screen', invariants(w, 1000, 's2').concat(domMatchesState(w, 's2')), []);
+    check('Starter: no script errors', w.errs, []);
+    w.close();
+    // --- the hints no longer talk about bets the Starter table does not have
+    w = load({}); turbo(w);
+    hit(w,'dontpass'); await roll(w, 1, 3); w.takeDown('dontpass');   // a point of 4 and nothing down
+    check('Starter, point up, no bets: the tray points at the numbers', $(w,'tray-hint').textContent, 'No bets down. You can roll to watch, or tap a number to bet on it.');
+    check('Starter, point up, no line bet: the coach points at the numbers', /Tap a number to bet on it/.test($(w,'coach-next').textContent), true);
+    w.close();
+    w = std(); turbo(w);
+    hit(w,'dontpass'); await roll(w, 1, 3); w.takeDown('dontpass');
+    check('Standard, point up, no bets: the tray still mentions Come and Place', $(w,'tray-hint').textContent, 'No bets down. You can roll to watch, or place a Come or Place bet.');
+    check('and the coach still explains the Come bet', /A Come bet works like a Pass Line bet/.test($(w,'coach-next').textContent), true);
+    w.close();
+
+    // --- the levels say what they add
+    w = load({});
+    check('the three tables explain themselves', [...w.document.querySelectorAll('#level-seg button')].map(b => b.title), ["Pass Line, Don't Pass and the numbers", "Adds Come, Don't Come and Field", 'Adds the one-roll bets: hardways, Any Seven, Any Craps, Yo and the rest']);
+    w.close();
+
+    // --- where the line bets sit
+    w = load({}); turbo(w);
+    const lines = $(w,'lines');
+    check('the numbers come first, then the Pass Line and Don\'t Pass together, then the lower board', [[...lines.querySelectorAll('.spot')].map(e => e.getAttribute('data-key')), !!(lines.compareDocumentPosition($(w,'numbers')) & w.Node.DOCUMENT_POSITION_PRECEDING), !!(lines.compareDocumentPosition($(w,'board')) & w.Node.DOCUMENT_POSITION_FOLLOWING), !!(lines.compareDocumentPosition($(w,'callout')) & w.Node.DOCUMENT_POSITION_PRECEDING)], [['pass','dontpass'], true, true, true]);
+    check('Starter: nothing visible in the lower board, so it is not drawn', [[...$(w,'board').querySelectorAll('.spot')].filter(e => !e.hidden).length, $(w,'board').style.display], [0, 'none']);
+    w.close();
+    w = std();
+    check('Standard: the lower board holds Come, Don\'t Come and Field', [[...$(w,'board').querySelectorAll('.spot')].map(e => e.getAttribute('data-key')), $(w,'board').style.display], [['come','dontcome','field'], '']);
+    w.close();
+
+    // --- nothing is lit up: no "start here", no highlight on any spot, at any moment
+    {
+      const lit = w => [...w.document.querySelectorAll('.spot')].filter(e => e.classList.contains('start-here')).length + w.document.querySelectorAll('.start-pill').length;
+      w = load({}); turbo(w);
+      check('an empty come-out: no "Start here" tag and no spot is picked out', [lit(w), $(w,'callout-sub').textContent], [0, 'Start with a Pass Line bet.']);
+      hit(w,'pass'); w.rollDice(2, 2);
+      check('with the dice in the air: still nothing lit', lit(w), 0);
+      await settle(w);
+      check('with a point up: still nothing lit', lit(w), 0);
+      await roll(w, 1, 3);                                            // the point is made: a bare table again
+      check('a bare table at the next come-out: nothing lit', [w.G.table.bets.length, w.G.table.point, lit(w)], [0, null, 0]);
+      w.close();
+    }
+
+    // --- plain words (on hover) on the Pass Line and Don't Pass; the cards stay the size of every other bet
+    w = load({}); turbo(w);
+    check('the card holds a title, the pay line and the edge, and nothing else (no paragraph, no tag)', [spot(w,'pass').querySelector('.spot-how'), spot(w,'pass').querySelector('.start-pill'), spot(w,'pass').querySelector('.spot-title') !== null, payLine(w,'pass').length > 0, spot(w,'pass').querySelector('.edge') !== null], [null, null, true, true, true]);
+    check('come-out: the Pass Line says what it is', how(w,'pass'), 'Bet with the shooter. A 7 or 11 wins, a 2, 3 or 12 loses, and any other number becomes the point.');
+    check('come-out: Don\'t Pass says what it is', how(w,'dontpass'), 'Bet against the shooter. A 2 or 3 wins and a 7 or 11 loses.');
+    check('come-out: the pay lines are the original ones', [payLine(w,'pass'), payLine(w,'dontpass')], ['Pays 1:1. Add odds once a point is set.', 'Pays 1:1. A 12 on the come-out is a push.']);
+    hit(w,'pass'); hit(w,'dontpass'); await roll(w, 2, 4);            // point 6
+    check('with a point of 6 they say what the shooter needs', [how(w,'pass'), how(w,'dontpass')], ['The point is 6. You win if the shooter rolls a 6 again before a 7.', 'The point is 6. You win if a 7 comes before the 6.']);
+    check('and what the odds behind them are', [payLine(w,'pass'), payLine(w,'dontpass')], ['Pays 1:1. Odds behind it pay true odds, with no house edge.', 'Pays 1:1. Odds you lay behind it pay true odds, with no house edge.']);
+    check('the spoken label of the Pass Line is unchanged', spot(w,'pass').querySelector('.spot-hit').getAttribute('aria-label').indexOf('Pass Line, $25 on it. Pays 1:1. Add odds once a point is set.') === 0, true);
+    await roll(w, 1, 5);                                              // the 6: the Pass Line wins, Don't Pass loses
+    check('after the point is made they go back to the come-out words', [how(w,'pass'), how(w,'dontpass')], ['Bet with the shooter. A 7 or 11 wins, a 2, 3 or 12 loses, and any other number becomes the point.', 'Bet against the shooter. A 2 or 3 wins and a 7 or 11 loses.']);
+    check('and the egg on the P still works', (() => { const e = spot(w,'pass').querySelector('.egg-p'); click(w, e); return spot(w,'pass').querySelector('.egg-a').textContent; })(), 'A');
+    check('no errors, and the books balance', w.errs.concat(invariants(w, 1000, 'pl'), domMatchesState(w, 'pl')), []);
+    w.close();
+  }
+
+  // ======================================================== 34. the green Max odds buttons (on the Pass Line and in the rail)
+  {
+    const std = (extra) => load(Object.assign({ [K.exp]:{ level:'rules' } }, extra || {}));
+    const disp = (w, el) => w.getComputedStyle(el).display;
+    const railBtn = w => $(w,'btn-maxodds');
+    const bandBtn = (w, k) => spot(w,k).querySelector('.odds-max');
+    const railShown = w => !railBtn(w).hidden && disp(w, railBtn(w)) !== 'none';
+    const bandShown = (w, k) => !bandBtn(w,k).hidden && disp(w, bandBtn(w,k)) !== 'none';
+    const msg = w => $(w,'table-msg').textContent;
+    const pass = w => betOf(w,'pass');
+
+    // --- when they show
+    let w = std(); turbo(w);
+    check('an empty come-out: neither Max odds button is there', [railShown(w), bandShown(w,'pass')], [false, false]);
+    check('and the rail one really is out of sight (the style must not override the hiding)', [disp(w, railBtn(w)), disp(w, bandBtn(w,'pass'))], ['none', 'none']);
+    hit(w,'pass');
+    check('a Pass Line bet but no point yet: still no Max odds', [railShown(w), bandShown(w,'pass')], [false, false]);
+    await roll(w, 1, 3);                                              // point 4: 3x $25 = $75
+    check('a point is set: both buttons show the $75 that fits', [railShown(w), bandShown(w,'pass'), $(w,'maxodds-amt').textContent, bandBtn(w,'pass').textContent], [true, true, '$75', 'Max odds $75']);
+    check('the buttons are really hidden (not just marked) when they are not wanted', [disp(w, $(w,'btn-maxodds')) !== 'none', disp(w, bandBtn(w,'dontpass')) === 'none'], [true, true]);
+    check('both pulse while no odds are out yet', [railBtn(w).classList.contains('cta'), bandBtn(w,'pass').classList.contains('cta')], [true, true]);
+    check('they say what they do', [railBtn(w).getAttribute('aria-label'), railBtn(w).title.indexOf('$75 behind your Pass Line') > 0, bandBtn(w,'pass').getAttribute('aria-label')], ['Max odds: $75 behind your Pass Line.', true, 'Max odds: put $75 behind your Pass Line bet.']);
+    check('the coach points at the button', /tap the green Max odds button/.test($(w,'coach-next').textContent), true);
+    // a little by hand first: the button offers what is left, and stops pulsing
+    w.addOddsToBet(pass(w).id);
+    check('after $25 by hand the button offers the other $50 and no longer pulses', [$(w,'maxodds-amt').textContent, bandBtn(w,'pass').textContent, railBtn(w).classList.contains('cta'), bandBtn(w,'pass').classList.contains('cta')], ['$50', 'Max odds $50', false, false]);
+    // --- the band's button
+    click(w, bandBtn(w,'pass'));
+    check('tap the one on the Pass Line: the rest of the odds go behind it', [pass(w).odds, w.G.bankroll, msg(w)], [75, 900, 'Max odds: $50 behind your Pass Line.']);
+    check('and both buttons go away, there being nothing left to add', [railShown(w), bandShown(w,'pass')], [false, false]);
+    check('the screen agrees and the books balance', domMatchesState(w, 'band').concat(invariants(w, 1000, 'band')), []);
+    click(w, $(w,'btn-undo'));
+    check('undo takes that $50 back (the $25 by hand is its own step)', [pass(w).odds, w.G.bankroll, railShown(w)], [25, 950, true]);
+    check('and the buttons come back', [$(w,'maxodds-amt').textContent, bandShown(w,'pass')], ['$50', true]);
+    w.close();
+
+    // --- the rail's button
+    w = std(); turbo(w);
+    hit(w,'pass'); await roll(w, 1, 3);
+    click(w, railBtn(w));
+    check('tap the one in the rail: the full $75 goes behind the Pass Line', [pass(w).odds, w.G.bankroll, msg(w), railShown(w), bandShown(w,'pass')], [75, 900, 'Max odds: $75 behind your Pass Line.', false, false]);
+    check('the table shows the chips and the books balance', [spot(w,'pass').querySelector('.odds-stack .amt').textContent, domMatchesState(w, 'rail').concat(invariants(w, 1000, 'rail')).length], ['$75', 0]);
+    click(w, $(w,'btn-undo'));
+    check('undo takes it all back in one step', [pass(w).odds, w.G.bankroll], [0, 975]);
+    w.close();
+
+    // --- it does every bet that can take odds, line bets first
+    w = std(); turbo(w);
+    hit(w,'pass'); hit(w,'dontpass'); await roll(w, 1, 3);           // point 4: $75 behind the Pass Line, $150 laid behind Don't Pass
+    check('Pass Line and Don\'t Pass: the rail offers both ($75 + $150)', [$(w,'maxodds-amt').textContent, railBtn(w).title.indexOf('$75 behind your Pass Line, $150 behind your Don\'t Pass') > 0], ['$225', true]);
+    check('the Don\'t Pass band has its own button with the lay amount', [bandShown(w,'dontpass'), bandBtn(w,'dontpass').textContent], [true, 'Max odds $150']);
+    click(w, railBtn(w));
+    check('one tap puts out both', [pass(w).odds, betOf(w,'dontpass').odds, w.G.bankroll, msg(w)], [75, 150, 725, 'Max odds: $75 behind your Pass Line, $150 behind your Don\'t Pass.']);
+    check('and the books balance', domMatchesState(w, 'both').concat(invariants(w, 1000, 'both')), []);
+    w.close();
+    w = std(); turbo(w);
+    hit(w,'pass'); hit(w,'dontpass'); await roll(w, 1, 3);
+    click(w, bandBtn(w,'dontpass'));
+    check('the Don\'t Pass button does only the Don\'t Pass', [pass(w).odds, betOf(w,'dontpass').odds, w.G.bankroll], [0, 150, 800]);
+    check('and the rail then offers just the Pass Line', [$(w,'maxodds-amt').textContent, railBtn(w).title.indexOf('$75 behind your Pass Line') > 0, railBtn(w).title.indexOf('Don\'t Pass') < 0], ['$75', true, true]);
+    w.close();
+    w = std(); turbo(w);
+    hit(w,'pass'); await roll(w, 2, 2);                               // point 4
+    hit(w,'come'); await roll(w, 4, 4);                               // the Come bet goes to the 8: 5x $25 = $125
+    check('a Come bet on the 8 as well: the rail offers $75 + $125', [$(w,'maxodds-amt').textContent, railBtn(w).title.indexOf('$75 behind your Pass Line, $125 behind your Come 8') > 0], ['$200', true]);
+    check('and the little "+ odds" tag on the Come bet is still there', box(w,8).querySelectorAll('.tag').length, 1);
+    click(w, railBtn(w));
+    check('one tap: odds on both, the Pass Line first', [pass(w).odds, w.G.table.bets.find(b => b.type === 'come' && b.number === 8).odds, w.G.bankroll], [75, 125, 1000 - 25 - 25 - 75 - 125]);
+    click(w, $(w,'btn-undo'));
+    check('undo takes them back one bet at a time, the last first', [pass(w).odds, w.G.table.bets.find(b => b.type === 'come' && b.number === 8).odds], [75, 0]);
+    check('the books balance', domMatchesState(w, 'come').concat(invariants(w, 1000, 'come')), []);
+    w.close();
+
+    // --- two bets and not enough for both: the line bet gets it, in order
+    w = std({ [K.bank]:{ balance:100 } }); turbo(w);
+    hit(w,'pass'); hit(w,'dontpass'); await roll(w, 1, 3);           // $50 left, $75 + $150 wanted
+    check('the rail offers what the bankroll can cover, not what the table would allow', [$(w,'maxodds-amt').textContent, railBtn(w).title.indexOf('$50 behind your Pass Line') > 0, railBtn(w).title.indexOf('Don\'t Pass') < 0], ['$50', true, true]);
+    click(w, railBtn(w));
+    check('the Pass Line gets the $50 and the Don\'t Pass nothing', [pass(w).odds, betOf(w,'dontpass').odds, w.G.bankroll], [50, 0, 0]);
+    w.close();
+
+    // --- bankroll too small
+    w = std({ [K.bank]:{ balance:60 } }); turbo(w);
+    hit(w,'pass'); await roll(w, 3, 3);                               // point 6, $35 left, the limit is $125
+    check('short of money: the buttons offer what is there', [$(w,'maxodds-amt').textContent, bandBtn(w,'pass').textContent], ['$35', 'Max odds $35']);
+    click(w, railBtn(w));
+    check('every dollar goes behind the bet, and the table says that is all it could do', [pass(w).odds, w.G.bankroll, msg(w)], [35, 0, 'Max odds: $35 behind your Pass Line. That is all your bankroll allowed.']);
+    check('with nothing left the buttons go away', [railShown(w), bandShown(w,'pass')], [false, false]);
+    check('tapping anyway with no bankroll left says so and puts nothing out', [w.putMaxOdds(w.oddsBets(w.G.table)), msg(w), pass(w).odds, w.G.bankroll], [false, 'Not enough bankroll for odds.', 35, 0]);
+    w.close();
+
+    // --- odds already full, odds not allowed yet, dice in the air
+    w = std(); turbo(w); w.setMaxOdds(true);
+    hit(w,'pass'); await roll(w, 1, 3);
+    check('with the Max odds setting on the odds are already in, so there is nothing to tap', [pass(w).odds, railShown(w), bandShown(w,'pass')], [75, false, false]);
+    check('tapping anyway (it is hidden, but the function is there) says the odds are full', [w.putMaxOdds(w.oddsBets(w.G.table)), msg(w)], [false, 'The odds are already at the limit for this table (3-4-5x odds).']);
+    w.close();
+    w = std(); turbo(w);
+    hit(w,'pass'); w.rollDice(1, 3);
+    check('while the dice are in the air the buttons are away and a tap does nothing', [w.G.phase, railShown(w), bandShown(w,'pass'), w.putMaxOdds(w.oddsBets(w.G.table)), w.G.table.bets.map(b => b.odds)], ['rolling', false, false, false, [0]]);
+    await settle(w);
+    check('and they are back when the dice stop', [railShown(w), bandShown(w,'pass')], [true, true]);
+    w.rollDice(1, 2);                                                 // a 3 with a point up: nothing is decided, and the Pass Line still has its odds row
+    check('same with a point up: the Pass Line row is there but its Max odds button waits for the dice', [w.G.phase, spot(w,'pass').querySelector('.odds-row').classList.contains('show'), bandShown(w,'pass'), railShown(w)], ['rolling', true, false, false]);
+    await settle(w);
+    await roll(w, 3, 4);                                               // seven-out: the Pass Line bet and its odds row are gone
+    check('after the seven-out the band button is switched off, not just out of sight', [spot(w,'pass').querySelector('.odds-row').classList.contains('show'), bandBtn(w,'pass').hidden, railBtn(w).hidden], [false, true, true]);
+    w.close();
+
+    // --- the Starter table, with a tighter limit
+    w = load({}); turbo(w);
+    const sel = $(w,'set-odds'); sel.value = '10x'; sel.dispatchEvent(new w.Event('change', { bubbles:true }));
+    hit(w,'pass'); await roll(w, 3, 3);                               // 10x $25 = $250
+    check('Starter table, 10x odds: the button offers $250', [$(w,'maxodds-amt').textContent, bandBtn(w,'pass').textContent], ['$250', 'Max odds $250']);
+    click(w, bandBtn(w,'pass'));
+    check('one tap: $250 behind the Pass Line', [pass(w).odds, w.G.bankroll], [250, 725]);
+    check('no errors', w.errs.concat(domMatchesState(w, 'st'), invariants(w, 1000, 'st')), []);
+    w.close();
+  }
+
+  // ======================================================== 35. the phone table: the pinned parts, the groups of bets, the jump bar
+  {
+    const w = load({}); turbo(w);
+    const doc = w.document, main = doc.querySelector('.felt-main'), top = $(w,'top-block'), bets = $(w,'bets');
+    const ids = a => a.map(id => $(w,id));
+    // --- where things live
+    check('the pinned block holds the status row, the stage with its buttons, the read-out, the callout, the roll strip, the jump bar and the small balance',
+      ['phase-pill','on-table','dice-stage','stage-total','btn-dice','btn-keep','btn-work','callout','callout-big','callout-sub','roll-strip','jump','mini-bank-amount','mini-bank-stack'].map(id => top.contains($(w,id))),
+      new Array(14).fill(true));
+    check('the pinned block is in the main column and the chips bar is not', [main.contains(top), main.contains($(w,'tray'))], [true, false]);
+    check('the three messages are above the pinned block, not inside it', ['resume-notice','bankruptcy-notice','table-msg'].map(id => top.contains($(w,id)) || !!(top.compareDocumentPosition($(w,id)) & w.Node.DOCUMENT_POSITION_FOLLOWING)), [false, false, false]);
+    check('the bets are after the pinned block and hold the numbers, the line bets, the board, the one-roll bets and the coach',
+      [!!(top.compareDocumentPosition(bets) & w.Node.DOCUMENT_POSITION_FOLLOWING), ...ids(['numbers','puck-lane','lines','board','props','props-grid','coach']).map(e => bets.contains(e))], [true, true, true, true, true, true, true, true]);
+    check('the bets are in groups, in the order of a real table: numbers, line bets, Come and Field, one-roll bets, coach', [...bets.children].map(c => c.id), ['grp-numbers','grp-lines','grp-board','props','coach']);
+    check('each group has a heading a phone shows', ['grp-numbers','grp-lines','grp-board'].map(id => $(w,id).querySelector('.grp-h').textContent), ['Numbers Place or Buy', "Line bets Pass or Don't Pass", 'Come & Field']);
+    check('the board and the line bets are still where the table draws them', [$(w,'lines').parentNode.id, $(w,'board').parentNode.id, $(w,'numbers').parentNode.id], ['grp-lines','grp-board','grp-numbers']);
+    check('the status row reads the same as before', [$(w,'phase-text').textContent, $(w,'on-table').parentNode.textContent.replace(/\s+/g,' ').trim()], ['Come-out roll', 'On the table $0']);
+    check('the Keep-bets switch still reads "Keep same bets out" in full (a phone only hides some of the words)', $(w,'btn-keep').textContent.trim(), 'Keep same bets out');
+    check('the small balance is hidden from a screen reader (the header pill is what is read)', doc.querySelector('.bank-mini').getAttribute('aria-hidden'), 'true');
+    ['top-block','bets','jump','mini-bank-amount','mini-bank-stack','grp-numbers','grp-lines','grp-board'].forEach(id => check('#'+id+' is unique', doc.querySelectorAll('[id="'+id+'"]').length, 1));
+    check('the jump bar is a labelled navigation with four buttons, one for each group', [$(w,'jump').tagName, $(w,'jump').getAttribute('aria-label'), [...$(w,'jump').querySelectorAll('button')].map(b => b.getAttribute('data-target'))], ['NAV', 'Jump to a kind of bet', ['grp-lines','grp-board','grp-numbers','props']]);
+    check('every jump button names a group that exists', [...$(w,'jump').querySelectorAll('button')].every(b => !!$(w, b.getAttribute('data-target'))), true);
+
+    // --- the small balance is always the same as the others
+    const same = label => check(label, [$(w,'mini-bank-amount').textContent, $(w,'mini-bank-stack').innerHTML], [$(w,'bankroll-amount').textContent, $(w,'bankroll-chip-stack').innerHTML]);
+    same('first load: the small balance is the header balance');
+    check('first load: $1,000', $(w,'mini-bank-amount').textContent, '$1,000');
+    hit(w,'pass'); same('after a bet'); check('after a $25 bet: $975 left and $25 on the table', [$(w,'mini-bank-amount').textContent, $(w,'on-table').textContent], ['$975', '$25']);
+    click(w, $(w,'btn-undo')); same('after undo'); check('undo: $1,000 again', $(w,'mini-bank-amount').textContent, '$1,000');
+    hit(w,'pass'); await roll(w, 3, 4); same('after a win'); check('a seven on the come-out pays the Pass Line: $1,025', [$(w,'mini-bank-amount').textContent, $(w,'tray-bank-amount').textContent], ['$1,025', '$1,025']);
+    w.G.settings.turbo = false;
+    w.setShown(w.G.shown + 50, true);
+    const mini = doc.querySelector('.bank-mini');
+    check('a count-up makes the small balance flash green as the others do', [mini.classList.contains('bump'), mini.classList.contains('up')], [true, true]);
+    await sleep(1400);
+    check('and the flash goes again', mini.classList.contains('bump'), false);
+    w.G.settings.turbo = true;
+    w.G.shown = w.G.bankroll; w.renderPill();
+    check('no errors', w.errs.concat(domMatchesState(w, 'ph'), invariants(w, 1000, 'ph')), []);
+    w.close();
+  }
+  {
+    // --- which groups there are on each table, and which jump buttons
+    const w = load({}); turbo(w);
+    const shown = () => [...$(w,'jump').querySelectorAll('button')].filter(b => !b.hidden).map(b => b.getAttribute('data-target'));
+    const groups = () => ['grp-lines','grp-board','grp-numbers','props'].filter(id => $(w,id).style.display !== 'none');
+    w.setLevel('starter', 'own');
+    check('Starter: line bets and numbers only, and a jump bar would be pointless, so it is hidden', [groups(), shown(), $(w,'jump').hidden], [['grp-lines','grp-numbers'], ['grp-lines','grp-numbers'], true]);
+    w.setLevel('standard', 'own');
+    check('Standard: Come and Field are there and the jump bar has three buttons', [groups(), shown(), $(w,'jump').hidden], [['grp-lines','grp-board','grp-numbers'], ['grp-lines','grp-board','grp-numbers'], false]);
+    w.setLevel('full', 'own');
+    check('Full table: the one-roll bets are there and the jump bar has four buttons', [groups(), shown(), $(w,'jump').hidden], [['grp-lines','grp-board','grp-numbers','props'], ['grp-lines','grp-board','grp-numbers','props'], false]);
+    check('the buttons read Line, Come & Field, Numbers and Hard Ways', [...$(w,'jump').querySelectorAll('button')].map(b => b.textContent), ['Line', 'Come & Field', 'Numbers', 'Hard Ways']);
+    check('and the group they lead to is headed Hard Ways too', $(w,'props').querySelector('h3').textContent.replace(/\s+/g,' ').startsWith('Hard Ways and one-roll bets'), true);
+    check('no errors', w.errs, []);
+    w.close();
+  }
+  {
+    // --- phone or not
+    const w = load({}); turbo(w);
+    const size = (iw, ih) => { Object.defineProperty(w, 'innerWidth', { value:iw, configurable:true }); Object.defineProperty(w, 'innerHeight', { value:ih, configurable:true }); return w.isPhone(); };
+    check('isPhone: a phone upright (375x812, 390x844, 320x568, 560 wide) is a phone', [size(375, 812), size(390, 844), size(320, 568), size(560, 1000)], [true, true, true, true]);
+    check('isPhone: 561 wide upright is not (a tablet)', [size(561, 900), size(768, 1024), size(1024, 768), size(1440, 900)], [false, false, false, false]);
+    check('isPhone: a phone on its side (844x390, 667x375, 740x360, 999x520) is a phone', [size(844, 390), size(667, 375), size(740, 360), size(999, 520)], [true, true, true, true]);
+    check('isPhone: but not a short, wide window at 1000 wide or 521 tall at 999', [size(1000, 520), size(999, 521), size(1280, 400)], [false, false, false]);
+    check('the dice are drawn with the phone sizes on a phone and the big ones otherwise (the die and where they rest)', [(size(375, 812), w.setMetrics().s), (size(844, 390), w.setMetrics().s), (size(1024, 768), w.setMetrics().s), (size(375, 812), w.diceX(1)), (size(1024, 768), w.diceX(1))], [48, 48, 60, 36, 46]);
+    check('the sweep (the stickman) is planned for the phone stage too', (size(375, 812), w.sweepGeom().R), Math.round(48 * 0.68));
+    check('a roll on a phone still lands the dice at their resting places', (size(375, 812), (w.showDice(2, 5, false), [w.G.phase, $(w,'die-pos-0').style.transform, $(w,'die-pos-1').style.transform])), ['betting', 'translateX(-36px)', 'translateX(36px)']);
+    size(1024, 768);
+    check('no errors', w.errs, []);
+    w.close();
+  }
+  {
+    // --- the numbers say it shorter on a phone, in full on a wide screen, and change when the screen changes shape
+    const w = load({}); turbo(w);
+    const resize = (iw, ih) => { Object.defineProperty(w, 'innerWidth', { value:iw, configurable:true }); Object.defineProperty(w, 'innerHeight', { value:ih, configurable:true }); w.dispatchEvent(new w.Event('resize')); };
+    const subs = () => [...w.document.querySelectorAll('.num .num-sub')].map(e => e.textContent);
+    check('wide: "Buy pays 2:1, 5% fee on wins" and "Place pays 7:6"', subs(), ['Buy pays 2:1, 5% fee on wins','Buy pays 3:2, 5% fee on wins','Place pays 7:6','Place pays 7:6','Buy pays 3:2, 5% fee on wins','Buy pays 2:1, 5% fee on wins']);
+    resize(375, 812);
+    check('phone: "Pays 2:1, 5% fee" for a Buy and "Pays 7:6" for a Place (the switch under it says which)', subs(), ['Pays 2:1, 5% fee','Pays 3:2, 5% fee','Pays 7:6','Pays 7:6','Pays 3:2, 5% fee','Pays 2:1, 5% fee']);
+    w.setMode(6, 'buy'); w.setMode(4, 'place');
+    check('phone: switching a box to Buy or Place changes its line', [subs()[0], subs()[2]], ['Pays 9:5', 'Pays 6:5, 5% fee']);
+    check('phone: the screen-reader label of a box still says everything', box(w, 6).querySelector('.spot-hit').getAttribute('aria-label'), 'Buy 6. Pays 6:5 minus a 5% fee on wins. House edge 2.27%.');
+    resize(1100, 800);
+    check('wide again: back in full', [subs()[0], subs()[2]], ['Place pays 9:5', 'Buy pays 6:5, 5% fee on wins']);
+    resize(844, 390);
+    check('on its side: the short form again', subs()[0], 'Pays 9:5');
+    check('no errors', w.errs, []);
+    w.close();
+  }
+  {
+    // --- the jump bar: where a button takes you, and which button is marked
+    const w = load({}); turbo(w); w.setLevel('full', 'own');
+    const doc = w.document, top = $(w,'top-block');
+    const calls = []; w.scrollTo = (a, b) => calls.push(typeof a === 'object' ? a : { top:b });
+    Object.defineProperty(w, 'pageYOffset', { value:50, configurable:true });
+    Object.defineProperty(top, 'offsetHeight', { value:300, configurable:true });
+    const place = (el, t, b) => { el.getBoundingClientRect = () => ({ top:t, bottom:b === undefined ? t + 100 : b, left:0, right:300, width:300, height:(b === undefined ? 100 : b - t) }); };
+    place(top, 0, 300);
+    const setTops = o => Object.keys(o).forEach(id => place($(w,id), o[id]));
+    setTops({ 'grp-lines':100, 'grp-board':320, 'grp-numbers':500, 'props':900 });
+    place($(w,'bets'), 100, 2000); place($(w,'tray'), 700, 820);
+    const orig = w.getComputedStyle.bind(w);
+    w.getComputedStyle = el => (el && el.id === 'top-block') ? { position:'sticky' } : orig(el);
+    // jumps
+    click(w, $(w,'jump').querySelector('[data-target="grp-numbers"]'));
+    check('a jump puts the group just under the pinned block: where it is, plus where we are, minus the block and 8 (instant in turbo)', calls[0], { top:50 + 500 - 300 - 8, behavior:'auto' });
+    w.G.settings.turbo = false;
+    click(w, $(w,'jump').querySelector('[data-target="props"]'));
+    check('and it glides when turbo is off', calls[1], { top:50 + 900 - 300 - 8, behavior:'smooth' });
+    place($(w,'grp-lines'), -700); click(w, $(w,'jump').querySelector('[data-target="grp-lines"]'));
+    check('a jump never goes above the top of the page', calls[2].top, 0);
+    w.G.settings.turbo = true;
+    // which is marked
+    const marked = () => [...$(w,'jump').querySelectorAll('button')].filter(b => b.getAttribute('aria-current') === 'true').map(b => b.getAttribute('data-target'));
+    setTops({ 'grp-lines':100, 'grp-board':320, 'grp-numbers':500, 'props':900 }); w.spyJump();
+    check('at the top: the line bets are marked (nothing has reached the line yet)', marked(), ['grp-lines']);
+    setTops({ 'grp-lines':-100, 'grp-board':200, 'grp-numbers':500, 'props':900 }); w.spyJump();
+    check('Come and Field have passed the line under the pinned block: marked', marked(), ['grp-board']);
+    setTops({ 'grp-lines':-700, 'grp-board':-300, 'grp-numbers':250, 'props':900 }); w.spyJump();
+    check('the numbers: marked', marked(), ['grp-numbers']);
+    setTops({ 'grp-lines':-1500, 'grp-board':-1200, 'grp-numbers':-800, 'props':400 }); place($(w,'bets'), -1500, 712); w.spyJump();
+    check('at the end of the list the last group is marked even if it never reaches the top (the bets end at the chips)', marked(), ['props']);
+    place($(w,'bets'), -1500, 2000); setTops({ 'grp-lines':-1500, 'grp-board':-1200, 'grp-numbers':-800, 'props':312 }); w.spyJump();
+    check('a group exactly on the line (12px under the block) is the marked one', marked(), ['props']);
+    // before any group has reached the line the first one is marked
+    setTops({ 'grp-lines':400, 'grp-board':600, 'grp-numbers':800, 'props':1100 }); place($(w,'bets'), 400, 2000); w.spyJump();
+    check('before any group reaches the line the first one is marked', marked(), ['grp-lines']);
+    // the end of the list means the bets are within a finger's width of the chips, not just somewhere near them
+    setTops({ 'grp-lines':-1500, 'grp-board':-1200, 'grp-numbers':250, 'props':900 }); place($(w,'bets'), -1500, 770); w.spyJump();
+    check('the bets still reach 70px under the chips: that is not the end yet, the numbers stay marked', marked(), ['grp-numbers']);
+    // a group that is not on this table is never the last one
+    $(w,'props').style.display = 'none'; place($(w,'bets'), -1500, 712); w.renderJump();
+    check('at the end with the One-roll bets gone: the last group there is, the numbers, is marked', marked(), ['grp-numbers']);
+    $(w,'props').style.display = ''; w.renderJump();
+    // scrolling moves the mark by itself (one frame later)
+    w.requestAnimationFrame = f => { f(); return 0; };
+    setTops({ 'grp-lines':-700, 'grp-board':-300, 'grp-numbers':250, 'props':900 }); place($(w,'bets'), -700, 2000); w.spyJump();
+    check('(setup) the numbers are marked', marked(), ['grp-numbers']);
+    setTops({ 'grp-lines':100, 'grp-board':320, 'grp-numbers':500, 'props':900 }); place($(w,'bets'), 100, 2000);
+    w.dispatchEvent(new w.Event('scroll'));
+    check('scrolling back to the top moves the mark to the line bets without anyone asking', marked(), ['grp-lines']);
+    // not pinned (a wide screen): nothing is marked and nothing breaks
+    setTops({ 'grp-lines':-1500, 'grp-board':-1200, 'grp-numbers':-800, 'props':312 }); place($(w,'bets'), -1500, 2000); w.spyJump();
+    check('(setup) the One-roll bets are marked', marked(), ['props']);
+    setTops({ 'grp-lines':100, 'grp-board':320, 'grp-numbers':500, 'props':900 }); place($(w,'bets'), 100, 2000);
+    w.getComputedStyle = orig; w.spyJump();
+    check('not pinned: the mark is left alone even though the groups moved', marked(), ['props']);
+    w.syncPins();
+    check('not pinned: the pinned sizes are zero', [doc.documentElement.style.getPropertyValue('--top-h'), doc.documentElement.style.getPropertyValue('--dock-h')], ['0px', '0px']);
+    w.getComputedStyle = el => (el && el.id === 'top-block') ? { position:'sticky' } : orig(el);
+    Object.defineProperty($(w,'tray'), 'offsetHeight', { value:119, configurable:true });
+    w.syncPins();
+    check('pinned: the sizes are the block\'s and the chips bar\'s heights, for a jump, a message and tabbing', [doc.documentElement.style.getPropertyValue('--top-h'), doc.documentElement.style.getPropertyValue('--dock-h')], ['300px', '119px']);
+    const pin = () => doc.documentElement.style.getPropertyValue('--dock-h');
+    Object.defineProperty($(w,'tray'), 'offsetHeight', { value:140, configurable:true });
+    w.dispatchEvent(new w.Event('resize'));
+    check('resizing the window (or turning the phone) measures the pinned parts again', pin(), '140px');
+    Object.defineProperty($(w,'tray'), 'offsetHeight', { value:150, configurable:true });
+    w.renderAll();
+    check('every redraw measures them again too', pin(), '150px');
+    $(w,'grp-board').style.display = 'none'; w.dispatchEvent(new w.Event('resize'));
+    check('and resizing redraws the jump bar for the groups there are', [...$(w,'jump').querySelectorAll('button')].filter(b => !b.hidden).map(b => b.getAttribute('data-target')), ['grp-lines', 'grp-numbers', 'props']);
+    $(w,'grp-board').style.display = ''; w.renderJump();
+    w.setLevel('starter', 'own'); place($(w,'bets'), 100, 2000); w.spyJump();
+    check('on Starter the bar is hidden and nothing is marked or changed', [$(w,'jump').hidden], [true]);
+    check('no errors', w.errs, []);
+    w.close();
+  }
+
+  // ======================================================== 36. sound: the engine, the speaker, what each moment asks of it, the stickman's call
+  {
+    const talk = w => { w.G.settings.turbo = false; w.G.settings.sound = true; w.G.settings.keep = false; w.G.settings.work = false; };
+    const w = load({ [K.exp]:{ level:'pro' } }); talk(w);
+    const d = w.document, btn = d.getElementById('snd-btn');
+    check('the page carries the sound engine, and the speaker sits by the bankroll in the header', [typeof w.TRSound, !!btn, !!btn.closest('header'), btn.getAttribute('aria-pressed'), btn.type], ['object', true, true, 'true', 'button']);
+    check('its label says what pressing it does', btn.getAttribute('aria-label'), 'Sound on. Press to mute');
+    check('there is no background murmur: the engine has no ambience to start', [typeof w.TRSound.ambient, w.TRSound._state.amb], ['undefined', undefined]);
+    btn.click();
+    check('the speaker mutes the game, the settings tick box and the whole site together', [w.TRSound.enabled(), w.G.settings.sound, d.getElementById('set-sound').checked, w.localStorage.getItem('house_edge_sound_v1'), btn.getAttribute('aria-pressed'), btn.getAttribute('aria-label')], [false, false, false, '0', 'false', 'Sound off. Press to turn on']);
+    d.getElementById('set-sound').checked = true; d.getElementById('set-sound').dispatchEvent(new w.Event('change', { bubbles:true }));
+    check('and the tick box in Table settings is the same switch', [w.TRSound.enabled(), w.G.settings.sound, btn.getAttribute('aria-pressed'), w.localStorage.getItem('house_edge_sound_v1')], [true, true, 'true', '1']);
+    // what each moment asks of the sound engine
+    const heard = []; w.TRSound.play = (n, o) => { heard.push([n, o || null]); return true; };
+    const ask = (fn, ...a) => { heard.length = 0; w[fn](...a); return heard.map(x => x[0]); };
+    check('a chip: the clack of clay', ask('sfxChip'), ['chip']);
+    check('win, lose, point and push each have their own', [ask('sfxWin'), ask('sfxLose'), ask('sfxPoint'), ask('sfxPush')], [['win'], ['lose'], ['point'], ['push']]);
+    check('picking up a die, dropping it and letting it skip', [ask('sfxLift'), ask('sfxDrop', 0.8), ask('sfxTick', 0.5)], [['lift'], ['bounce'], ['bounce']]);
+    check('a die against the back wall is a wall, and harder throws are louder', [ask('sfxWall', 0.9), heard[0][1].v > (ask('sfxWall', 0.2), heard[0][1].v)], [['wall'], true]);
+    check('the throw: a shake in the hand, then a whoosh', [ask('sfxRoll'), ask('sfxWhoosh', 1500)], [['rattle'], ['swish']]);
+    check('the stickman’s sweep: a swish and a tap', ask('sfxSweep'), ['swish', 'tap']);
+    w.G.settings.turbo = true;
+    check('turbo: the throw and the sweep are skipped', [ask('sfxRoll'), ask('sfxSweep')], [[], []]);
+    w.G.settings.turbo = false;
+    check('no sound feature of the old kind is left (no raw noise helper)', [typeof w.noiseTick, typeof w.tone, typeof w.toneAt], ['undefined', 'function', 'function']);
+    w.close();
+    // the stickman's call
+    const calls = async (opts, rolls, sound, turbo) => {
+      const x = load({ [K.exp]:{ level:'pro' }, [K.bank]:{ balance:100000 } }); talk(x); x.G.settings.sound = sound; x.G.settings.turbo = turbo;
+      const out = [];
+      for(const [a, b2, pre] of rolls){ if(pre) hit(x, 'pass'); await roll(x, a, b2); out.push(x.document.getElementById('stick-call').textContent); }
+      const on = x.document.getElementById('stick-call').classList.contains('on');
+      x.close(); return { out, on };
+    };
+    const r1 = await calls({}, [[3, 4, true], [2, 2, true], [2, 2, false], [1, 1, false], [5, 6, false]], true, false);
+    check('a come-out 7 is a winner', r1.out[0], 'Seven! Front line winner!');
+    check('a hard four sets the point and says so', r1.out[1], 'Hard four! The point is 4.');
+    check('making the hard point is called as a winner', r1.out[2], 'Hard four! Winner, pay the line.');
+    check('and the small ones keep their traditional names', [r1.out[3], r1.out[4]], ['Aces! Snake eyes!', 'Yo-eleven!']);
+    check('the caption is showing for the last call', r1.on, true);
+    const r2 = await calls({}, [[4, 2, true], [4, 3, false], [6, 6, true], [1, 2, false], [3, 2, true], [4, 4, false]], true, false);
+    check('an easy six sets the point (not hard)', r2.out[0], 'Six! The point is 6.');
+    check('a 7 with the point on is a seven out', r2.out[1], 'Seven out! Line away.');
+    check('boxcars on the come-out: midnight', r2.out[2], 'Midnight! Boxcars!');
+    check('ace-deuce: three craps', r2.out[3], 'Ace-deuce! Three craps!');
+    check('a five sets the point, and a hard eight rolled for another number is just called', [r2.out[4], r2.out[5]], ['Five! No field five! The point is 5.', 'Hard eight!']);
+    const r3 = await calls({}, [[3, 4, true], [2, 2, true]], false, false);
+    check('with the sound off the stickman says nothing', r3.out, ['', '']);
+    const r4 = await calls({}, [[3, 4, true], [2, 2, true]], true, true);
+    check('and in turbo he stays quiet too', r4.out, ['', '']);
+  }
+
   // ======================================================== 15. fuzz: random play, invariants after every action
   for(const seed of [11, 202, 3033, 4044]){
     const w = load({ [K.exp]:{ level:'pro' }, [K.bank]:{ balance:100000 } }); turbo(w);
     const R = rng(seed), pick = a => a[Math.floor(R()*a.length)], base = 100000;
     const keys = ['pass','dontpass','come','dontcome','field','hard4','hard6','hard8','hard10','any7','anycraps','yo','aces','boxcars','acedeuce','place4','place5','place6','place8','place9','place10','buy4','buy5','buy6','buy8','buy9','buy10'];
-    w.G.settings.keep = (seed % 2 === 1); w.G.settings.autopress = (seed === 3033); w.renderAll();
+    w.G.settings.keep = (seed % 2 === 1); w.G.settings.autopress = (seed === 3033); if(seed === 202 || seed === 3033) w.setWork(true, false); if(seed === 11 || seed === 3033) w.setMaxOdds(true); w.renderAll();
     let bad = [], rolls = 0, actions = 0;
     for(let i=0;i<300 && bad.length<5;i++){
       const r = R(); actions++;
@@ -2113,6 +3149,10 @@ function invariants(w, base, label){
       else if(r < 0.59){ click(w, $(w,'btn-clear')); }
       else if(r < 0.62){ click(w, $(w,'btn-rebet')); }
       else if(r < 0.65){ if(R() < 0.5) w.doPress(pick([4,5,6,8,9,10])); else w.placeOnSpot(pick(keys)); }
+      else if(r < 0.68){ w.setWork(R() < 0.5, false); }
+      else if(r < 0.70){ w.setMaxOdds(R() < 0.6); }
+      else if(r < 0.72){ if(R() < 0.5) click(w, $(w,'btn-maxodds')); else { const mb = w.document.querySelector('.spot .odds-max:not([hidden])'); if(mb) click(w, mb); } }
+      else if(r < 0.76){ const els = [...w.document.querySelectorAll('.spot:not([hidden]), .num, .num .tag')]; els[Math.floor(R()*els.length)].dispatchEvent(new w.MouseEvent('contextmenu', { bubbles:true, cancelable:true, button:2 })); }
       else { rolls++; await roll(w, 1+Math.floor(R()*6), 1+Math.floor(R()*6)); }
       bad = bad.concat(invariants(w, base, 'seed '+seed+' step '+i), domMatchesState(w, 'seed '+seed+' step '+i));
       if(w.errs.length){ bad.push('script error '+w.errs[0]); }
