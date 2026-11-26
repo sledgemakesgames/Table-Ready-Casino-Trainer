@@ -65,6 +65,7 @@
   --brass:#D6A94B; --brass-bright:#F0C46B;
   --coral:#E15D45; --sage:#3FA484; --sage-bright:#65C7A3; --dusty-blue:#5B8DE0; --violet:#9C82E0;
   --text:#EDEEF0; --text-muted:#8A8F98; --line:rgba(237,238,240,0.09);
+  --brass-rgb:214,169,75; --brass-bright-rgb:240,196,107; --sage-bright-rgb:101,199,163; --coral-rgb:225,93,69; --text-rgb:237,238,240; --dusty-blue-rgb:91,141,224; --violet-rgb:156,130,224;   /* the same colors as r,g,b, so a tint of them follows the theme */
   --ease-out:cubic-bezier(.16,1,.3,1); --spring:cubic-bezier(.34,1.56,.64,1);
 }
 *{box-sizing:border-box;}
@@ -91,7 +92,7 @@ details.fold[open]>summary{margin-bottom:12px;}
   .side-panels{display:block;position:sticky;top:20px;}
 }
 button{font-family:'Inter',sans-serif;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-size:13px;cursor:pointer;transition:border-color 140ms ease,background 140ms ease,transform 120ms ease,opacity 140ms ease;}
-button:hover{border-color:rgba(237,238,240,0.22);}
+button:hover{border-color:rgba(var(--text-rgb),0.22);}
 button:active{transform:scale(0.97);}
 button.primary{background:var(--brass);color:#20160A;border:none;font-weight:600;}
 button.primary:hover{background:var(--brass-bright);}
@@ -121,7 +122,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .panel h2.section{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 12px;}
 .check-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;}
 .foot-note{font-size:12px;color:var(--text-muted);line-height:1.6;margin-top:6px;}
-.hint-line{text-align:center;font-size:12px;color:var(--brass-bright);background:rgba(214,169,75,0.08);border:1px solid rgba(214,169,75,0.22);border-radius:10px;padding:8px 12px;margin:0 0 12px;}
+.hint-line{text-align:center;font-size:12px;color:var(--brass-bright);background:rgba(var(--brass-rgb),0.08);border:1px solid rgba(var(--brass-rgb),0.22);border-radius:10px;padding:8px 12px;margin:0 0 12px;}
 
 .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
 .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;}
@@ -129,9 +130,9 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .seg button:hover{color:var(--text);}
 .seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--brass-bright);box-shadow:0 1px 0 rgba(255,255,255,0.05) inset,0 2px 8px -3px rgba(0,0,0,0.5);}
 .toggle-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:11px;font-size:12.5px;font-weight:600;color:var(--text-muted);}
-.toggle-btn .dot{width:8px;height:8px;border-radius:50%;background:rgba(237,238,240,0.25);transition:background 200ms ease,box-shadow 200ms ease;}
-.toggle-btn[aria-pressed="true"]{color:var(--brass-bright);border-color:rgba(240,196,107,0.35);}
-.toggle-btn[aria-pressed="true"] .dot{background:var(--brass-bright);box-shadow:0 0 8px rgba(240,196,107,0.6);}
+.toggle-btn .dot{width:8px;height:8px;border-radius:50%;background:rgba(var(--text-rgb),0.25);transition:background 200ms ease,box-shadow 200ms ease;}
+.toggle-btn[aria-pressed="true"]{color:var(--brass-bright);border-color:rgba(var(--brass-bright-rgb),0.35);}
+.toggle-btn[aria-pressed="true"] .dot{background:var(--brass-bright);box-shadow:0 0 8px rgba(var(--brass-bright-rgb),0.6);}
 .table-felt.no-edge .edge{display:none;}
 .seg-label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
 
@@ -139,10 +140,10 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .table-felt{position:relative;margin-bottom:16px;background:radial-gradient(ellipse 110% 60% at 50% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 55%),radial-gradient(ellipse 130% 90% at 50% 100%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 62%),linear-gradient(180deg, #131519 0%, var(--felt) 100%);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 1px 0 rgba(255,255,255,0.03) inset,0 20px 40px -24px rgba(0,0,0,0.6);}
 
 .status-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
-.phase-pill{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding:7px 13px;border-radius:999px;background:rgba(237,238,240,0.06);border:1px solid var(--line);transition:background 300ms ease,color 300ms ease,border-color 300ms ease;}
+.phase-pill{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding:7px 13px;border-radius:999px;background:rgba(var(--text-rgb),0.06);border:1px solid var(--line);transition:background 300ms ease,color 300ms ease,border-color 300ms ease;}
 .phase-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);transition:background 300ms ease,box-shadow 300ms ease;}
-.phase-pill.point{color:var(--brass-bright);background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);}
-.phase-pill.point .dot{background:var(--brass-bright);box-shadow:0 0 10px 1px rgba(240,196,107,0.6);}
+.phase-pill.point{color:var(--brass-bright);background:rgba(var(--brass-rgb),0.1);border-color:rgba(var(--brass-rgb),0.3);}
+.phase-pill.point .dot{background:var(--brass-bright);box-shadow:0 0 10px 1px rgba(var(--brass-bright-rgb),0.6);}
 .on-table{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;}
 .on-table b{color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;}
 
@@ -178,13 +179,13 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .dice-swatch .d2{--d:30px;}
 @media(max-width:560px){ .dice-swatches{gap:2px;} .dice-swatch{padding:3px;} }
 .dice-swatch:hover{transform:translateY(-1px);}
-.dice-swatch[aria-checked="true"]{border-color:var(--brass-bright);background:rgba(240,196,107,0.12);}
+.dice-swatch[aria-checked="true"]{border-color:var(--brass-bright);background:rgba(var(--brass-bright-rgb),0.12);}
 .dice-pick{position:absolute;left:10px;top:10px;z-index:5;padding:5px;border-radius:12px;line-height:0;background:rgba(8,9,11,0.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);cursor:pointer;transition:transform 180ms var(--spring),border-color 160ms ease;}
 .dice-pick .d2{--d:26px;box-shadow:inset 0 0 6px rgba(0,0,0,0.12),inset 0 1px 0 var(--die-shine),0 1px 3px rgba(0,0,0,0.35);}
-.dice-pick:hover{transform:rotate(-8deg) scale(1.06);border-color:rgba(240,196,107,0.4);}
+.dice-pick:hover{transform:rotate(-8deg) scale(1.06);border-color:rgba(var(--brass-bright-rgb),0.4);}
 .keep-toggle,.work-toggle{position:absolute;right:10px;bottom:10px;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:6px 11px 6px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:rgba(8,9,11,0.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);color:var(--text-muted);}
-.keep-toggle[aria-checked="true"],.work-toggle[aria-checked="true"]{color:var(--brass-bright);border-color:rgba(240,196,107,0.4);}
-.keep-toggle .sw,.work-toggle .sw{width:26px;height:15px;border-radius:99px;background:rgba(237,238,240,0.2);position:relative;transition:background 200ms ease;flex-shrink:0;}
+.keep-toggle[aria-checked="true"],.work-toggle[aria-checked="true"]{color:var(--brass-bright);border-color:rgba(var(--brass-bright-rgb),0.4);}
+.keep-toggle .sw,.work-toggle .sw{width:26px;height:15px;border-radius:99px;background:rgba(var(--text-rgb),0.2);position:relative;transition:background 200ms ease;flex-shrink:0;}
 .keep-toggle .sw i,.work-toggle .sw i{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:transform 260ms var(--spring);}
 .keep-toggle[aria-checked="true"] .sw,.work-toggle[aria-checked="true"] .sw{background:var(--brass);}
 .keep-toggle[aria-checked="true"] .sw i,.work-toggle[aria-checked="true"] .sw i{transform:translateX(11px);}
@@ -195,7 +196,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .work-toggle:disabled:active{transform:none;}
 /* the small ON / OFF marker a casino puts on a bet that is working (or not) for the come-out roll */
 .wk{display:inline-block;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:8.5px;letter-spacing:0.7px;line-height:1;padding:2px 5px;border-radius:99px;vertical-align:middle;white-space:nowrap;}
-.wk.off{color:var(--text-muted);background:rgba(237,238,240,0.09);border:1px solid var(--line);}
+.wk.off{color:var(--text-muted);background:rgba(var(--text-rgb),0.09);border:1px solid var(--line);}
 .wk.on{color:#20160A;background:var(--brass-bright);border:1px solid transparent;}
 .num-stack .wk{margin-top:4px;}
 .spot .spot-chips .wk{align-self:center;}
@@ -229,7 +230,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .dice-stage.hand .table-wall{transform:translateX(0);opacity:1;}
 .table-wall.hit{animation:wallHit 260ms ease-out;}
 @keyframes wallHit{0%{filter:brightness(1.9);transform:translateX(3px);}35%{transform:translateX(-1px);}100%{filter:none;transform:translateX(0);}}
-.shoot-hint{position:absolute;left:50%;top:10px;z-index:1;transform:translate(-50%,-6px);padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:0.2px;color:var(--brass-bright);background:rgba(0,0,0,0.42);border:1px solid rgba(240,196,107,0.3);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity 220ms ease,transform 320ms var(--spring);}
+.shoot-hint{position:absolute;left:50%;top:10px;z-index:1;transform:translate(-50%,-6px);padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:0.2px;color:var(--brass-bright);background:rgba(0,0,0,0.42);border:1px solid rgba(var(--brass-bright-rgb),0.3);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity 220ms ease,transform 320ms var(--spring);}
 .shoot-hint::after{content:' \2192';}
 .dice-stage.hand .shoot-hint{opacity:1;transform:translate(-50%,0);}
 .dice-stage.hand.flying .shoot-hint{opacity:0;}
@@ -261,11 +262,11 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .callout.in .big,.callout.in .sub{animation:calloutIn 420ms var(--ease-out);}
 @keyframes calloutIn{0%{opacity:0;transform:translateY(8px);}100%{opacity:1;transform:translateY(0);}}
 .roll-strip{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:28px;margin:8px 0 12px;}
-.roll-strip .rp{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;background:rgba(237,238,240,0.07);border:1px solid var(--line);color:var(--text-muted);animation:pillIn 320ms var(--spring);}
-.roll-strip .rp.seven{background:rgba(225,93,69,0.16);border-color:rgba(225,93,69,0.4);color:var(--coral);}
-.roll-strip .rp.nat{background:rgba(101,199,163,0.13);border-color:rgba(101,199,163,0.35);color:var(--sage-bright);}
-.roll-strip .rp.craps{background:rgba(156,130,224,0.14);border-color:rgba(156,130,224,0.35);color:var(--violet);}
-.roll-strip .rp.pt{background:rgba(214,169,75,0.14);border-color:rgba(214,169,75,0.4);color:var(--brass-bright);}
+.roll-strip .rp{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;background:rgba(var(--text-rgb),0.07);border:1px solid var(--line);color:var(--text-muted);animation:pillIn 320ms var(--spring);}
+.roll-strip .rp.seven{background:rgba(var(--coral-rgb),0.16);border-color:rgba(var(--coral-rgb),0.4);color:var(--coral);}
+.roll-strip .rp.nat{background:rgba(var(--sage-bright-rgb),0.13);border-color:rgba(var(--sage-bright-rgb),0.35);color:var(--sage-bright);}
+.roll-strip .rp.craps{background:rgba(var(--violet-rgb),0.14);border-color:rgba(var(--violet-rgb),0.35);color:var(--violet);}
+.roll-strip .rp.pt{background:rgba(var(--brass-rgb),0.14);border-color:rgba(var(--brass-rgb),0.4);color:var(--brass-bright);}
 @keyframes pillIn{0%{transform:scale(0.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
 
 /* ---- chips (the same flat chips the other tables use) ---- */
@@ -288,7 +289,7 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .puck.on{background:#F6F4EC;color:#16181C;border-color:rgba(0,0,0,0.25);}
 .numbers{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
 .num{position:relative;min-height:166px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015));border:1px solid var(--line);padding:9px 6px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:border-color 220ms ease,background 220ms ease,box-shadow 220ms ease,transform 220ms var(--ease-out);overflow:hidden;}
-.num.is-point{border-color:rgba(240,196,107,0.55);background:linear-gradient(180deg,rgba(214,169,75,0.13),rgba(214,169,75,0.03));box-shadow:0 0 0 1px rgba(240,196,107,0.18),0 8px 24px -10px rgba(214,169,75,0.4);}
+.num.is-point{border-color:rgba(var(--brass-bright-rgb),0.55);background:linear-gradient(180deg,rgba(var(--brass-rgb),0.13),rgba(var(--brass-rgb),0.03));box-shadow:0 0 0 1px rgba(var(--brass-bright-rgb),0.18),0 8px 24px -10px rgba(var(--brass-rgb),0.4);}
 .num .num-label{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;line-height:1;letter-spacing:-0.5px;position:relative;z-index:1;pointer-events:none;}
 .num .num-sub{font-size:9.5px;color:var(--text-muted);margin-top:3px;line-height:1.35;position:relative;z-index:1;pointer-events:none;}
 .num .num-stack{position:relative;z-index:1;margin-top:auto;min-height:34px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;pointer-events:none;}
@@ -298,13 +299,13 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .pb-switch button:hover{color:var(--text);border:none;}
 .pb-switch button[aria-pressed="true"]{background:var(--panel-2);color:var(--brass-bright);}
 .pb-switch button:disabled{opacity:0.55;cursor:not-allowed;}
-.tag.press{background:rgba(214,169,75,0.16);border-color:rgba(214,169,75,0.5);color:var(--brass-bright);animation:pressIn 360ms var(--spring);}
+.tag.press{background:rgba(var(--brass-rgb),0.16);border-color:rgba(var(--brass-rgb),0.5);color:var(--brass-bright);animation:pressIn 360ms var(--spring);}
 .tag.press:hover{border-color:var(--brass-bright);}
 @keyframes pressIn{0%{transform:scale(0.7);opacity:0;}100%{transform:scale(1);opacity:1;}}
 .press-row{position:relative;z-index:3;margin-top:6px;}
 .tag .stack{margin-left:2px;}
-.tag{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;font-size:10.5px;font-weight:600;padding:3px 4px;border-radius:7px;line-height:1.2;background:rgba(101,199,163,0.13);border:1px solid rgba(101,199,163,0.34);color:var(--sage-bright);font-variant-numeric:tabular-nums;}
-.tag.dc{background:rgba(156,130,224,0.13);border-color:rgba(156,130,224,0.36);color:var(--violet);}
+.tag{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;font-size:10.5px;font-weight:600;padding:3px 4px;border-radius:7px;line-height:1.2;background:rgba(var(--sage-bright-rgb),0.13);border:1px solid rgba(var(--sage-bright-rgb),0.34);color:var(--sage-bright);font-variant-numeric:tabular-nums;}
+.tag.dc{background:rgba(var(--violet-rgb),0.13);border-color:rgba(var(--violet-rgb),0.36);color:var(--violet);}
 .tag em{font-style:normal;opacity:0.85;}
 .tag .amt{font-size:11px;}
 .tag .tl{font-weight:700;}
@@ -315,8 +316,8 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .spot::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(180px circle at var(--mx) var(--my),rgba(255,255,255,0.09),transparent 65%);opacity:0;transition:opacity 220ms ease;pointer-events:none;}
 .spot:hover::after,.num:hover::after{opacity:1;}
 .num::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(180px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,0.09),transparent 65%);opacity:0;transition:opacity 220ms ease;pointer-events:none;}
-.spot:hover:not(.off),.num:hover:not(.off){border-color:rgba(237,238,240,0.2);transform:translateY(-2px);}
-.spot.has-bet{border-color:rgba(214,169,75,0.45);background:linear-gradient(180deg,rgba(214,169,75,0.11),rgba(214,169,75,0.03));}
+.spot:hover:not(.off),.num:hover:not(.off){border-color:rgba(var(--text-rgb),0.2);transform:translateY(-2px);}
+.spot.has-bet{border-color:rgba(var(--brass-rgb),0.45);background:linear-gradient(180deg,rgba(var(--brass-rgb),0.11),rgba(var(--brass-rgb),0.03));}
 /* The Pass Line is the bet to begin with, so its name is gold. Nothing else about the card is different from any other bet. */
 .spot[data-key="pass"] .spot-title{color:var(--brass-bright);}
 .spot.off,.num.off{opacity:0.45;}
@@ -336,22 +337,22 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .egg-p.on .egg-chip{width:17px;margin-right:7px;opacity:1;transform:none;}
 .spot-pay{font-size:11px;color:var(--text-muted);position:relative;pointer-events:none;line-height:1.35;}
 .edge{display:inline-block;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;letter-spacing:0.2px;padding:2px 7px;border-radius:999px;margin-top:3px;align-self:flex-start;pointer-events:none;position:relative;border:1px solid transparent;font-variant-numeric:tabular-nums;}
-.edge.e-good{background:rgba(101,199,163,0.14);color:var(--sage-bright);border-color:rgba(101,199,163,0.32);}
-.edge.e-ok{background:rgba(214,169,75,0.14);color:var(--brass-bright);border-color:rgba(214,169,75,0.34);}
+.edge.e-good{background:rgba(var(--sage-bright-rgb),0.14);color:var(--sage-bright);border-color:rgba(var(--sage-bright-rgb),0.32);}
+.edge.e-ok{background:rgba(var(--brass-rgb),0.14);color:var(--brass-bright);border-color:rgba(var(--brass-rgb),0.34);}
 .edge.e-meh{background:rgba(225,140,69,0.14);color:#EBA06A;border-color:rgba(225,140,69,0.34);}
-.edge.e-bad{background:rgba(225,93,69,0.14);color:var(--coral);border-color:rgba(225,93,69,0.34);}
+.edge.e-bad{background:rgba(var(--coral-rgb),0.14);color:var(--coral);border-color:rgba(var(--coral-rgb),0.34);}
 .spot .spot-chips{position:absolute;right:12px;bottom:10px;display:flex;align-items:flex-end;gap:8px;z-index:0;pointer-events:none;}
 .spot .spot-chips .amt{align-self:center;}
 .spot-x{position:absolute;top:6px;right:6px;z-index:3;width:24px;height:24px;border-radius:50%;padding:0;font-size:14px;line-height:1;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);border:1px solid var(--line);color:var(--text-muted);}
 .spot.has-bet .spot-x.can,.num.has-bet .spot-x.can{display:flex;}
-.spot-x:hover{color:var(--coral);border-color:rgba(225,93,69,0.5);}
+.spot-x:hover{color:var(--coral);border-color:rgba(var(--coral-rgb),0.5);}
 .odds-row{position:relative;z-index:3;display:none;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
 .odds-row.show{display:flex;padding-right:104px;}
 .odds-stack{display:inline-flex;align-items:flex-end;gap:6px;min-height:20px;pointer-events:none;}
 .odds-stack .amt{font-size:12px;color:var(--sage-bright);}
 .odds-stack .lab{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);font-weight:700;align-self:center;}
-.odds-btn{padding:5px 10px;border-radius:8px;font-size:11.5px;font-weight:600;background:rgba(101,199,163,0.13);border-color:rgba(101,199,163,0.38);color:var(--sage-bright);font-variant-numeric:tabular-nums;}
-.odds-btn:hover{border-color:rgba(101,199,163,0.7);}
+.odds-btn{padding:5px 10px;border-radius:8px;font-size:11.5px;font-weight:600;background:rgba(var(--sage-bright-rgb),0.13);border-color:rgba(var(--sage-bright-rgb),0.38);color:var(--sage-bright);font-variant-numeric:tabular-nums;}
+.odds-btn:hover{border-color:rgba(var(--sage-bright-rgb),0.7);}
 .odds-btn small{font-weight:500;opacity:0.8;}
 .odds-x{width:24px;height:24px;border-radius:50%;padding:0;font-size:13px;line-height:1;}
 /* the green Max odds buttons: one tap puts the most the table allows behind a bet */
@@ -370,8 +371,8 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .board .wide{grid-column:1 / -1;}
 .field-nums{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;position:relative;pointer-events:none;}
 .field-nums span{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;min-width:26px;text-align:center;padding:3px 0;border-radius:6px;background:rgba(255,255,255,0.06);}
-.field-nums span.x2,.field-nums span.x3{background:rgba(214,169,75,0.18);color:var(--brass-bright);}
-.props{margin-top:14px;padding-top:14px;border-top:1px dashed rgba(237,238,240,0.12);}
+.field-nums span.x2,.field-nums span.x3{background:rgba(var(--brass-rgb),0.18);color:var(--brass-bright);}
+.props{margin-top:14px;padding-top:14px;border-top:1px dashed rgba(var(--text-rgb),0.12);}
 .props h3,.board-h{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 8px;}
 .props-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .props-grid .spot{min-height:92px;padding:9px 10px;}
@@ -384,8 +385,54 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .props-grid .spot-title{font-size:12.5px;}
 .props-grid .spot .spot-chips{right:8px;bottom:8px;}
 
+/* ---- hops: one-roll bets on two exact dice ---- */
+.px-label{display:none;}
+.hops{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+.hops[hidden]{display:none;}
+.hop-list{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:30px;}
+.hop-none{font-size:11.5px;color:var(--text-muted);}
+.hop-more{font-size:11px;color:var(--text-muted);font-weight:600;}
+.hop-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 4px 3px 6px;border-radius:999px;border:1px solid rgba(var(--brass-rgb),0.5);background:rgba(var(--brass-rgb),0.12);font-variant-numeric:tabular-nums;}
+.hop-chip .d2{--d:14px;border-radius:4px;padding:2px;box-shadow:none;}
+.hop-chip .hc-amt{font-family:'Space Grotesk',sans-serif;font-size:12px;color:var(--brass-bright);}
+.hop-x{width:18px;height:18px;border-radius:50%;padding:0;font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);border:1px solid var(--line);color:var(--text-muted);}
+.hop-x:hover{color:var(--coral);border-color:rgba(var(--coral-rgb),0.5);}
+.hop-open{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;min-height:42px;padding:6px 14px;border-radius:12px;border:1px solid rgba(var(--brass-bright-rgb),0.65);background:rgba(var(--brass-rgb),0.12);color:var(--brass-bright);font-size:13px;font-weight:600;}
+.hop-open:hover{background:rgba(var(--brass-rgb),0.2);border-color:var(--brass-bright);}
+.hop-open.has-bet{background:rgba(var(--brass-rgb),0.2);}
+.hop-open .hop-art{display:inline-flex;gap:3px;}
+.hop-open .d2{--d:16px;border-radius:4px;padding:2px;box-shadow:none;}
+.hop-open .hop-t-close{display:none;}
+.props.hops-open .hop-open .hop-t-open{display:none;}
+.props.hops-open .hop-open .hop-t-close{display:inline;}
+.hop-picker{border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,0.2);padding:10px;display:flex;flex-direction:column;gap:8px;}
+.hop-picker[hidden]{display:none;}
+.hp-top{font-size:11.5px;line-height:1.35;color:var(--text-muted);}
+.hp-top b{font-family:'Space Grotesk',sans-serif;color:var(--brass-bright);text-transform:uppercase;letter-spacing:0.6px;font-size:11px;}
+.hp-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
+.hp-h{display:flex;align-items:center;justify-content:center;min-height:20px;}
+.hp-h .d2{--d:16px;border-radius:4px;padding:2px;box-shadow:none;}
+.hp-cell{position:relative;min-height:34px;padding:0;border-radius:8px;border:1px solid var(--line);background:rgba(var(--text-rgb),0.05);color:var(--text);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11.5px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}
+@media (max-width:1319px){.hp-cell{min-height:42px;font-size:12.5px;}}
+.hp-cell.hard{border-color:rgba(var(--brass-rgb),0.45);background:rgba(var(--brass-rgb),0.12);color:var(--brass-bright);}
+.hp-cell:hover:not(:disabled),.hp-cell.sel{border-color:var(--brass-bright);background:rgba(var(--brass-rgb),0.24);}
+.hp-cell.has-bet{background:var(--brass);border-color:var(--brass-bright);color:#20160A;}
+.hp-cell:disabled{opacity:0.5;cursor:not-allowed;}
+.hp-info{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"dice main down" "dice sub down";gap:2px 9px;align-items:center;min-height:42px;}
+.hp-info .hi-dice{grid-area:dice;display:inline-flex;gap:3px;}
+.hp-info .hi-dice .d2{--d:22px;}
+.hp-info .hi-main{grid-area:main;font-size:12.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.hp-info .hi-main .edge{margin-top:0;}
+.hp-info .hi-pay{color:var(--text-muted);font-size:12px;}
+.hp-info .hi-pay b{color:var(--brass-bright);font-family:'Space Grotesk',sans-serif;}
+.hp-info .hi-sub{grid-area:sub;font-size:11px;line-height:1.35;color:var(--text-muted);}
+.hop-open .hop-sum{display:none;}
+.hp-info .hi-down{grid-area:down;align-self:center;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:600;color:var(--coral);border-color:rgba(var(--coral-rgb),0.4);background:rgba(var(--coral-rgb),0.08);}
+.hop-open.flash-win{animation:flashWin 900ms ease-out;}
+.hop-open.flash-lose{animation:flashLose 900ms ease-out;}
+
 /* ---- coach + tray ---- */
-.coach{margin-top:14px;background:rgba(91,141,224,0.08);border:1px solid rgba(91,141,224,0.25);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;}
+.coach{margin-top:14px;background:rgba(var(--dusty-blue-rgb),0.08);border:1px solid rgba(var(--dusty-blue-rgb),0.25);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;}
 .coach .label{display:block;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11px;color:var(--dusty-blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
 .coach p{margin:0;} .coach p + p{margin-top:6px;}
 .coach .next{color:var(--brass-bright);}
@@ -394,14 +441,14 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .chip-btn{--c:#2E8F63;width:40px;height:40px;border-radius:50%;padding:0;flex-shrink:0;background:var(--c);border:2px solid rgba(255,255,255,0.22);color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;box-shadow:0 3px 8px -3px rgba(0,0,0,0.5);transition:transform 160ms var(--spring),box-shadow 160ms ease,border-color 160ms ease;}
 .chip-btn:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.22);}
 .chip-btn:active{transform:translateY(0) scale(0.95);}
-.chip-btn.active{transform:translateY(-4px);border-color:var(--brass-bright);box-shadow:0 0 0 2px rgba(240,196,107,0.35),0 6px 12px -4px rgba(0,0,0,0.5);}
+.chip-btn.active{transform:translateY(-4px);border-color:var(--brass-bright);box-shadow:0 0 0 2px rgba(var(--brass-bright-rgb),0.35),0 6px 12px -4px rgba(0,0,0,0.5);}
 .chip-btn.c5{--c:#B33F3F;} .chip-btn.c10{--c:#2F6FB0;} .chip-btn.c25{--c:#2E8F63;} .chip-btn.c50{--c:#3A3D44;}
 .chip-btn.c100{--c:#7C5CC4;} .chip-btn.c500{--c:#EDEDE6;color:#1A1A1A;border-color:rgba(0,0,0,0.25);} .chip-btn.c1000{--c:#D97B29;}
 .chip-btn.c500.active{border-color:var(--brass-bright);}
 .tray-actions{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;}
 .tray-actions button{font-size:12.5px;}
-.roll-btn{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:0.2px;padding:13px 34px;border-radius:13px;min-width:170px;box-shadow:0 8px 20px -8px rgba(214,169,75,0.55);transition:transform 160ms var(--spring),box-shadow 200ms ease,background 160ms ease;}
-.roll-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 26px -8px rgba(240,196,107,0.65);}
+.roll-btn{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:0.2px;padding:13px 34px;border-radius:13px;min-width:170px;box-shadow:0 8px 20px -8px rgba(var(--brass-rgb),0.55);transition:transform 160ms var(--spring),box-shadow 200ms ease,background 160ms ease;}
+.roll-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 26px -8px rgba(var(--brass-bright-rgb),0.65);}
 .roll-btn kbd{font-family:'Inter',sans-serif;font-weight:500;font-size:10.5px;opacity:0.65;margin-left:8px;border:1px solid rgba(32,22,10,0.35);border-radius:5px;padding:1px 5px;}
 .tray-hint{text-align:center;font-size:11.5px;color:var(--text-muted);margin:0;}
 /* the balance, repeated inside the betting rail so it is always in view next to the chips */
@@ -455,9 +502,9 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .spot.flash-win,.num.flash-win{animation:flashWin 900ms ease-out;}
 .spot.flash-lose,.num.flash-lose{animation:flashLose 900ms ease-out;}
 .spot.flash-push,.num.flash-push{animation:flashPush 900ms ease-out;}
-@keyframes flashWin{0%{box-shadow:0 0 0 0 rgba(101,199,163,0.7);background:rgba(101,199,163,0.22);}100%{box-shadow:0 0 0 14px rgba(101,199,163,0);}}
-@keyframes flashLose{0%{box-shadow:0 0 0 0 rgba(225,93,69,0.6);background:rgba(225,93,69,0.2);}100%{box-shadow:0 0 0 14px rgba(225,93,69,0);}}
-@keyframes flashPush{0%{box-shadow:0 0 0 0 rgba(91,141,224,0.6);}100%{box-shadow:0 0 0 14px rgba(91,141,224,0);}}
+@keyframes flashWin{0%{box-shadow:0 0 0 0 rgba(var(--sage-bright-rgb),0.7);background:rgba(var(--sage-bright-rgb),0.22);}100%{box-shadow:0 0 0 14px rgba(var(--sage-bright-rgb),0);}}
+@keyframes flashLose{0%{box-shadow:0 0 0 0 rgba(var(--coral-rgb),0.6);background:rgba(var(--coral-rgb),0.2);}100%{box-shadow:0 0 0 14px rgba(var(--coral-rgb),0);}}
+@keyframes flashPush{0%{box-shadow:0 0 0 0 rgba(var(--dusty-blue-rgb),0.6);}100%{box-shadow:0 0 0 14px rgba(var(--dusty-blue-rgb),0);}}
 .spot.shake{animation:shake 360ms ease;}
 @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
 
@@ -471,18 +518,18 @@ h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-
 .ledger th:first-child,.ledger td:first-child{text-align:left;padding-left:0;}
 .ledger td{padding:7px 0 7px 8px;border-top:1px solid var(--line);text-align:right;}
 .ledger td.n{font-weight:600;}
-.ledger tr.total td{border-top:1px solid rgba(237,238,240,0.22);font-weight:700;}
+.ledger tr.total td{border-top:1px solid rgba(var(--text-rgb),0.22);font-weight:700;}
 .pos{color:var(--sage-bright);} .neg{color:var(--coral);}
 .ledger-empty{font-size:12.5px;color:var(--text-muted);line-height:1.6;margin:0;}
 .edge-guide{display:flex;flex-direction:column;gap:9px;}
 .eg-row{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:3px 10px;align-items:center;font-size:12px;}
 .eg-row .nm{font-weight:600;} .eg-row .pc{text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;font-variant-numeric:tabular-nums;}
-.eg-bar{grid-column:1 / -1;height:6px;border-radius:99px;background:rgba(237,238,240,0.07);overflow:hidden;}
+.eg-bar{grid-column:1 / -1;height:6px;border-radius:99px;background:rgba(var(--text-rgb),0.07);overflow:hidden;}
 .eg-bar i{display:block;height:100%;border-radius:99px;transition:width 600ms var(--ease-out);}
 .hist{display:flex;align-items:flex-end;gap:5px;height:92px;padding-top:8px;}
 .hist .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;min-width:0;}
 .hist .bar{width:100%;border-radius:5px 5px 2px 2px;background:var(--brass);min-height:2px;transition:height 500ms var(--ease-out);}
-.hist .exp{position:absolute;left:-1px;right:-1px;height:0;border-top:2px dashed rgba(237,238,240,0.38);pointer-events:none;}
+.hist .exp{position:absolute;left:-1px;right:-1px;height:0;border-top:2px dashed rgba(var(--text-rgb),0.38);pointer-events:none;}
 .hist .lab{font-size:10.5px;color:var(--text-muted);margin-top:4px;font-family:'Space Grotesk',sans-serif;font-weight:700;}
 .hist .cnt{font-size:9.5px;color:var(--text-muted);height:12px;font-variant-numeric:tabular-nums;}
 .how li{margin-bottom:6px;font-size:12.5px;line-height:1.55;color:var(--text);}
@@ -535,8 +582,8 @@ body{--gut:16px;}
   header .bankroll-pill{display:none;}
   .jump{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .jump::-webkit-scrollbar{display:none;}
-  .jump button{flex:1 0 auto;padding:7px 11px;font-size:12px;font-weight:600;border-radius:99px;background:rgba(237,238,240,0.06);color:var(--text-muted);white-space:nowrap;min-height:32px;}
-  .jump button[aria-current="true"]{background:rgba(214,169,75,0.16);border-color:rgba(214,169,75,0.45);color:var(--brass-bright);}
+  .jump button{flex:1 0 auto;padding:7px 11px;font-size:12px;font-weight:600;border-radius:99px;background:rgba(var(--text-rgb),0.06);color:var(--text-muted);white-space:nowrap;min-height:32px;}
+  .jump button[aria-current="true"]{background:rgba(var(--brass-rgb),0.16);border-color:rgba(var(--brass-rgb),0.45);color:var(--brass-bright);}
   /* the bets: one column of groups, in the order you want them on a phone (the page order is the table's, for the wide screen) */
   .bets{display:flex;flex-direction:column;gap:16px;}
   #grp-lines{order:1;} #grp-board{order:2;} #grp-numbers{order:3;} #props{order:4;} .coach{order:5;margin-top:0;}
@@ -1038,48 +1085,19 @@ body{--gut:16px;}
   .status-bar{grid-column:1;grid-row:1;margin:0 0 calc(3px + 7px * var(--f));}
   .roll-strip{grid-column:2;grid-row:1;margin:0 0 calc(3px + 7px * var(--f));min-height:0;height:28px;flex-wrap:nowrap;}
   .stage-wrap{grid-column:1 / -1;grid-row:2;}
-  .callout{grid-column:1 / -1;grid-row:3;margin:calc(3px + 9px * var(--f)) 0 0;min-height:calc(22px + 8px * var(--f));display:flex;align-items:baseline;justify-content:center;gap:12px;}
-  .callout .big{font-size:calc(19px + 6px * var(--f));}
-  .callout .sub{margin-top:0;min-height:0;font-size:calc(12px + 1.5px * var(--f));}
+  /* The result line has a fixed height: the headline never wraps and a long list of results takes up to two lines, so the table does not move after a roll. */
+  .callout{grid-column:1 / -1;grid-row:3;margin:calc(0px + 12px * var(--f)) 0 0;height:calc(24px + 9px * var(--f));min-height:0;display:flex;align-items:center;justify-content:center;gap:12px;overflow:hidden;}
+  .callout .big{font-size:calc(18px + 7px * var(--f));flex:none;white-space:nowrap;line-height:1.05;}
+  .callout .sub{margin-top:0;min-height:0;font-size:calc(10.5px + 2.5px * var(--f));line-height:1.12;flex:0 1 auto;min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
   #jump{display:none !important;}
   .dice-stage{--s:calc(38px + 34px * var(--f));--h:calc(var(--s) / 2);height:calc(94px + 160px * var(--f));}
   .die-shadow{left:calc(var(--s) * -.57);width:calc(var(--s) * 1.13);height:calc(var(--s) * .27);bottom:calc(var(--s) * -.23);}
-  .num{min-height:calc(119px + 47px * var(--f));padding:calc(5px + 5px * var(--f)) 6px calc(4px + 5px * var(--f));}
-  .num .num-label{font-size:calc(20px + 8px * var(--f));}
-  .num .num-sub{margin-top:1px;}
-  .num-edge{min-height:calc(14px + 4px * var(--f));}
-  .pb-switch{margin-top:calc(1px + 4px * var(--f));}
-  .num .num-stack{min-height:calc(20px + 12px * var(--f));}
-  #bets{display:flex;flex-wrap:wrap;gap:calc(6px + 5px * var(--f));align-items:stretch;}
-  #bets > #grp-numbers,#bets > #props,#bets > #coach{flex:0 0 100%;min-width:0;}
-  #bets > #grp-lines{flex:2 1 0;min-width:0;}
-  #bets > #grp-board{flex:3.5 1 0;min-width:0;}
-  .line-bets,.board{margin-top:0;gap:calc(6px + 5px * var(--f));height:100%;}
-  .board{grid-template-columns:1fr 1fr 1.5fr;}
-  .board .wide{grid-column:auto;}
-  .spot{min-height:calc(54px + 46px * var(--f));padding:calc(6px + 5px * var(--f)) 10px calc(5px + 5px * var(--f));}
-  .field-nums{gap:3px;margin-top:2px;}
-  .field-nums span{min-width:19px;font-size:10.5px;padding:2px 0;}
-  .props{margin-top:0;padding-top:calc(3px + 7px * var(--f));}
-  .props h3{margin-bottom:calc(2px + 5px * var(--f));}
-  .props-grid{gap:calc(5px + 4px * var(--f));}
-  .props-grid .spot{min-height:calc(46px + 42px * var(--f));padding:calc(4px + 5px * var(--f)) 9px;}
-  .prop-art{min-height:calc(22px + 6px * var(--f));margin-bottom:0;}
-  .prop-art .d2{--d:calc(20px + 6px * var(--f));}
-  .prop-big{font-size:calc(20px + 4px * var(--f));}
-  .prop-big.s{font-size:calc(15px + 2px * var(--f));}
-  .props-grid .spot-title{font-size:12px;}
-  .coach{margin-top:0;padding:calc(4px + 6px * var(--f)) 12px;line-height:1.45;min-height:calc(2.9em + 8px + 12px * var(--f));}   /* room for the longer sentence that comes after a roll, so the table does not move */
+  .coach{margin-top:0;padding:calc(4px + 6px * var(--f)) 12px;line-height:1.45;min-height:calc(2.9em + 10px + 12px * var(--f));}   /* room for the longer sentence that comes after a roll, so the table does not move */
   .coach .label{display:inline;margin:0 8px 0 0;}
   .coach p{display:inline;}
   .coach p + p{margin-top:0;}
 }
 @media (min-width:1320px) and (min-height:600px){
-  .props-grid .spot{flex-direction:row;flex-wrap:wrap;align-items:center;align-content:center;column-gap:7px;row-gap:2px;}
-  .props-grid .spot .prop-art{flex:0 0 auto;}
-  .props-grid .spot .spot-title:not(.sr-only){flex:0 1 auto;}
-  .props-grid .spot .spot-pay{flex:0 0 auto;}
-  .props-grid .spot .edge{margin-top:0;align-self:center;}
   .side-panels{display:flex;flex-direction:column;gap:8px;top:12px;}
   .side-panels .panel{margin:0;padding:12px 14px;border-radius:14px;}
   .side-panels h2.section,.side-panels details.fold>summary{font-size:14.5px;margin:0 0 8px;}
@@ -1098,7 +1116,7 @@ body{--gut:16px;}
 }
 @media (min-width:1320px) and (min-height:600px){
   /* Notices (welcome back, tips, messages) take the callout's own row under the dice while they show, so they never sit on the top bar or on the dice. */
-  .top-block > .hint-line{grid-column:1 / -1;grid-row:3;align-self:stretch;margin:calc(3px + 9px * var(--f)) 0 0;min-height:calc(22px + 8px * var(--f));height:auto;padding:0 14px;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1.25;z-index:7;text-wrap:balance;overflow:hidden;border-radius:999px;}
+  .top-block > .hint-line{grid-column:1 / -1;grid-row:3;align-self:stretch;margin:calc(0px + 12px * var(--f)) 0 0;min-height:calc(22px + 8px * var(--f));height:auto;padding:0 14px;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1.25;z-index:7;text-wrap:balance;overflow:hidden;border-radius:999px;}
   .top-block > .hint-line[style*="display: none"],.top-block > .hint-line[style*="display:none"]{display:none !important;}
   .top-block:has(> .hint-line:not([style*="display: none"]):not([style*="display:none"])) > .callout{visibility:hidden;}
   /* The dice total sits in the top corner beside the dice colour button, so it never covers the dice however short the tray is. */
@@ -1109,21 +1127,193 @@ body{--gut:16px;}
   /* The stickman's call comes up under the dice, where the tray is empty, instead of over their tops. */
   .stick-call{top:auto;bottom:calc(5px + 3px * var(--f));}
   /* The puck is sized to its lane, so it never sits on top of the number it marks. */
-  .puck-lane{height:calc(32px + 6px * var(--f));margin-bottom:calc(0px + 4px * var(--f));}
-  .puck{width:calc(27px + 7px * var(--f));height:calc(27px + 7px * var(--f));top:2px;font-size:9px;}
-  .line-bets .spot.has-bet .spot-pay{display:none;}
-  .odds-row.show{padding-right:0;margin-top:4px;gap:6px;}
-  .line-bets .spot.has-bet .spot-chips{top:8px;bottom:auto;right:10px;}
-  .line-bets .spot.has-bet:has(.odds-row.show) .edge{display:none;}   /* once odds are on, the card makes room for them: the edge is in the cost panel */
-  .line-bets .spot{min-height:calc(97px + 27px * var(--f));}   /* with odds on, the bet's chips sit up beside its name, not on top of the odds buttons */
-  .odds-btn{padding:3px 8px;font-size:11px;white-space:nowrap;}
-  .odds-max{padding:4px 10px;font-size:12px;}
 }
 @media (min-width:1320px) and (min-height:600px) and (max-width:1399px){
   .coach{min-height:calc(4.35em + 8px + 12px * var(--f));}   /* a narrower table: the sentence after a roll can take a third line */
-  .line-bets .spot{min-height:calc(113px + 27px * var(--f));}
 }
 
+/* ====== The table, laid out like a real craps layout: the numbers across the top, Come / Field under them, Don't Pass, and the Pass Line wrapped round the bottom.
+   Hard ways, one-roll bets and Hops share a panel on the right. Every colour is a theme colour. ====== */
+@media (min-width:1320px) and (min-height:600px){
+  #bets{--g:calc(6px + 5px * var(--f));display:grid;grid-template-columns:minmax(0,1fr) calc(216px + 44px * var(--f));column-gap:calc(8px + 6px * var(--f));row-gap:0;align-items:stretch;}
+  #bets:not(.has-props){grid-template-columns:minmax(0,1fr);}
+  #bets > *{min-width:0;}
+  #bets > #grp-numbers{grid-column:1;grid-row:1;margin:0 0 var(--g);}
+  #bets > #grp-board{grid-column:1;grid-row:2;margin:0 0 var(--g);display:flex;flex-direction:column;}
+  #bets > #grp-lines,#grp-lines > .line-bets{display:contents;}
+  #grp-lines > .grp-h,#grp-board > .grp-h,#grp-numbers > .grp-h{display:none;}
+  #bets .spot[data-key="dontpass"]{grid-column:1;grid-row:3;margin:0 0 var(--g);}
+  #bets > #props{grid-column:2;grid-row:1 / span 3;margin:0 0 var(--g);}
+  #bets .spot[data-key="pass"]{grid-column:1 / -1;grid-row:4;margin:0 0 var(--g);}
+  #bets > #coach{grid-column:1 / -1;grid-row:5;margin:0;}
+  #bets .spot:hover:not(.off){transform:none;}
+
+  /* the numbers: one joined strip, with the puck sitting on the corner of the point */
+  .numbers-wrap{margin-top:0;padding-top:calc(6px + 5px * var(--f));}
+  .puck-lane{height:0;margin:0;overflow:visible;z-index:7;}
+  .puck-lane .lane-label{display:none;}
+  .puck{top:calc(-4px - 1px * var(--f));margin-left:calc(24px + 12px * var(--f));width:calc(24px + 6px * var(--f));height:calc(24px + 6px * var(--f));font-size:8px;border-width:2px;}
+  .puck{transition:transform 640ms var(--spring),translate 640ms var(--spring),background 300ms ease,color 300ms ease;}
+  .puck:not(.on){translate:calc(-18px - 10px * var(--f)) 0;}   /* the OFF puck waits in the corner of the first box, clear of its number */
+  .numbers{gap:0;border:1px solid rgba(var(--text-rgb),0.14);border-radius:14px;overflow:hidden;background:rgba(0,0,0,0.2);}
+  .numbers .num{border:0;border-left:1px solid rgba(var(--text-rgb),0.1);border-radius:0;background:transparent;box-shadow:none;min-height:calc(98px + 38px * var(--f));padding:calc(4px + 4px * var(--f)) 6px calc(2px + 4px * var(--f));}
+  .numbers .num:first-child{border-left:0;}
+  .numbers .num:hover:not(.off){transform:none;background:rgba(var(--text-rgb),0.04);}
+  .numbers .num.has-bet{background:linear-gradient(180deg,rgba(var(--brass-rgb),0.13),rgba(var(--brass-rgb),0.03));}
+  .numbers .num.is-point{background:linear-gradient(180deg,rgba(var(--brass-bright-rgb),0.24),rgba(var(--brass-bright-rgb),0.07));box-shadow:inset 0 0 0 2px rgba(var(--brass-bright-rgb),0.75);}
+  /* A number's cell has one fixed layout. Come-bet tags take the place of the pay line and edge, and the Press button takes the place of the Place / Buy switch, so nothing makes the cell taller mid-hand. */
+  .numbers .num{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto minmax(0,1fr);grid-template-areas:"lab" "sub" "edge" "sw" "stk";justify-items:center;align-content:start;}
+  .num .num-label{grid-area:lab;}
+  .num .num-sub{grid-area:sub;}
+  .num .num-edge{grid-area:edge;justify-self:stretch;}
+  .num .pb-switch{grid-area:sw;}
+  .num .num-stack{grid-area:stk;align-self:end;}
+  /* Come / Don't Come bets that have travelled here: one tight line each, laid over the pay and edge rows with no height of their own, so a number can never make the strip taller. */
+  .num .tags{grid-area:sub / 1 / edge / 2;align-self:start;justify-self:stretch;margin-top:0;z-index:4;height:0;overflow:visible;gap:2px;}
+  .num .tags .tag{flex-wrap:nowrap;white-space:nowrap;min-width:0;padding:1px 3px;gap:3px;line-height:1.25;}
+  .num .tags .tag .stack,.num .tags .tag .wk{display:none;}
+  .num .tags .tag:has(.wk.off){opacity:.72;}
+  .num:has(.tags .tag + .tag) .pb-switch{visibility:hidden;}
+  .num .press-row{grid-area:sw;justify-self:stretch;align-self:center;margin-top:0;z-index:4;}
+  .num:has(.tags .tag) .num-sub,.num:has(.tags .tag) .num-edge{visibility:hidden;}
+  .num:has(.press-row .tag) .pb-switch{visibility:hidden;}
+  .num .num-label{font-size:calc(22px + 9px * var(--f));}
+  .num .num-sub{margin-top:1px;font-size:10.5px;}
+  .num-edge{min-height:calc(14px + 4px * var(--f));}
+  .pb-switch{margin-top:calc(1px + 4px * var(--f));}
+  /* a bet on a number sits in a row, so the cell is the same height with or without chips on it */
+  .num .num-stack{position:static;display:flex;flex-direction:row;flex-wrap:nowrap;justify-content:center;align-items:center;gap:5px;min-height:calc(26px + 4px * var(--f));height:calc(26px + 4px * var(--f));margin-top:0;}
+  .num .num-stack .amt{font-size:12.5px;}
+  .num .num-stack .wk{position:absolute;top:calc(5px + 2px * var(--f));left:6px;margin:0;}
+
+  /* Come, Don't Come and the Field */
+  #board{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.9fr);grid-template-rows:auto auto;gap:var(--g);margin:0;flex:1;height:auto;}
+  #board > .spot{margin:0;}
+  #board .spot[data-key="dontcome"]{grid-column:1;grid-row:1;}
+  #board .spot[data-key="come"]{grid-column:2;grid-row:1;}
+  #board .spot[data-key="field"]{grid-column:1 / -1;grid-row:2;}
+  #board .spot[data-key="come"],#board .spot[data-key="dontcome"]{align-items:center;justify-content:center;text-align:center;gap:calc(1px + 4px * var(--f));min-height:calc(46px + 22px * var(--f));padding:calc(4px + 4px * var(--f)) 10px;background:rgba(0,0,0,0.14);}
+  #board .spot[data-key="come"] .spot-title,#board .spot[data-key="dontcome"] .spot-title{text-transform:uppercase;letter-spacing:calc(2px + 3px * var(--f));margin-right:calc(-2px - 3px * var(--f));color:rgba(var(--brass-bright-rgb),0.92);line-height:1.1;}
+  #board .spot[data-key="come"] .spot-title{font-size:calc(17px + 8px * var(--f));}
+  #board .spot[data-key="dontcome"] .spot-title{font-size:calc(12.5px + 3px * var(--f));}
+  #board .spot[data-key="come"] .spot-pay,#board .spot[data-key="dontcome"] .spot-pay{font-size:11px;}
+  #board .spot .edge{align-self:center;margin-top:0;}
+  #board .spot.has-bet .spot-pay,#board .spot.has-bet .edge{display:none;}
+  #board .spot .spot-chips{position:static;justify-content:center;}
+  #board .spot[data-key="field"]{display:grid;grid-template-columns:calc(104px + 44px * var(--f)) minmax(0,1fr);grid-template-areas:"title nums" "edge nums";align-items:center;column-gap:12px;padding:0 0 0 calc(10px + 6px * var(--f));min-height:calc(38px + 18px * var(--f));background:rgba(0,0,0,0.18);}
+  #board .spot[data-key="field"] .spot-title{grid-area:title;align-self:end;text-transform:uppercase;letter-spacing:3px;font-size:calc(13px + 3px * var(--f));color:rgba(var(--brass-bright-rgb),0.92);}
+  #board .spot[data-key="field"] .spot-pay{display:none;}
+  #board .spot[data-key="field"] .edge{grid-area:edge;align-self:start;justify-self:start;margin-top:2px;}
+  #board .spot[data-key="field"] .spot-chips{grid-area:edge;align-self:start;justify-self:start;justify-content:flex-start;margin-top:2px;}
+  #board .spot[data-key="field"] .field-nums{grid-area:nums;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:0;align-self:stretch;border-left:1px solid rgba(var(--text-rgb),0.14);}
+  #board .spot[data-key="field"] .field-nums span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:0;padding:0;border-radius:0;background:none;font-size:calc(17px + 6px * var(--f));line-height:1;border-left:1px solid rgba(var(--text-rgb),0.08);}
+  #board .spot[data-key="field"] .field-nums span:first-child{border-left:0;}
+  #board .spot[data-key="field"] .field-nums span.x2,#board .spot[data-key="field"] .field-nums span.x3{background:rgba(var(--brass-rgb),0.13);color:var(--brass-bright);}
+  #board .spot[data-key="field"] .field-nums span.x2::after{content:'pays 2:1';font-size:9.5px;font-weight:600;letter-spacing:0.2px;}
+  #board .spot[data-key="field"] .field-nums span.x3::after{content:'pays 3:1';font-size:9.5px;font-weight:600;letter-spacing:0.2px;}
+
+  /* Don't Pass: the bar along the top of the Pass Line */
+  #bets .spot[data-key="dontpass"]{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:calc(8px + 6px * var(--f));row-gap:4px;min-height:calc(30px + 8px * var(--f));padding:calc(3px + 2px * var(--f)) 16px;border:1.5px dashed rgba(var(--brass-rgb),0.5);background:transparent;border-radius:12px;overflow:visible;}
+  #bets .spot[data-key="dontpass"]::after,#bets .spot[data-key="pass"]::after{display:none;}
+  #bets .spot[data-key="dontpass"] .spot-title{text-transform:uppercase;letter-spacing:3px;font-size:calc(12px + 1px * var(--f));color:rgba(var(--brass-bright-rgb),0.92);}
+  #bets .spot[data-key="dontpass"] .spot-title::after{content:' \00b7  bar 12';letter-spacing:1px;font-weight:500;text-transform:uppercase;font-size:10.5px;color:var(--text-muted);}
+  #bets .spot[data-key="dontpass"] .spot-pay{font-size:11.5px;}
+  #bets .spot .spot-pay .pay-more{display:none;}
+  #bets .spot[data-key="dontpass"] .edge{margin-top:0;align-self:center;}
+  #bets .spot[data-key="dontpass"].has-bet{border-style:solid;background:rgba(var(--brass-rgb),0.1);padding-right:calc(96px + 20px * var(--f));}
+  #bets .spot[data-key="dontpass"].has-bet .spot-pay{display:none;}
+  #bets .spot[data-key="dontpass"] .spot-chips{right:12px;top:50%;bottom:auto;transform:translateY(-50%);}
+  #bets .spot[data-key="dontpass"] .spot-x{top:50%;right:auto;left:8px;transform:translateY(-50%);}
+  #bets .spot[data-key="dontpass"].off{opacity:0.55;}
+
+  /* The Pass Line: a brass U round the bottom of the felt, with its odds in a dashed box below */
+  #bets .spot[data-key="pass"]{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;grid-template-rows:minmax(calc(46px + 28px * var(--f)),auto) auto;column-gap:calc(10px + 6px * var(--f));align-items:center;padding:0 calc(26px + 14px * var(--f));border:0;background:none;overflow:visible;min-height:0;}
+  #bets .spot[data-key="pass"]::before{content:'';grid-column:1 / -1;grid-row:1;align-self:stretch;margin:0 calc(-26px - 14px * var(--f));border:calc(4px + 3px * var(--f)) solid var(--brass);border-top:0;border-radius:0 0 calc(24px + 16px * var(--f)) calc(24px + 16px * var(--f));background:linear-gradient(180deg,rgba(var(--brass-bright-rgb),0.07),rgba(var(--brass-bright-rgb),0.2));transition:background 200ms ease,border-color 200ms ease;}
+  #bets .spot[data-key="pass"]:hover:not(.off)::before{background:linear-gradient(180deg,rgba(var(--brass-bright-rgb),0.12),rgba(var(--brass-bright-rgb),0.28));border-color:var(--brass-bright);}
+  #bets .spot[data-key="pass"].has-bet::before{background:linear-gradient(180deg,rgba(var(--brass-bright-rgb),0.14),rgba(var(--brass-bright-rgb),0.32));}
+  #bets .spot[data-key="pass"] > *{position:relative;}
+  #bets .spot[data-key="pass"] .spot-hit{position:absolute;}
+  #bets .spot[data-key="pass"] .spot-title{grid-column:1;grid-row:1;text-transform:uppercase;letter-spacing:calc(4px + 4px * var(--f));font-size:calc(19px + 11px * var(--f));color:var(--brass-bright);line-height:1;white-space:nowrap;}
+  #bets .spot[data-key="pass"] .spot-pay{grid-column:2;grid-row:1;font-size:11.5px;color:rgba(var(--text-rgb),0.8);}
+  #bets .spot[data-key="pass"] .spot-chips{position:relative;grid-column:3;grid-row:1;right:auto;bottom:auto;gap:10px;}
+  #bets .spot[data-key="pass"] .spot-chips .amt{font-family:'Space Grotesk',sans-serif;font-size:calc(17px + 7px * var(--f));font-weight:700;}
+  #bets .spot[data-key="pass"] .edge{grid-column:4;grid-row:1;margin:0;}
+  #bets .spot[data-key="pass"] .spot-x{position:relative;grid-column:5;grid-row:1;top:auto;right:auto;}
+  #bets .spot[data-key="pass"].has-bet .spot-pay{display:none;}
+  #bets .spot[data-key="pass"].has-bet{border:0;background:none;}
+  #bets .spot[data-key="pass"] .odds-row{grid-column:1 / -1;grid-row:2;}
+  #bets .spot.off .spot-title{opacity:1;}
+  #bets .spot[data-key="pass"].off::before{opacity:0.5;}
+
+  /* odds: a dashed sage box under the Pass Line; the bar for Don't Pass keeps its own on the same line */
+  .odds-row.show{padding-right:0;margin-top:calc(6px + 3px * var(--f));gap:calc(8px + 4px * var(--f));align-items:center;}
+  #bets .spot[data-key="pass"] .odds-row.show{justify-content:center;height:calc(38px + 12px * var(--f));padding:0 14px;border:1.5px dashed rgba(var(--sage-bright-rgb),0.45);border-radius:14px;background:rgba(var(--sage-bright-rgb),0.07);}
+  #bets .spot[data-key="pass"] .odds-row.show::before{content:'Free odds · pay true odds, 0% edge';font-size:11.5px;color:var(--sage-bright);font-weight:600;margin-right:auto;letter-spacing:0.2px;}
+  #bets .spot[data-key="dontpass"] .odds-row.show{margin-top:0;}
+  #bets .spot[data-key="pass"].has-bet:has(.odds-row.show) .edge,#bets .spot[data-key="dontpass"].has-bet:has(.odds-row.show) .edge{display:none;}
+  #bets .spot[data-key="pass"] .odds-row:not(.show){display:flex;justify-content:center;align-items:center;height:calc(38px + 12px * var(--f));padding:0 14px;margin-top:calc(6px + 3px * var(--f));border:1.5px dashed rgba(var(--sage-bright-rgb),0.2);border-radius:14px;background:rgba(var(--sage-bright-rgb),0.03);}
+  #bets .spot[data-key="pass"] .odds-row:not(.show) > *{display:none;}
+  #bets .spot[data-key="pass"] .odds-row:not(.show)::before{content:'Free odds open once a point is set. They pay true odds, so the casino has no edge.';font-size:11.5px;color:var(--text-muted);}
+  #bets .spot[data-key="dontpass"] .odds-row:not(.show){display:none;}
+  .odds-btn{padding:3px 9px;font-size:11.5px;white-space:nowrap;}
+  .odds-max{padding:3px 12px;font-size:12.5px;}
+
+  /* the panel on the right: hard ways, one-roll bets, hops */
+  #props{position:relative;display:flex;flex-direction:column;gap:calc(3px + 3px * var(--f));padding:calc(5px + 4px * var(--f)) 11px calc(5px + 4px * var(--f));border:1px solid rgba(var(--text-rgb),0.14);border-radius:14px;background:rgba(0,0,0,0.2);--hb:calc(28px + 8px * var(--f));}
+  #props > h3{display:none;}
+  #props-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:calc(3px + 3px * var(--f));align-content:start;}
+  .px-label{display:flex;grid-column:1 / -1;align-items:center;justify-content:space-between;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(var(--brass-bright-rgb),0.92);}
+  .px-label.px-one{margin-top:calc(0px + 3px * var(--f));}
+  .px-edge{font-size:10px;letter-spacing:0.2px;text-transform:none;padding:2px 7px;border-radius:999px;color:var(--coral);background:rgba(var(--coral-rgb),0.14);border:1px solid rgba(var(--coral-rgb),0.34);font-variant-numeric:tabular-nums;}
+  #props-grid .spot{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"art title" "pay edge";align-items:center;column-gap:7px;row-gap:calc(1px + 3px * var(--f));min-height:calc(34px + 9px * var(--f));padding:calc(3px + 3px * var(--f)) 9px;border-radius:11px;background:rgba(0,0,0,0.28);border:1px solid rgba(var(--text-rgb),0.12);}
+  #props-grid .spot.has-bet{background:linear-gradient(180deg,rgba(var(--brass-rgb),0.16),rgba(var(--brass-rgb),0.05));}
+  #props-grid .spot .prop-art{grid-area:art;min-height:0;margin:0;gap:3px;}
+  #props-grid .spot .prop-art .d2{--d:calc(14px + 4px * var(--f));border-radius:4px;padding:2px;}
+  #props-grid .spot .spot-title,#props-grid .spot .spot-title.sr-only{grid-area:title;position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:nowrap;font-size:calc(12px + 1px * var(--f));}
+  #props-grid .spot .spot-pay{grid-area:pay;font-size:calc(11px + 1.5px * var(--f));color:var(--text-muted);}
+  #props-grid .spot .spot-pay .pw{display:none;}
+  #props-grid .spot .spot-pay .pr{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--brass-bright);font-size:calc(13px + 2px * var(--f));}
+  #props-grid .spot .edge{grid-area:edge;justify-self:end;margin:0;padding:0;background:none;border:0;font-size:10.5px;font-weight:600;color:var(--coral);}
+  #props-grid .spot .edge .ew{display:none;}
+  #props-grid .spot.has-bet .edge{display:none;}
+  #props-grid .spot .spot-chips{right:7px;bottom:calc(3px + 2px * var(--f));gap:5px;}
+  #props-grid .spot .stack{width:15px;height:15px;}
+  #props-grid .spot .stack .pchip{width:15px;height:15px;font-size:0;border-width:1.5px;bottom:calc(var(--i) * 2px);}
+  #props-grid .spot .spot-chips .amt{font-size:11.5px;}
+  #props-grid .spot .spot-chips .wk{display:none;}
+  #props-grid .spot .spot-x{top:3px;right:3px;width:17px;height:17px;font-size:11px;}
+  #props-grid .spot.has-bet .spot-title{padding-right:16px;}
+  /* the one-roll bets have no art: a name, then what they pay and cost */
+  #props-grid .spot:not([data-key^="hard"]){grid-template-areas:"title title" "pay edge";}
+  #props-grid .spot[data-key^="hard"]{grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"art title title" "pay edge edge";}
+  #props-grid .spot[data-key^="hard"] .spot-pay{justify-self:start;}
+  #props-grid .spot:not([data-key^="hard"]) .prop-art{display:none;}
+  #props-grid .spot:not([data-key^="hard"]){min-height:calc(36px + 9px * var(--f));}
+  #props-grid .spot:not([data-key^="hard"]) .spot-title{font-size:calc(11.5px + 1.5px * var(--f));}
+  #props-grid .spot:not([data-key^="hard"]).has-bet .spot-pay{display:none;}
+  #props-grid .spot:not([data-key^="hard"]) .spot-chips{left:0;right:0;bottom:calc(3px + 2px * var(--f));justify-content:center;}
+  #props-grid .spot[data-key="hard4"] .spot-chips,#props-grid .spot[data-key="hard6"] .spot-chips,#props-grid .spot[data-key="hard8"] .spot-chips,#props-grid .spot[data-key="hard10"] .spot-chips{left:auto;}
+
+  /* hops */
+  #props .hops{margin:auto 0 0;gap:6px;}
+  #props .hop-list{display:none;}
+  #props .hop-open{min-height:var(--hb);padding:4px 10px;gap:8px;font-size:12.5px;white-space:nowrap;}
+  #props .hop-open .hop-sum:empty{display:none;}
+  #props .hop-open .d2{--d:calc(14px + 3px * var(--f));}
+  #props .hop-open .hop-sum{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;background:rgba(var(--brass-rgb),0.22);color:var(--brass-bright);font-variant-numeric:tabular-nums;}
+  #props.hops-open .hop-open .hop-sum{display:none;}
+  #props.hops-open #props-grid{visibility:hidden;}
+  #props .hop-picker{position:absolute;left:11px;right:11px;top:calc(5px + 4px * var(--f));bottom:calc(5px + 4px * var(--f) + var(--hb) + 6px);padding:calc(5px + 3px * var(--f));gap:calc(4px + 2px * var(--f));overflow:hidden;background:rgba(0,0,0,0.38);z-index:5;}
+  #props .hp-top{display:none;}
+  #props .hp-grid{gap:3px;flex:1;min-height:0;grid-template-rows:auto repeat(6,minmax(0,1fr));}
+  #props .hp-h{min-height:0;}
+  #props .hp-h .d2{--d:calc(13px + 3px * var(--f));}
+  #props .hp-cell{min-height:0;font-size:calc(10.5px + 1px * var(--f));border-radius:7px;}
+  #props .hp-info{min-height:0;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"dice main down" "dice sub down";gap:1px 8px;}
+  #props .hp-info .hi-dice .d2{--d:calc(16px + 4px * var(--f));}
+  #props .hp-info .hi-main{font-size:11.5px;gap:5px;}
+  #props .hp-info .hi-sub{font-size:10px;}
+}
 </style>
 <style id="tr-brand">
 /* the way home: the Table Ready coin and name, big enough to see (same coin as the Learn page) */
@@ -1145,7 +1335,7 @@ body{--gut:16px;}
 @media (min-width:1200px) and (min-height:600px){
   html .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 22px;margin-bottom:clamp(6px,1.2vh,12px);}
   html .topbar .back-link{margin:0;position:relative;padding-right:22px;flex:0 0 auto;}
-  html .topbar .back-link::after{content:"";position:absolute;right:0;top:50%;width:1px;height:24px;background:var(--line,rgba(237,238,240,.16));transform:translateY(-50%);}
+  html .topbar .back-link::after{content:"";position:absolute;right:0;top:50%;width:1px;height:24px;background:var(--line,rgba(var(--text-rgb),.16));transform:translateY(-50%);}
   html .topbar header > div:first-child{min-width:0;}
   html .topbar header > div:last-child{margin-left:auto;}
   html .topbar h1{margin:0;line-height:1.1;}
@@ -1157,7 +1347,7 @@ body{--gut:16px;}
 /* craps: its header is not inside a .topbar; the same single row */
 @media (min-width:1320px) and (min-height:600px){
   html .wrap > .back-link{margin:0;position:relative;padding-right:22px;}
-  html .wrap > .back-link::after{content:"";position:absolute;right:0;top:50%;width:1px;height:24px;background:var(--line,rgba(237,238,240,.16));transform:translateY(-50%);}
+  html .wrap > .back-link::after{content:"";position:absolute;right:0;top:50%;width:1px;height:24px;background:var(--line,rgba(var(--text-rgb),.16));transform:translateY(-50%);}
 }
 
 /* craps on a phone: its way home is as easy to see as in the other games */
@@ -1242,8 +1432,8 @@ body{--gut:16px;}
 
 
 
-  <p class="hint-line" id="resume-notice" style="display:none;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the bets you had on the table.</p>
-  <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
+  <p class="hint-line" id="resume-notice" style="display:none;background:rgba(var(--sage-bright-rgb),0.1);border-color:rgba(var(--sage-bright-rgb),0.3);color:var(--sage-bright);">Welcome back — we restored the bets you had on the table.</p>
+  <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(var(--brass-rgb),0.1);border-color:rgba(var(--brass-rgb),0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
   <p class="hint-line" id="table-msg" role="status" style="display:none;"></p>
 
   <div class="top-block" id="top-block">
@@ -1323,6 +1513,11 @@ body{--gut:16px;}
   <div class="props" id="props">
     <h3>Hard Ways and one-roll bets <span style="font-weight:500;text-transform:none;letter-spacing:0;">— the expensive corner of the table</span></h3>
     <div class="props-grid" id="props-grid"></div>
+    <div class="hops" id="hops">
+      <div class="hop-list" id="hop-list" role="group" aria-label="Your hop bets" aria-live="polite"></div>
+      <button type="button" class="hop-open" id="btn-hops" data-act="hop-toggle" aria-expanded="false" aria-controls="hop-picker"><span class="hop-art" aria-hidden="true"></span><span class="hop-t hop-t-open">Hops: pick exact dice</span><span class="hop-t hop-t-close">Close hops</span><span class="hop-sum" id="hop-sum"></span></button>
+      <div class="hop-picker" id="hop-picker" hidden></div>
+    </div>
   </div>
 
   <div class="coach" id="coach">
@@ -1420,6 +1615,7 @@ body{--gut:16px;}
 //   Field                 3,4,9,10,11 pay 1:1, 2 pays 2:1, 12 pays 3:1, 5,6,7,8 lose (one roll)
 //   Hardways 4,6,8,10     win if rolled as a pair before a 7 or the "easy way"; 7:1 on 4/10, 9:1 on 6/8; OFF on come-out
 //   One-roll props        Any 7 (4:1), Any Craps (7:1), Yo-eleven (15:1), Aces (30:1), Boxcars (30:1), Ace-Deuce (15:1)
+//   Hops                  One roll, exact dice: a pair such as 3-3 (a hard hop) pays 30:1, two different dice such as 2-5 pay 15:1 (either die can show either number)
 // Come/Don't Come odds are OFF on a come-out roll (the standard house default); a 7 on the come-out takes
 // the flat part of a Come bet and returns the odds.
 // Payouts that don't divide evenly are rounded DOWN to whole dollars, exactly as a casino pays them.
@@ -1433,8 +1629,8 @@ body{--gut:16px;}
 
 var POINTS = [4,5,6,8,9,10];
 var HARD_NUMBERS = [4,6,8,10];
-var TYPES = ['pass','dontpass','come','dontcome','place','buy','field','hard','any7','anycraps','yo','aces','boxcars','acedeuce'];
-var ONE_ROLL = ['field','any7','anycraps','yo','aces','boxcars','acedeuce'];
+var TYPES = ['pass','dontpass','come','dontcome','place','buy','field','hard','any7','anycraps','yo','aces','boxcars','acedeuce','hop'];
+var ONE_ROLL = ['field','any7','anycraps','yo','aces','boxcars','acedeuce','hop'];
 
 // Ways to roll each total with two dice (out of 36).
 var WAYS = {2:1,3:2,4:3,5:4,6:5,7:6,8:5,9:4,10:3,11:2,12:1};
@@ -1444,6 +1640,14 @@ var ODDS_PAY  = {4:[2,1],10:[2,1],5:[3,2],9:[3,2],6:[6,5],8:[6,5]};          // 
 var LAY_PAY   = {4:[1,2],10:[1,2],5:[2,3],9:[2,3],6:[5,6],8:[5,6]};          // lay (against) is the reverse
 var HARD_PAY  = {4:7,10:7,6:9,8:9};
 var PROP_PAY  = {any7:4, anycraps:7, yo:15, aces:30, boxcars:30, acedeuce:15};
+var HOP_PAY   = {easy:15, hard:30};
+// A hop is named by its two dice, low die first, as a two-digit number: 25 is a 2 and a 5, 33 is a pair of threes.
+var HOP_NUMBERS = [];
+(function(){ for(var a=1;a<=6;a++){ for(var b=a;b<=6;b++){ HOP_NUMBERS.push(a*10+b); } } })();
+function hopDice(number){ return [Math.floor(number/10), number%10]; }
+function hopIsHard(number){ var d = hopDice(number); return d[0]===d[1]; }
+function hopPay(number){ return hopIsHard(number) ? HOP_PAY.hard : HOP_PAY.easy; }
+function hopNumber(d1, d2){ return Math.min(d1,d2)*10 + Math.max(d1,d2); }
 
 // Max free odds as a multiple of the flat bet, by the table's odds rule.
 var ODDS_RULES = {
@@ -1472,8 +1676,10 @@ var LEDGER = [
   {key:'hard410',  label:'Hard 4 or 10',      edge:1/9,         blurb:'Pays 7:1 but is beaten by 8 of every 9 resolving rolls.'},
   {key:'yo',       label:'Yo (11)',           edge:1/9,         blurb:'One roll. Pays 15:1 when the true odds are 17:1.'},
   {key:'acedeuce', label:'Ace-Deuce (3)',     edge:1/9,         blurb:'One roll. Pays 15:1 when the true odds are 17:1.'},
+  {key:'hopeasy',  label:'Hop (two different dice)', edge:1/9,   blurb:'One roll. Wins only on that exact pair of dice, in either order (2 ways in 36). Pays 15:1 when the true odds are 17:1.'},
   {key:'aces',     label:'Aces (2)',          edge:5/36,        blurb:'One roll. Pays 30:1 when the true odds are 35:1.'},
   {key:'boxcars',  label:'Boxcars (12)',      edge:5/36,        blurb:'One roll. Pays 30:1 when the true odds are 35:1.'},
+  {key:'hophard',  label:'Hard hop (a pair)', edge:5/36,        blurb:'One roll. Wins only on that exact pair, such as 3-3 (1 way in 36). Pays 30:1 when the true odds are 35:1.'},
   {key:'any7',     label:'Any Seven',         edge:1/6,         blurb:'The single worst bet on the table. Pays 4:1 when the true odds are 5:1.'}
 ];
 var LEDGER_BY_KEY = {};
@@ -1485,12 +1691,13 @@ function ledgerKey(type, number){
   if(type==='place') return (number===6||number===8) ? 'place68' : (number===5||number===9) ? 'place59' : 'place410';
   if(type==='buy') return (number===6||number===8) ? 'buy68' : (number===5||number===9) ? 'buy59' : 'buy410';
   if(type==='hard') return (number===6||number===8) ? 'hard68' : 'hard410';
+  if(type==='hop') return (typeof number==='number' && hopIsHard(number)) ? 'hophard' : 'hopeasy';
   return type; // field, any7, anycraps, yo, aces, boxcars, acedeuce
 }
 
 var BET_LABEL = {
   pass:'Pass Line', dontpass:"Don't Pass", come:'Come', dontcome:"Don't Come", place:'Place', buy:'Buy', field:'Field',
-  hard:'Hardway', any7:'Any Seven', anycraps:'Any Craps', yo:'Yo (11)', aces:'Aces', boxcars:'Boxcars', acedeuce:'Ace-Deuce'
+  hard:'Hardway', any7:'Any Seven', anycraps:'Any Craps', yo:'Yo (11)', aces:'Aces', boxcars:'Boxcars', acedeuce:'Ace-Deuce', hop:'Hop'
 };
 
 function defaultOpts(){
@@ -1533,6 +1740,7 @@ function canPlace(state, type, amount, number){
   if(type==='place' && POINTS.indexOf(number) < 0) return {ok:false, reason:'Place bets go on 4, 5, 6, 8, 9 or 10.'};
   if(type==='buy' && POINTS.indexOf(number) < 0) return {ok:false, reason:'Buy bets go on 4, 5, 6, 8, 9 or 10.'};
   if(type==='hard' && HARD_NUMBERS.indexOf(number) < 0) return {ok:false, reason:'Hardways are 4, 6, 8 and 10.'};
+  if(type==='hop' && HOP_NUMBERS.indexOf(number) < 0) return {ok:false, reason:'A hop is two dice, each from 1 to 6.'};
   if(type==='place' && hasBetAt(state, 'buy', number)) return {ok:false, reason:'You have a Buy bet on the '+number+'. Take it down to switch to Place.'};
   if(type==='buy' && hasBetAt(state, 'place', number)) return {ok:false, reason:'You have a Place bet on the '+number+'. Take it down to switch to Buy.'};
   return {ok:true};
@@ -1540,7 +1748,7 @@ function canPlace(state, type, amount, number){
 
 function sameSpot(b, type, number){
   if(b.type !== type) return false;
-  if(type==='place' || type==='buy' || type==='hard') return b.number === number;
+  if(type==='place' || type==='buy' || type==='hard' || type==='hop') return b.number === number;
   if(type==='come' || type==='dontcome') return b.number === null; // only the not-yet-traveled one
   return true;
 }
@@ -1549,7 +1757,7 @@ function placeBet(state, type, amount, number){
   var chk = canPlace(state, type, amount, number);
   if(!chk.ok) return {ok:false, reason:chk.reason, state:state};
   var s = clone(state);
-  var num = (type==='place' || type==='buy' || type==='hard') ? number : null;
+  var num = (type==='place' || type==='buy' || type==='hard' || type==='hop') ? number : null;
   for(var i=0;i<s.bets.length;i++){
     if(sameSpot(s.bets[i], type, num)){ s.bets[i].amount += amount; return {ok:true, state:s, betId:s.bets[i].id}; }
   }
@@ -1793,6 +2001,7 @@ function resolveRoll(state, d1, d2){
     else if(t === 'aces'){ if(s===2) ev(bet,'win','none',{winFlat:bet.amount*PROP_PAY.aces, ratio:[PROP_PAY.aces,1]}); else ev(bet,'lose','none'); }
     else if(t === 'boxcars'){ if(s===12) ev(bet,'win','none',{winFlat:bet.amount*PROP_PAY.boxcars, ratio:[PROP_PAY.boxcars,1]}); else ev(bet,'lose','none'); }
     else if(t === 'acedeuce'){ if(s===3) ev(bet,'win','none',{winFlat:bet.amount*PROP_PAY.acedeuce, ratio:[PROP_PAY.acedeuce,1]}); else ev(bet,'lose','none'); }
+    else if(t === 'hop'){ if(hopNumber(d1,d2) === bet.number) ev(bet,'win','none',{winFlat:bet.amount*hopPay(bet.number), ratio:[hopPay(bet.number),1]}); else ev(bet,'lose','none'); }
     else { keep.push(bet); }
   }
 
@@ -1836,6 +2045,7 @@ function validState(st){
       if(!isInt(b.odds) || b.odds < 0) return false;
       if(b.type==='place' || b.type==='buy'){ if(POINTS.indexOf(b.number) < 0) return false; }
       else if(b.type==='hard'){ if(HARD_NUMBERS.indexOf(b.number) < 0) return false; }
+      else if(b.type==='hop'){ if(HOP_NUMBERS.indexOf(b.number) < 0) return false; }
       else if(b.type==='come' || b.type==='dontcome'){ if(!(b.number === null || POINTS.indexOf(b.number) >= 0)) return false; }
       else { if(b.number !== null) return false; }
       if(b.odds > 0){
@@ -1851,6 +2061,7 @@ function validState(st){
 return {
   POINTS:POINTS, HARD_NUMBERS:HARD_NUMBERS, TYPES:TYPES, ONE_ROLL:ONE_ROLL, WAYS:WAYS,
   PLACE_PAY:PLACE_PAY, ODDS_PAY:ODDS_PAY, LAY_PAY:LAY_PAY, HARD_PAY:HARD_PAY, PROP_PAY:PROP_PAY,
+  HOP_PAY:HOP_PAY, HOP_NUMBERS:HOP_NUMBERS, hopDice:hopDice, hopIsHard:hopIsHard, hopPay:hopPay, hopNumber:hopNumber,
   ODDS_RULES:ODDS_RULES, LEDGER:LEDGER, LEDGER_BY_KEY:LEDGER_BY_KEY, BET_LABEL:BET_LABEL,
   BUY_VIG_RATE:BUY_VIG_RATE, buyVig:buyVig, buyWin:buyWin, hasBetAt:hasBetAt,
   ledgerKey:ledgerKey, newState:newState, defaultOpts:defaultOpts, clone:clone,
@@ -1876,6 +2087,10 @@ function applyTheme(name){
   var t=THEMES[name]; if(!t) return;
   G_theme=name;
   Object.keys(t).forEach(function(k){ if(k!=='label') document.documentElement.style.setProperty('--'+k, t[k]); });
+  ['brass','brass-bright','sage-bright','coral','text','dusty-blue','violet'].forEach(function(k){
+    var m=/^#([0-9a-f]{6})$/i.exec(t[k]||''); if(!m) return; var v=parseInt(m[1],16);
+    document.documentElement.style.setProperty('--'+k+'-rgb', (v>>16&255)+','+(v>>8&255)+','+(v&255));
+  });
   repaintDice();                             // the ivory dice take their face and pip colors from the table theme
 }
 
@@ -2065,9 +2280,9 @@ var SPOT_DEFS=[
   {key:'any7',      type:'any7',     title:'Any Seven',  pay:'Pays 4:1',  where:'props', level:'full', edge:'any7'},
   {key:'anycraps',  type:'anycraps', title:'Any Craps',  pay:'Pays 7:1',  where:'props', level:'full', edge:'anycraps'},
   {key:'yo',        type:'yo',       title:'Yo (11)',    pay:'Pays 15:1', where:'props', level:'full', edge:'yo'},
+  {key:'acedeuce',  type:'acedeuce', title:'Ace-Deuce (3)', pay:'Pays 15:1', where:'props', level:'full', edge:'acedeuce'},
   {key:'aces',      type:'aces',     title:'Aces (2)',   pay:'Pays 30:1', where:'props', level:'full', edge:'aces'},
-  {key:'boxcars',   type:'boxcars',  title:'Boxcars (12)', pay:'Pays 30:1', where:'props', level:'full', edge:'boxcars'},
-  {key:'acedeuce',  type:'acedeuce', title:'Ace-Deuce (3)', pay:'Pays 15:1', where:'props', level:'full', edge:'acedeuce'}
+  {key:'boxcars',   type:'boxcars',  title:'Boxcars (12)', pay:'Pays 30:1', where:'props', level:'full', edge:'boxcars'}
 ];
 var SPOT_BY_KEY={}; SPOT_DEFS.forEach(function(d){ SPOT_BY_KEY[d.key]=d; });
 // The Pass Line and Don't Pass say in plain words (on hover) what they are, and what the point has made of them.
@@ -2085,11 +2300,11 @@ function payText(def, point){
 }
 function edgeClass(e){ return e<=0.0155?'e-good': e<=0.04?'e-ok' : e<=0.07?'e-meh' : 'e-bad'; }
 function edgePct(e){ return (Math.round(e*10000)/100).toFixed(2).replace(/\.?0+$/,'')+'%'; }
-function edgeBadge(key, extraClass){ var e=E.LEDGER_BY_KEY[key].edge; return '<span class="edge '+edgeClass(e)+(extraClass?' '+extraClass:'')+'">'+edgePct(e)+' edge</span>'; }
+function edgeBadge(key, extraClass){ var e=E.LEDGER_BY_KEY[key].edge; return '<span class="edge '+edgeClass(e)+(extraClass?' '+extraClass:'')+'">'+edgePct(e)+'<span class="ew"> edge</span></span>'; }
 
 // A key names a spot on the felt: 'pass', 'field', 'place6', 'hard8', 'any7' ...
 function keyToBet(key){
-  var m=/^(place|buy|hard)(\d+)$/.exec(key);
+  var m=/^(place|buy|hard|hop)(\d+)$/.exec(key);
   if(m) return {type:m[1], number:parseInt(m[2],10)};
   return {type:key, number:null};
 }
@@ -2098,7 +2313,7 @@ function betForKey(table, key){
   for(var i=0;i<table.bets.length;i++){
     var x=table.bets[i];
     if(x.type!==b.type) continue;
-    if(b.type==='place' || b.type==='buy' || b.type==='hard'){ if(x.number===b.number) return x; }
+    if(b.type==='place' || b.type==='buy' || b.type==='hard' || b.type==='hop'){ if(x.number===b.number) return x; }
     else if(b.type==='come' || b.type==='dontcome'){ if(x.number===null) return x; }
     else return x;
   }
@@ -2108,11 +2323,18 @@ function lineBetAt(table, type, number){
   for(var i=0;i<table.bets.length;i++){ var x=table.bets[i]; if(x.type===type && x.number===number) return x; }
   return null;
 }
-function spotKeyOf(type, number){ return (type==='place'||type==='buy'||type==='hard') ? type+number : type; }
+function spotKeyOf(type, number){ return (type==='place'||type==='buy'||type==='hard'||type==='hop') ? type+number : type; }
 function numBet(table, n){ return lineBetAt(table,'place',n) || lineBetAt(table,'buy',n); }
 function levelAllows(def){ return levelRank(def.level) <= levelRank(G.settings.level); }
 
 /* ============ BUILD THE TABLE ============ */
+// "Pays 7:1" on a one-roll or hard-way bet is drawn as the word and then the number, so a tight card can show just the number.
+function payHTML(def){
+  var m=def.where==='props' && /^Pays (\d+:\d+)$/.exec(def.pay);
+  return m ? '<span class="pw">Pays </span><b class="pr">'+m[1]+'</b>' : splitPay(def.pay);
+}
+// A line bet's pay text is a short first sentence and a longer second one; a small table shows only the first.
+function splitPay(pt){ var cut=pt.indexOf('. '); return cut>0 ? esc(pt.slice(0,cut))+'<span class="pay-more">'+esc(pt.slice(cut))+'</span>' : esc(pt); }
 function buildSpotEl(def){
   var d=document.createElement('div');
   d.className='spot'; d.setAttribute('data-key', def.key);
@@ -2121,7 +2343,7 @@ function buildSpotEl(def){
   else title='<span class="spot-title'+(art && art.hideTitle?' sr-only':'')+'">'+esc(def.title)+'</span>';
   if(art && art.hideTitle) d.title=def.title;
   var html='<button type="button" class="spot-hit" data-act="place" aria-label="'+esc(def.title)+'"'+(def.how?' title="'+esc(howText(def.type, null))+'"':'')+'></button>'+
-    propArtHTML(def)+title+'<span class="spot-pay">'+esc(def.pay)+'</span>'+edgeBadge(def.edge);
+    propArtHTML(def)+title+'<span class="spot-pay">'+payHTML(def)+'</span>'+edgeBadge(def.edge);
   if(def.fieldNums){ html+='<div class="field-nums"><span>2</span><span>3</span><span>4</span><span>9</span><span>10</span><span>11</span><span>12</span></div>'; }
   html+='<div class="spot-chips"></div>'+
     '<button type="button" class="spot-x" data-act="take-down" aria-label="Take down '+esc(def.title)+' bet">&times;</button>';
@@ -2139,8 +2361,15 @@ function buildTable(){
   SPOT_DEFS.forEach(function(def){
     var el=buildSpotEl(def);
     if(def.wide) el.className+=' wide';
+    if(def.where==='props' && (def.key==='hard4' || def.key==='any7')){
+      var lab=document.createElement('div');
+      lab.className='px-label '+(def.key==='hard4'?'px-hard':'px-one'); lab.setAttribute('aria-hidden','true');
+      lab.innerHTML=def.key==='hard4' ? '<span>Hard ways</span><span class="px-edge">9\u201311% edge</span>' : '<span>One roll</span><span class="px-edge">11\u201317% edge</span>';
+      props.appendChild(lab);
+    }
     (def.where==='props'?props:def.where==='lines'?lines:board).appendChild(el);
   });
+  buildHops();
   E.POINTS.forEach(function(n){
     var el=document.createElement('div');
     el.className='num'; el.setAttribute('data-number', String(n));
@@ -2258,7 +2487,7 @@ function renderSpots(){
   Array.prototype.forEach.call(document.querySelectorAll('.spot'), function(el){
     var key=el.getAttribute('data-key'), def=SPOT_BY_KEY[key], bet=betForKey(t, key);
     if(def.how){ var hb=el.querySelector('.spot-hit'), ht=howText(def.type, t.point); if(hb.title!==ht) hb.title=ht; }   // the plain words, on hover
-    if(def.how){ var pay=el.querySelector('.spot-pay'), pt=payText(def, t.point); if(pay.textContent!==pt) pay.textContent=pt; }
+    if(def.how){ var pay=el.querySelector('.spot-pay'), pt=payText(def, t.point); if(pay.textContent!==pt) pay.innerHTML=splitPay(pt); }
     var visible=levelAllows(def) || !!bet;
     el.hidden=!visible;
     el.classList.toggle('has-bet', !!bet);
@@ -2296,11 +2525,13 @@ function renderSpots(){
   });
   var anyProp=false;
   Array.prototype.forEach.call(document.querySelectorAll('#props-grid .spot'), function(el){ if(!el.hidden) anyProp=true; });
+  if(!anyProp && hopBets(t).length) anyProp=true;
   $('props').style.display=anyProp?'':'none';
   var boardVisible=false;
   Array.prototype.forEach.call(document.querySelectorAll('#board .spot'), function(el){ if(!el.hidden) boardVisible=true; });
   $('board').style.display=boardVisible?'':'none';
   if($('grp-board')) $('grp-board').style.display=boardVisible?'':'none';
+  var bx=$('bets'); bx.classList.toggle('has-props', anyProp); bx.classList.toggle('has-board', boardVisible);
 }
 function pressAmount(n){
   var p=G.last && G.last.press && G.last.press[n];
@@ -2437,7 +2668,7 @@ function nextDiceTheme(){
   setDiceTheme(DICE_THEMES[(i+1)%DICE_THEMES.length].key, true);
 }
 function renderAll(){
-  renderPill(); renderPhase(); renderSpots(); renderNumbers(); renderPuck(); renderTray(); renderLevel(); renderCoach(); renderToggles(); renderJump(); syncPins();
+  renderPill(); renderPhase(); renderSpots(); renderNumbers(); renderHops(); renderPuck(); renderTray(); renderLevel(); renderCoach(); renderToggles(); renderJump(); syncPins();
 }
 
 /* ============ PLACING, TAKING DOWN, UNDO, REBET ============ */
@@ -2450,7 +2681,7 @@ function placeOnSpot(key){
   G.table=r.state; G.bankroll-=amt; G.shown=G.bankroll;
   G.undo.push({kind:'bet', type:b.type, number:b.number, amount:amt});
   persistAll(); sfxChip(); renderAll();
-  say(E.BET_LABEL[b.type]+(b.number?' '+b.number:'')+', $'+(betForKey(G.table,key)||{amount:amt}).amount+' on it.');
+  say((b.type==='hop' ? hopTitle(b.number) : E.BET_LABEL[b.type]+(b.number?' '+b.number:''))+', $'+(betForKey(G.table,key)||{amount:amt}).amount+' on it.');
   if(key==='place6' || key==='place8'){
     var cur=betForKey(G.table,key).amount;
     if(cur%6!==0) toast('Tip: the 6 and 8 pay 7:6, so bet in $6 steps ($30, $60...). Otherwise the payout is rounded down.');
@@ -2593,9 +2824,13 @@ function takeDownOdds(key){
 /* ---- Right-click a bet to take it down ---- */
 // What is under the pointer: the bet there, and whether only its odds are meant (the pointer is on the odds).
 function pointerBet(target){
-  var node=(target && target.closest) ? target.closest('.tag, .odds-row, .spot, .num') : null;
+  var node=(target && target.closest) ? target.closest('.tag, .odds-row, .spot, .num, .hop-chip, .hp-cell') : null;
   if(!node) return {over:false, bet:null, oddsOnly:false};
   var t=G.table, bet=null, oddsOnly=false;
+  if(node.classList.contains('hop-chip') || node.classList.contains('hp-cell')){
+    var hk=node.getAttribute('data-key') || ('hop'+node.getAttribute('data-n'));
+    return {over:true, bet:betForKey(t, hk), oddsOnly:false};
+  }
   if(node.classList.contains('tag') && !node.classList.contains('press') && node.hasAttribute('data-id')){
     bet=E.findBet(t, parseInt(node.getAttribute('data-id'),10)) || null;               // a Come / Don't Come bet that has gone to its number
   } else {
@@ -2678,6 +2913,81 @@ function doRebet(){
   G.shown=G.bankroll;
   persistAll(); sfxChip(); renderAll();
   toast('Rebet '+res.items.length+(res.items.length>1?' bets':' bet')+' for '+formatMoney(res.total)+'.');
+}
+
+/* ============ HOPS: one-roll bets on two exact dice ============ */
+var HOP_OPEN=false, HOP_SEL=null;
+function hopName(n){ var d=E.hopDice(n); return d[0]+'-'+d[1]; }
+function hopTitle(n){ return (E.hopIsHard(n) ? 'Hard hop ' : 'Hop ')+hopName(n); }
+function hopBets(table){ return table.bets.filter(function(b){ return b.type==='hop'; }).sort(function(a,b){ return a.number-b.number; }); }
+function hopPairHTML(n){ var d=E.hopDice(n); return die2d(d[0],0)+die2d(d[1],1); }
+function buildHops(){
+  var art=document.querySelector('#btn-hops .hop-art'); if(art) art.innerHTML=die2d(3,0)+die2d(5,1);
+  var pk=$('hop-picker'); if(!pk) return;
+  var h='<div class="hp-top"><b>Hops</b> <span>One roll. Pick the exact two dice. Either die can show either number.</span></div><div class="hp-grid">'+
+        '<span class="hp-h hp-corner" aria-hidden="true"></span>';
+  for(var c=1;c<=6;c++) h+='<span class="hp-h" aria-hidden="true">'+die2d(c,0)+'</span>';
+  for(var a=1;a<=6;a++){
+    h+='<span class="hp-h" aria-hidden="true">'+die2d(a,0)+'</span>';
+    for(var b=1;b<=6;b++){
+      var lo=Math.min(a,b), hi=Math.max(a,b), n=lo*10+hi;
+      h+='<button type="button" class="hp-cell '+(a===b?'hard':'easy')+'" data-act="hop" data-n="'+n+'" data-key="hop'+n+'"><span class="hp-t">'+a+'-'+b+'</span></button>';
+    }
+  }
+  h+='</div><div class="hp-info" id="hop-info" aria-live="polite"></div>';
+  pk.innerHTML=h;
+  pk.addEventListener('mouseover', function(ev){ var c=ev.target.closest && ev.target.closest('.hp-cell'); if(c) hopFocus(parseInt(c.getAttribute('data-n'),10)); });
+  pk.addEventListener('focusin', function(ev){ var c=ev.target.closest && ev.target.closest('.hp-cell'); if(c) hopFocus(parseInt(c.getAttribute('data-n'),10)); });
+  pk.addEventListener('keydown', function(ev){ if(ev.key==='Escape' && HOP_OPEN){ toggleHops(false); var b=$('btn-hops'); if(b) b.focus(); } });
+}
+function hopLine(n){
+  var bet=betForKey(viewTable(), 'hop'+n), hard=E.hopIsHard(n), pay=E.hopPay(n), d=E.hopDice(n), k=hard?'hophard':'hopeasy';
+  return '<span class="hi-dice" aria-hidden="true">'+hopPairHTML(n)+'</span>'+
+    '<span class="hi-main"><b>'+esc(hopTitle(n))+'</b> <span class="hi-pay">pays <b>'+pay+':1</b></span> '+edgeBadge(k)+'</span>'+
+    '<span class="hi-sub">'+(hard ? 'Wins only on '+d[0]+'-'+d[1]+': 1 way in 36.' : 'Wins on '+d[0]+'-'+d[1]+' or '+d[1]+'-'+d[0]+': 2 ways in 36.')+(bet ? ' You have '+formatMoney(bet.amount)+' on it.' : '')+'</span>'+
+    (bet && G.phase==='betting' ? '<button type="button" class="hi-down" data-act="take-down" data-key="hop'+n+'">Take down</button>' : '');
+}
+function hopFocus(n){
+  if(!(E.HOP_NUMBERS.indexOf(n)>=0)) return;
+  HOP_SEL=n;
+  var cells=document.querySelectorAll('#hop-picker .hp-cell');
+  Array.prototype.forEach.call(cells, function(c){ c.classList.toggle('sel', parseInt(c.getAttribute('data-n'),10)===n); });
+  var info=$('hop-info'); if(info) setHTML(info, hopLine(n));
+}
+function toggleHops(force){
+  var open=(typeof force==='boolean') ? force : !HOP_OPEN;
+  HOP_OPEN=open;
+  $('props').classList.toggle('hops-open', open);
+  $('hop-picker').hidden=!open;
+  $('btn-hops').setAttribute('aria-expanded', open?'true':'false');
+  if(open && HOP_SEL===null) hopFocus(33);
+  if(open){ var info=$('hop-info'); if(info && HOP_SEL!==null) setHTML(info, hopLine(HOP_SEL)); }
+  if(typeof renderJump==='function') try{ renderJump(); }catch(e){}
+}
+function renderHops(){
+  var box=$('hops'); if(!box) return;
+  var t=viewTable(), betting=G.phase==='betting', bets=hopBets(t), allowed=levelRank('full')<=levelRank(G.settings.level);
+  box.hidden=!(allowed || bets.length);
+  if(!allowed && !bets.length && HOP_OPEN) toggleHops(false);
+  var list=$('hop-list'), shown=bets.slice(0,5), more=bets.length-shown.length;
+  setHTML(list, bets.length
+    ? shown.map(function(b){
+        return '<span class="hop-chip" data-key="hop'+b.number+'" title="'+esc(hopTitle(b.number))+', '+formatMoney(b.amount)+'">'+hopPairHTML(b.number)+'<b class="hc-amt">'+formatMoney(b.amount)+'</b>'+
+          (betting ? '<button type="button" class="hop-x" data-act="take-down" data-key="hop'+b.number+'" aria-label="Take down '+esc(hopTitle(b.number))+' bet">&times;</button>' : '')+'</span>';
+      }).join('')+(more>0 ? '<span class="hop-more">+'+more+' more</span>' : '')
+    : '<span class="hop-none">No hops out</span>');
+  var cells=document.querySelectorAll('#hop-picker .hp-cell');
+  Array.prototype.forEach.call(cells, function(c){
+    var n=parseInt(c.getAttribute('data-n'),10), bet=betForKey(t,'hop'+n), hard=E.hopIsHard(n), key=hard?'hophard':'hopeasy';
+    c.classList.toggle('has-bet', !!bet);
+    c.disabled=!betting;
+    var lab=hopTitle(n)+', pays '+E.hopPay(n)+':1, house edge '+edgePct(E.LEDGER_BY_KEY[key].edge)+'.'+(bet?' '+formatMoney(bet.amount)+' on it.':'');
+    if(c.getAttribute('aria-label')!==lab) c.setAttribute('aria-label', lab);
+  });
+  var btn=$('btn-hops'); btn.classList.toggle('has-bet', bets.length>0);
+  var sum=0; bets.forEach(function(b){ sum+=b.amount; });
+  setHTML($('hop-sum'), bets.length ? bets.length+' out \u00b7 '+formatMoney(sum) : '');
+  if(HOP_OPEN && HOP_SEL!==null){ var info=$('hop-info'); if(info) setHTML(info, hopLine(HOP_SEL)); }
 }
 
 /* ============ DICE ============ */
@@ -3450,6 +3760,7 @@ function betWord(e){
   if(e.type==='place') return 'Place '+e.number;
   if(e.type==='buy') return 'Buy '+e.number;
   if(e.type==='hard') return 'Hard '+e.number;
+  if(e.type==='hop') return hopTitle(e.number);
   if((e.type==='come'||e.type==='dontcome') && e.number) return base+' '+e.number;
   return base;
 }
@@ -3532,7 +3843,7 @@ function rebetFrom(res){
   var map={}, order=[];
   res.events.forEach(function(e){
     if(!e.removed) return;
-    var type=e.type, number=(type==='place'||type==='buy'||type==='hard')?e.number:null;
+    var type=e.type, number=(type==='place'||type==='buy'||type==='hard'||type==='hop')?e.number:null;
     var k=type+':'+number;
     if(!map[k]){ map[k]={type:type, number:number, amount:0}; order.push(k); }
     map[k].amount+=e.amount;
@@ -3597,6 +3908,7 @@ function flyChip(fromEl,toEl){
   a.onfinish=rm; setTimeout(rm, 900);
 }
 function eventTarget(e){
+  if(e.type==='hop') return $('btn-hops');
   if(e.type==='place' || e.type==='buy' || e.type==='hard'){
     return e.type==='hard' ? document.querySelector('.spot[data-key="hard'+e.number+'"]') : document.querySelector('.num[data-number="'+e.number+'"]');
   }
@@ -3843,6 +4155,8 @@ function wire(){
       var key=t.getAttribute('data-key') || t.parentNode.getAttribute('data-key'); placeOnSpot(key); return;
     }
     if(act==='take-down'){ takeDown(t.getAttribute('data-key') || t.parentNode.getAttribute('data-key')); return; }
+    if(act==='hop'){ hopFocus(parseInt(t.getAttribute('data-n'),10)); placeOnSpot('hop'+t.getAttribute('data-n')); return; }
+    if(act==='hop-toggle'){ toggleHops(); return; }
     if(act==='odds'){
       var k=t.closest('.spot').getAttribute('data-key'), bet=betForKey(G.table,k); if(bet) addOddsToBet(bet.id); return;
     }
@@ -4819,11 +5133,20 @@ window.TRPractice = (function(){
     if(sp && sp.offsetParent){ R.style.removeProperty('--spot-min'); R.style.setProperty('--spot-min', Math.ceil(sp.getBoundingClientRect().height) + 'px'); }
   }
   function set(v){ R.style.setProperty('--fit', (Math.round(v * 1000) / 1000).toString()); }
+  /* Table settings opens in the page's own flow, above the table, and pushes it down. It is not part of the table, so it must not count: with it open, every change made in it
+     (decks, commission, side bets) used to read as "nothing fits", squeezed the table to its tightest size and left it there after the panel closed. */
+  function panelH(){
+    var p = D.getElementById('settings-panel');
+    if(!p || p.offsetParent === null) return 0;                                   // closed
+    var cs = getComputedStyle(p);
+    if(cs.position === 'fixed' || cs.position === 'absolute') return 0;           // the phone sheet floats: it does not push the table
+    return p.getBoundingClientRect().height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+  }
   function over(){
     wrap = wrap || D.querySelector('.wrap');
     if(!wrap) return 0;
     var pb = parseFloat(getComputedStyle(D.body).paddingBottom) || 0;
-    return wrap.getBoundingClientRect().bottom + pb - W.innerHeight;
+    return wrap.getBoundingClientRect().bottom + (W.pageYOffset || 0) - panelH() + pb - W.innerHeight;   // pageYOffset: measured from the top of the page, wherever it is scrolled
   }
   var TOL = -0.6, calls = 0;
   /* Finding the roomiest setting takes few measurements: the page's height rises in a nearly straight line with --fit, so measure the two ends, jump to where the line says it fits,

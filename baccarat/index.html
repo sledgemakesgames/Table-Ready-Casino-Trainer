@@ -4188,7 +4188,7 @@ var Show = (function(){
     queue: [], busy: false, idleWaiters: [], timers: [], flights: [], errors: [], k: 1, gen: 0, seed: 7919,
     mine: null, passedInit: false, autoRec: null, armPt: null, egg: null, eggEnd: 0, eggLast: '', eggLine: {sus: 0, sad: 0}, eggDwell: 1000, dwellRec: null, dwellEv: null, tray: null, mhEl: null, mhBox: null, mhSide: null, mhTag: null, mhCards: [], mhOn: false, mhTok: 0, idleRec: null, lowerRec: null, enterCbs: [], wasOn: false, lines: {}, peeking: false,
     ticks: {}, chipLog: [], kbNav: false, wired: false, pauseOrig: null, pauseSet: 0, streakKey: '', hintShown: false, hintMem: 0,
-    stats: {deals: 0, turns: 0, peels: 0, passes: 0, autos: 0, says: 0, quick: 0, eggs: 0, tosses: 0, ticks: 0, naturals: 0, drops: 0, slashes: 0, undos: 0, rebets: 0}
+    stats: {deals: 0, turns: 0, peels: 0, passes: 0, autos: 0, says: 0, quick: 0, eggs: 0, tosses: 0, ticks: 0, naturals: 0, drops: 0, slashes: 0, undos: 0, rebets: 0, takes: 0}
   };
   var SETTINGS_KEY = 'house_edge_baccarat_show_v1';
 
@@ -4793,7 +4793,7 @@ var Show = (function(){
     function one(){ if(--left === 0 && tok === S.mhTok) trayClear(); }
     ms.forEach(function(m, i){
       var el = m._real;
-      if(!el || !el.isConnected || !m.isConnected){ one(); return; }
+      if(!el || !el.isConnected || !m.isConnected || m._ret){ one(); return; }   // (m._ret: the dealer is already taking that one back)
       later(function(){
         if(tok !== S.mhTok || !el.isConnected || !m.isConnected){ one(); return; }
         var a = rectInLayer(m), b = rectInLayer(el);
@@ -4834,7 +4834,44 @@ var Show = (function(){
     if(m && m.isConnected){
       m.style.visibility = ''; m.classList.add('instant', 'flipped'); setTimeout(function(){ try{ m.classList.remove('instant'); }catch(e){} }, 90);
       if(S.mhEl && S.mhCards.every(function(c){ return c.classList.contains('flipped'); })) S.mhEl.classList.remove('passed');      // nothing left to peel
+      try{ takeBack(el); }catch(e){ err('takeBack', e); }
     }
+  }
+  /* a card of mine has been turned in the tray: after a beat to look at it, the dealer takes it back up to its place in the Player / Banker box.
+     When the last one is home the tray folds away, and the dealer goes on to turn the other hand (that job is queued behind this one). */
+  function takeBack(el){
+    var m = el && el._mirror;
+    if(!m || m._ret || !m.isConnected || !S.mhOn) return;
+    m._ret = true;
+    var tok = S.mhTok, side = el._bc && el._bc.side;
+    function settle(){                                  // the card is home: its copy in the tray goes, the real one shows
+      if(m.parentNode) m.parentNode.removeChild(m);
+      var i = S.mhCards.indexOf(m); if(i >= 0) S.mhCards.splice(i, 1);
+      if(el._mirror === m) el._mirror = null;
+      el.classList.remove('with-you'); el.classList.add('landed'); setTimeout(function(){ try{ el.classList.remove('landed'); }catch(e){} }, 240);
+      if(!S.mhCards.length && S.mhOn && tok === S.mhTok){
+        trayClear();
+        var bx = side && $(side + '-box'); if(bx) bx.classList.remove('passed', 'pass-nudge');
+      }
+    }
+    enqueue({name: 'takeback', max: 2600, run: function(done){
+      function end(){ done(); later(maybeAuto, 60); checkIdle(); }
+      if(!el.isConnected || !m.isConnected){ settle(); end(); return; }
+      if(!fx()){ settle(); S.stats.takes++; end(); return; }
+      var sl = stageXY(m), dst = stageXY(el), first = S.mhCards.indexOf(m) <= 0;
+      setArmMs(130); armTo(sl.x, sl.y); look(sl.x, sl.y);
+      later(function(){                                 // a beat to look at the card, then up it goes
+        if(!el.isConnected || !m.isConnected){ settle(); end(); return; }
+        var a = rectInLayer(m), b = rectInLayer(el);
+        m.style.visibility = 'hidden';
+        sfxSwish(); setArmMs(360); armTo(dst.x, dst.y - 4); look(dst.x, dst.y);
+        arc(a, b, el._bc.card, true, 420, first ? -1 : 1, function(){
+          sfxLand(); S.stats.takes++; settle();
+          later(function(){ setArmMs(220); restPose(); look((TRDim.w(S.st) || 300) / 2, 90); }, 40);
+          end();
+        });
+      }, 360);
+    }});
   }
   /* the dealer picks the card up, turns it over where you can see it, and sets it back */
   function turnCard(el){
@@ -4988,7 +5025,7 @@ var Show = (function(){
   function placeNote(){
     try{
       var note = $('third-card-note'), tray = S.mhEl; if(!note || !tray || !tray.parentNode) return;
-      var under = on() && D.body.classList.contains('tray-on');
+      var under = on() && (D.body.classList.contains('tray-on') || (S.mine && (G.phase === 'initial' || G.phase === 'third')));     // through the whole hand, not only while the tray is out: my cards go back up between the two passes
       if(under){ if(tray.nextSibling !== note) tray.parentNode.insertBefore(note, tray.nextSibling); }
       else { var home = $('outcome-badge'); if(home && home.parentNode && note.nextSibling !== home) home.parentNode.insertBefore(note, home); }
     }catch(e){ err('note place', e); }
@@ -7277,11 +7314,20 @@ window.TRPractice = (function(){
     if(sp && sp.offsetParent){ R.style.removeProperty('--spot-min'); R.style.setProperty('--spot-min', Math.ceil(sp.getBoundingClientRect().height) + 'px'); }
   }
   function set(v){ R.style.setProperty('--fit', (Math.round(v * 1000) / 1000).toString()); }
+  /* Table settings opens in the page's own flow, above the table, and pushes it down. It is not part of the table, so it must not count: with it open, every change made in it
+     (decks, commission, side bets) used to read as "nothing fits", squeezed the table to its tightest size and left it there after the panel closed. */
+  function panelH(){
+    var p = D.getElementById('settings-panel');
+    if(!p || p.offsetParent === null) return 0;                                   // closed
+    var cs = getComputedStyle(p);
+    if(cs.position === 'fixed' || cs.position === 'absolute') return 0;           // the phone sheet floats: it does not push the table
+    return p.getBoundingClientRect().height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+  }
   function over(){
     wrap = wrap || D.querySelector('.wrap');
     if(!wrap) return 0;
     var pb = parseFloat(getComputedStyle(D.body).paddingBottom) || 0;
-    return wrap.getBoundingClientRect().bottom + pb - W.innerHeight;
+    return wrap.getBoundingClientRect().bottom + (W.pageYOffset || 0) - panelH() + pb - W.innerHeight;   // pageYOffset: measured from the top of the page, wherever it is scrolled
   }
   var TOL = -0.6, calls = 0;
   /* Finding the roomiest setting takes few measurements: the page's height rises in a nearly straight line with --fit, so measure the two ends, jump to where the line says it fits,

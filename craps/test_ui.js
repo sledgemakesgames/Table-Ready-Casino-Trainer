@@ -342,6 +342,67 @@ function invariants(w, base, label){
     w.close();
   }
 
+  // ======================================================== 5b. hops: one roll, the exact two dice
+  {
+    // only on the Full table; Starter and Standard never show them
+    for(const lvl of ['starter', 'standard']){
+      const ws = load({ [K.exp]:{ level: lvl === 'starter' ? 'new' : 'rules' } }); turbo(ws);
+      check(lvl + ': no Hops button on a table that does not have the one-roll bets', [ws.G.settings.level, $(ws,'hops').hidden], [lvl, true]);
+      ws.close();
+    }
+    const w = load({ [K.exp]:{ level:'pro' } }); turbo(w);
+    check('Full table: the Hops button is there, and the picker starts shut', [$(w,'hops').hidden, $(w,'hop-picker').hidden, $(w,'btn-hops').getAttribute('aria-expanded')], [false, true, 'false']);
+    check('no hops out, so the list says so', $(w,'hop-list').textContent.trim(), 'No hops out');
+    w.toggleHops(true);
+    const cells = [...w.document.querySelectorAll('#hop-picker .hp-cell')];
+    check('opening the picker: 36 cells for the 36 rolls, 6 of them pairs', [$(w,'hop-picker').hidden, $(w,'btn-hops').getAttribute('aria-expanded'), $(w,'props').classList.contains('hops-open'), cells.length, cells.filter(c => c.classList.contains('hard')).length], [false, 'true', true, 36, 6]);
+    check('2-5 and 5-2 are the same hop, and every cell has a label that says what it pays and costs', [cells.filter(c => c.getAttribute('data-n') === '25').length, cells.every(c => /pays (15|30):1, house edge (11\.11|13\.89)%/.test(c.getAttribute('aria-label')))], [2, true]);
+    w.hopFocus(25); check('pointing at one shows what it pays', [/Hop 2-5/.test($(w,'hop-info').textContent), /15:1/.test($(w,'hop-info').textContent), /2 ways in 36/.test($(w,'hop-info').textContent), /11\.11%/.test($(w,'hop-info').textContent)], [true, true, true, true]);
+    w.hopFocus(33); check('a pair says it is a hard hop at 30:1, one way in 36', [/Hard hop 3-3/.test($(w,'hop-info').textContent), /30:1/.test($(w,'hop-info').textContent), /1 way in 36/.test($(w,'hop-info').textContent), /13\.89%/.test($(w,'hop-info').textContent)], [true, true, true, true]);
+    w.G.chip = 10;
+    const cell = n => w.document.querySelector('#hop-picker .hp-cell[data-n="' + n + '"]');
+    click(w, cell(25));
+    check('tapping a cell bets the chip on that hop', [w.G.bankroll, betOf(w,'hop',25) && betOf(w,'hop',25).amount, w.G.table.bets.length], [990, 10, 1]);
+    click(w, cell(25));
+    check('again stacks on it', [w.G.bankroll, betOf(w,'hop',25).amount, w.G.table.bets.length], [980, 20, 1]);
+    click(w, cell(33));
+    check('another cell is its own bet', [w.G.bankroll, w.G.table.bets.length, cell(25).classList.contains('has-bet'), cell(33).classList.contains('has-bet'), cell(16).classList.contains('has-bet')], [970, 2, true, true, false]);
+    check('the list beside the button shows each hop with its amount, and the total', [[...w.document.querySelectorAll('#hop-list .hop-chip')].map(c => c.getAttribute('data-key') + ':' + c.querySelector('.hc-amt').textContent), $(w,'hop-sum').textContent.replace(/\s+/g, ' ')], [['hop25:$20', 'hop33:$10'], '2 out · $30']);
+    check('the Hops button is marked as holding a bet', $(w,'btn-hops').classList.contains('has-bet'), true);
+    // taking one down puts the chips back
+    click(w, w.document.querySelector('#hop-list .hop-x[data-key="hop33"]'));
+    check('the little x on a hop takes it down and returns the money', [w.G.bankroll, w.G.table.bets.map(b => b.type + b.number)], [980, ['hop25']]);
+    // the roll: either order of the two dice wins, 15:1
+    const before = w.G.bankroll;
+    await roll(w, 5, 2);
+    check('a 5 and a 2 wins the 2-5 hop at 15:1: $20 wins $300 and comes back with the stake, and the hop is gone', [w.G.bankroll - before, w.G.table.bets.filter(b => b.type === 'hop').length], [320, 0]);
+    check('the callout names it and says 15:1', /Hop 2-5 \+\$300 pays 15:1/.test(sub(w)), true);
+    check('the ledger has it under its own row: the easy hop', [!!w.G.session.ledger.hopeasy, w.G.session.ledger.hophard], [true, undefined]);
+    // a hard hop at 30:1, and a miss
+    w.G.chip = 5; click(w, cell(33)); click(w, cell(16));
+    const b2 = w.G.bankroll;
+    await roll(w, 3, 3);
+    check('3-3 wins the hard hop 3-3 at 30:1 ($5 wins $150, stake back) and the 1-6 hop loses its $5; both are gone', [w.G.bankroll - b2, w.G.table.bets.filter(b => b.type === 'hop').length], [155, 0]);
+    check('the callout says 30:1', /Hard hop 3-3 \+\$150 pays 30:1/.test(sub(w)), true);
+    check('both rows are in the ledger now', [!!w.G.session.ledger.hopeasy, !!w.G.session.ledger.hophard], [true, true]);
+    check('the Hops button no longer holds a bet once they are settled', [$(w,'btn-hops').classList.contains('has-bet'), $(w,'hop-list').textContent.trim()], [false, 'No hops out']);
+    check('no script errors', w.errs, []);
+    w.close();
+  }
+
+  // ======================================================== 5c. the tint colours follow the table theme
+  {
+    const w = load({ [K.exp]:{ level:'pro' } }); turbo(w);
+    const rgb = name => { w.applyTheme(name); return ['brass', 'brass-bright', 'sage-bright', 'coral', 'text'].map(k => w.document.documentElement.style.getPropertyValue('--' + k + '-rgb')); };
+    const seen = {};
+    for(const name of Object.keys(w.THEMES)){ const v = rgb(name); seen[name] = v; check(name + ': every tint colour is an "r,g,b" triplet', v.every(x => /^\d{1,3},\d{1,3},\d{1,3}$/.test(x)), true); }
+    const names = Object.keys(w.THEMES);
+    check('there are several themes, and the tint of the accent differs between them', [names.length >= 4, new Set(names.map(n => seen[n][0])).size >= 3], [true, true]);
+    // the triplet belongs to the same hex as the theme's own colour
+    for(const name of names){ const hex = w.THEMES[name].brass, v = parseInt(hex.slice(1), 16); check(name + ': the accent tint is the accent colour itself', seen[name][0], (v >> 16 & 255) + ',' + (v >> 8 & 255) + ',' + (v & 255)); }
+    w.close();
+  }
+
   // ======================================================== 6. no moving the table while the dice are in the air
   {
     const w = load({}); // animation on
@@ -1224,7 +1285,7 @@ function invariants(w, base, label){
     };
 
     // ---- 27a. tap to turn, drag to move, on a table that is not rolling
-    {
+    try {
       const w = mk(), k = kit(w), M = k.M();
       const css = [...w.document.querySelectorAll('style')].map(s => s.textContent).join('\n');
       const touchAct = css.match(/[^{}]*\{[^}]*touch-action:[^}]*\}/g) || [];
@@ -1352,10 +1413,10 @@ function invariants(w, base, label){
       wh.close();
       truthy('the how-it-works list explains setting the dice and says the roll is still random', [...wc.document.querySelectorAll('li')].some(li => /Setting the dice/.test(li.textContent) && /fresh random dice/.test(li.textContent) && /turn/.test(li.textContent)));
       wc.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27a. tap to turn, drag to move, on a table that is n, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27a2. the two buttons on the tray (colour, keep-bets) are obstacles: a die slides along them, never under them
-    {
+    try {
       const w = mk(), k = kit(w);
       const stub = (id, l, t, wd, ht) => { const el = $(w, id); for(const [key, v] of Object.entries({ offsetLeft:l, offsetTop:t, offsetWidth:wd, offsetHeight:ht })) Object.defineProperty(el, key, { value:v, configurable:true }); };
       stub('btn-dice', 10, 10, 46, 46); stub('btn-keep', 690, 176, 160, 28);
@@ -1376,10 +1437,10 @@ function invariants(w, base, label){
       stub('btn-dice', 10, 10, 0, 0);
       check('a button that is hidden is not in the way', k.M().obst.length, 1);
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27a2. the two buttons on the tray (colour, keep-bets, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27b. the throw starts from where the dice were set, and the roll never looks at them
-    {
+    try {
       const w = mk(), k = kit(w);
       const calls = [];
       w.Element.prototype.animate = function(kf, o){ calls.push({ id:this.id, cls:this.className, kf, o, el:this }); return { cancel(){ this.cancelled = true; }, finished:new Promise(r => setTimeout(r, o.duration > 2000 ? 600 : (o.duration === 1120 ? 200 : 60))) }; };
@@ -1474,10 +1535,10 @@ function invariants(w, base, label){
       w.endSweep();
       check('and ending it unlocks them', [!!w.sweep, k.locked()], [false, false]);
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27b. the throw starts from where the dice were set, , the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27c. turbo and reduced motion; the roll itself; layout changes; the page loading
-    {
+    try {
       const w = mk(), k = kit(w);
       k.tap(0); k.drag(1, 100, -20);
       w.G.settings.turbo = true; w.rollDice(5, 6); await settle(w);
@@ -1526,10 +1587,10 @@ function invariants(w, base, label){
       const k4 = kit(w4);
       check('after a reload the dice show the last roll at rest, nothing set', [w4.hasSet(), k4.at(0), k4.at(1), k4.faces(), k4.locked()], [false, { x:-46, y:0 }, { x:46, y:0 }, [2, 3], false]);
       w3.close(); w4.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27c. turbo and reduced motion; the roll itself; layo, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27d. random handling: anything a hand can do keeps the dice on the tray and apart, and locked at the right times
-    {
+    try {
       const w = mk(), k = kit(w), R = rng(2718);
       for(const [id, l, tp, wd, ht] of [['btn-dice', 10, 10, 46, 46], ['btn-keep', 690, 176, 160, 28]]) for(const [key, v] of Object.entries({ offsetLeft:l, offsetTop:tp, offsetWidth:wd, offsetHeight:ht })) Object.defineProperty($(w, id), key, { value:v, configurable:true });
       w.Element.prototype.animate = function(kf, o){ return { cancel(){}, finished:new Promise(r => setTimeout(r, 40)) }; };
@@ -1565,10 +1626,10 @@ function invariants(w, base, label){
       check('700 random presses, drags, taps, resizes, blurs, redraws and rolls: dice always inside the tray, apart, numbered 1-6, and locked at the right times', bad.slice(0, 5), []);
       check('and the page is still healthy', [w.errs, w.G.phase], [[], 'betting']);
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27d. random handling: anything a hand can do keeps t, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27e. push the two dice into each other and you pick them both up; the wall comes in
-    {
+    try {
       const T = { v: 10000 };
       const mkh = () => { const w = mk(); w.nowMs = () => T.v; const k = kit(w); k.wall = () => $(w,'dice-stage').classList.contains('hand'); return [w, k]; };
       const mv = (w, k, x, y, ms, o) => { T.v += ms; const e = ptr(w, k.face(0), 'pointermove', x, y, o); w.advanceMotion(ms); return e; };
@@ -1640,10 +1701,10 @@ function invariants(w, base, label){
       check('...and lifting it later does nothing: no tap that turns a die, the pair stays in the hand', [k3.faces(), w3.hasHand()], [[4, 3], true]);
       w3.close();
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27e. push the two dice into each other and you pick , the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27f. a flick throws them at the wall; the roll is the same two random dice as ever
-    {
+    try {
       const T = { v: 20000 };
       const w = mk(); w.nowMs = () => T.v; const k = kit(w), M = k.M();
       const calls = [];
@@ -1715,10 +1776,10 @@ function invariants(w, base, label){
       await touchFlick(4, true, 'a finger flick at 400px/s throws');
       await touchFlick(3.4, false, 'a finger flick at 340px/s is a set-down');
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27f. a flick throws them at the wall; the roll is th, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27f2. how fast a flick was comes from when the pointer really moved, not from when a busy page got round to hearing about it
-    {
+    try {
       const T = { v: 25000 };
       const w = mk(); w.nowMs = () => T.v; const k = kit(w);
       w.Element.prototype.animate = function(kf, o){ return { cancel(){}, finished:new Promise(r => setTimeout(r, o.duration * 0.55)) }; };
@@ -1783,10 +1844,10 @@ function invariants(w, base, label){
       w.endSweep();
       check('no errors', w.errs, []);
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27f2. how fast a flick was comes from when the point, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27g. Space or the Roll button with the dice in your hand: thrown from your hand at a middling speed
-    {
+    try {
       const T = { v: 30000 };
       const w = mk(); w.nowMs = () => T.v; const k = kit(w), M = k.M();
       const calls = [];
@@ -1815,10 +1876,10 @@ function invariants(w, base, label){
       check('reduced motion: thrown without animation', [calls.length, k.wall(), k.faces(), w.hasHand()], [0, false, [6, 6], false]);
       w.reducedMotion = false;
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27g. Space or the Roll button with the dice in your , the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27h. the feel: a little physics, the same on every screen
-    {
+    try {
       const T = { v: 40000 };
       const w = mk(); w.nowMs = () => T.v; const k = kit(w), M = k.M();
       // time steps: the same motion however the frames come
@@ -1900,10 +1961,10 @@ function invariants(w, base, label){
       k3.up(0, 250, 300);
       check('put down: back to full', [k3.shadow(0).style.transform, k3.shadow(0).style.opacity], ['scale(1)', '1']);
       w3.close(); w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27h. the feel: a little physics, the same on every s, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27i. the flight plan: exact end, never through the wall, never through each other, same plan for the same throw
-    {
+    try {
       const w = mk(), R = rng(1999);
       const plans = [];
       for(const phone of [false, true]){
@@ -1955,10 +2016,10 @@ function invariants(w, base, label){
       const pf = w.planThrow(flipped), ov = pf.samples[0].filter((s, j) => { const t = pf.samples[1][j], nx = (s.x - t.x)/82, ny = (s.y - t.y)/47; return nx*nx + ny*ny < 0.999; }).length;
       check('thrown with the dice the other way round in depth: still never overlapping, still ends at rest', [ov, pf.samples[0].slice(-1)[0].x, pf.samples[1].slice(-1)[0].x], [0, -46, 46]);
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27i. the flight plan: exact end, never through the w, the rest still runs):', String(e && e.message).slice(0, 160)); }
 
     // ---- 27j. fairness: whatever the hand does, the roll is two fair dice
-    {
+    try {
       const T = { v: 50000 };
       const w = mk(); w.nowMs = () => T.v; const k = kit(w); w.G.settings.turbo = true;
       const R = rng(4242), pairs = Array(36).fill(0), byFlick = { soft:[], hard:[] };
@@ -1979,7 +2040,7 @@ function invariants(w, base, label){
       check('hard flicks and soft ones both average a total of 7', [Math.abs(mean(byFlick.hard) - 7) < 0.45, Math.abs(mean(byFlick.soft) - 7) < 0.45], [true, true]);
       check('the page stayed healthy and bankroll untouched (no bets)', [w.errs, w.G.bankroll], [[], 1000]);
       w.close();
-    }
+    } catch(e){ failures++; console.log('FAIL (exception inside section 27j. fairness: whatever the hand does, the roll is t, the rest still runs):', String(e && e.message).slice(0, 160)); }
   }
 
   // ======================================================== 28. roll sounds: each total has its own cue, played once when the dice settle (sounds only; the roll is untouched)

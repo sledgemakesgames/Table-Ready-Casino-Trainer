@@ -320,6 +320,59 @@ async function playHand(t, o){
     noErr(t); w.close();
   }
 
+  section('my cards go back up to their box as soon as I turn them, then the dealer turns his hand');
+  {
+    const t = await boot();
+    const w = t.w, G = w.G, Peel = w.Peel, S = t.S;
+    w.rig(['5S', '2H', 'KD', '3C', '9H']);
+    w.bet('banker', 2); w.dealHand(); await fourDealt(t);
+    const mine = cardsIn(t, 'banker');
+    ok(await waitFor(() => S.mhCards.length === 2 && !S.busy, 6000, 'tossed'), 'both of mine are in the tray');
+    click(t, mine[0]); await waitFor(() => Peel.isOpen() && !t.P.busy, 2000, 'peel 0'); Peel.finish('flip');
+    ok(await waitFor(() => S.stats.takes === 1, 6000, 'first back'), 'the first card goes back up as soon as it is turned');
+    ok(!mine[0].classList.contains('with-you') && mine[0].classList.contains('flipped') && !mine[0]._mirror, 'it is the real card, face up in its box');
+    ok(S.mhCards.length === 1 && t.doc.body.classList.contains('tray-on') && S.mhOn, 'the other one is still in the tray, and the tray stays');
+    ok(G.playerRevealed.length === 0 && S.stats.autos === 0, 'the dealer has not touched his hand yet');
+    click(t, mine[1]); await waitFor(() => Peel.isOpen() && !t.P.busy, 2000, 'peel 1'); Peel.finish('flip');
+    ok(await waitFor(() => S.stats.takes === 2, 6000, 'second back'), 'the second card goes back too');
+    ok(await waitFor(() => !t.doc.body.classList.contains('tray-on'), 2000, 'tray folds'), 'with both home the tray folds away');
+    ok(!S.mhOn && S.mhCards.length === 0 && !t.doc.querySelector('.flip-card.with-you') && !t.doc.querySelector('#mh-cards .flip-card'), 'nothing is left in it, and no place is held');
+    ok(t.doc.querySelectorAll('.hand-box.passed').length === 0, 'the "yours to peel" mark is gone from the box');
+    ok(await waitFor(() => G.playerRevealed.length >= 1, 8000, 'his first'), 'then the dealer starts on the other hand');
+    ok(S.stats.takes === 2, 'and only after both of mine were home');
+    ok(await waitFor(() => G.playerRevealed.length === 2, 8000, 'his second'), 'he turns both of his cards by himself');
+    ok(await waitFor(() => G.phase === 'third' || G.phase === 'done' || G.phase === 'betting', 6000, 'moves on'), 'the hand moves on');
+    ok(await toBetting(t), 'hand completes');
+    ok(G.handHistory[0].outcome === 'banker', 'banker wins 5-4');
+    noErr(t); w.close();
+  }
+  {
+    // the dealer turns my cards (flip mode) and takes them back too
+    const t = await boot({ how: 'flip' });
+    const w = t.w, G = w.G, S = t.S;
+    w.rig(['2S', '3D', '3H', '2C', '4H', '8S']);
+    w.bet('banker', 1); w.dealHand(); await fourDealt(t);
+    ok(await waitFor(() => S.mhCards.length === 2 && !S.busy, 6000, 'tossed'), 'flip mode: my hand is in the tray');
+    const ms = S.mhCards.slice();
+    click(t, ms[0]); ok(await waitFor(() => S.stats.takes === 1, 8000, 'one back'), 'flip mode: the dealer turns the first and takes it back');
+    click(t, ms[1]); ok(await waitFor(() => S.stats.takes === 2 && !t.doc.body.classList.contains('tray-on'), 8000, 'two back'), 'flip mode: the second goes back and the tray folds');
+    ok(await waitFor(() => G.playerRevealed.length === 2, 8000, 'auto'), 'flip mode: then he turns the other hand');
+    noErr(t); w.close();
+  }
+  {
+    // no motion at all: the same, at once
+    const t = await boot({ reduced: true, how: 'flip' });
+    const w = t.w, G = w.G, S = t.S;
+    w.rig(['2S', '3D', '3H', '2C', '4H', '8S']);
+    w.bet('banker', 1); w.dealHand(); await fourDealt(t);
+    ok(await waitFor(() => S.mhCards.length === 2, 6000, 'tossed'), 'reduced motion: my hand is in the tray');
+    const ms = S.mhCards.slice();
+    click(t, ms[0]); click(t, ms[1]);
+    ok(await waitFor(() => S.stats.takes === 2 && !t.doc.body.classList.contains('tray-on') && S.mhCards.length === 0, 6000, 'both home'), 'reduced motion: both go back and the tray folds, with no flights');
+    ok(await waitFor(() => G.playerRevealed.length === 2, 8000, 'auto'), 'reduced motion: and he turns the other hand');
+    noErr(t); w.close();
+  }
+
   section('my third card: passed again, peeled, then the dealer turns his');
   {
     const t = await boot();
@@ -332,7 +385,7 @@ async function playHand(t, o){
     ok(await waitFor(() => { const c = cardsIn(t, 'player'); return c.length === 3 && !c[2].classList.contains('pending') && !t.S.busy; }, 6000, 'my third dealt'), 'my third card is dealt');   // landed, not still in the air
     ok(t.S.stats.passes === 2, 'a second, small pass for the third card');
     const p3 = cardsIn(t, 'player')[2];
-    ok(await waitFor(() => t.S.stats.tosses === 2 && !t.S.busy && t.doc.querySelectorAll('#mh-cards .flip-card').length === 3, 4000, 'third in tray'), 'the third card is tossed into the tray too (' + t.doc.querySelectorAll('#mh-cards .flip-card').length + ' cards there)');
+    ok(await waitFor(() => t.S.stats.tosses === 2 && !t.S.busy && t.doc.querySelectorAll('#mh-cards .flip-card').length === 1, 4000, 'third in tray'), 'the third card is tossed into the tray on its own: the first two went back up when I turned them (' + t.doc.querySelectorAll('#mh-cards .flip-card').length + ' card there)');
     ok(p3.classList.contains('with-you') && !!p3._mirror && p3._mirror.parentNode === t.doc.getElementById('mh-cards'), 'its place in the box is held while the real card is in the tray');
     ok(!p3.classList.contains('flipped'), 'third card waits face down for me');
     await wait(500);

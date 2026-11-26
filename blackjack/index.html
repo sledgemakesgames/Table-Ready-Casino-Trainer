@@ -8648,11 +8648,20 @@ window.TRPractice = (function(){
     if(sp && sp.offsetParent){ R.style.removeProperty('--spot-min'); R.style.setProperty('--spot-min', Math.ceil(sp.getBoundingClientRect().height) + 'px'); }
   }
   function set(v){ R.style.setProperty('--fit', (Math.round(v * 1000) / 1000).toString()); }
+  /* Table settings opens in the page's own flow, above the table, and pushes it down. It is not part of the table, so it must not count: with it open, every change made in it
+     (decks, commission, side bets) used to read as "nothing fits", squeezed the table to its tightest size and left it there after the panel closed. */
+  function panelH(){
+    var p = D.getElementById('settings-panel');
+    if(!p || p.offsetParent === null) return 0;                                   // closed
+    var cs = getComputedStyle(p);
+    if(cs.position === 'fixed' || cs.position === 'absolute') return 0;           // the phone sheet floats: it does not push the table
+    return p.getBoundingClientRect().height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+  }
   function over(){
     wrap = wrap || D.querySelector('.wrap');
     if(!wrap) return 0;
     var pb = parseFloat(getComputedStyle(D.body).paddingBottom) || 0;
-    return wrap.getBoundingClientRect().bottom + pb - W.innerHeight;
+    return wrap.getBoundingClientRect().bottom + (W.pageYOffset || 0) - panelH() + pb - W.innerHeight;   // pageYOffset: measured from the top of the page, wherever it is scrolled
   }
   var TOL = -0.6, calls = 0;
   /* Finding the roomiest setting takes few measurements: the page's height rises in a nearly straight line with --fit, so measure the two ends, jump to where the line says it fits,

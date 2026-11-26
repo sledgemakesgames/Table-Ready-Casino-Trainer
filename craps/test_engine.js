@@ -236,7 +236,7 @@ for(const pt of [4,5,6,8,9,10]){
 const ledgerCheck = {
   pass:7/495, dontpass:3/220, place68:1/66, place59:1/25, place410:1/15, field:1/36, hard68:1/11, hard410:1/9,
   any7:1/6, anycraps:1/9, yo:1/9, acedeuce:1/9, aces:5/36, boxcars:5/36, odds:0,
-  buy410:1/60, buy59:1/50, buy68:1/44
+  buy410:1/60, buy59:1/50, buy68:1/44, hopeasy:1/9, hophard:5/36
 };
 Object.keys(ledgerCheck).forEach(k => near('ledger row "'+k+'" matches the derived edge', E.LEDGER_BY_KEY[k].edge, ledgerCheck[k]));
 check('every bet type maps to a ledger row', E.TYPES.every(t => E.LEDGER_BY_KEY[E.ledgerKey(t, (t==='place'||t==='buy'||t==='hard')?6:null)]), true);
@@ -349,6 +349,39 @@ for(let i = 0; i < 4000; i++){
   if(bank < 5 && fs.bets.length === 0){ bank = 1000; }
 }
 check('4000 random rolls: books balance, state always valid, bankroll never negative', fuzzBad, 0);
+
+console.log('\n=== Hop bets: one roll, exact dice, either die can show either number ===');
+check('21 different hops: 15 with two different dice, 6 pairs', [E.HOP_NUMBERS.length, E.HOP_NUMBERS.filter(n => !E.hopIsHard(n)).length, E.HOP_NUMBERS.filter(n => E.hopIsHard(n)).length], [21, 15, 6]);
+check('a hop is named low die first', [E.hopNumber(5,2), E.hopNumber(2,5), E.hopNumber(3,3), E.hopDice(25), E.hopDice(66)], [25, 25, 33, [2,5], [6,6]]);
+check('pays 15:1 for two different dice and 30:1 for a pair', [E.hopPay(25), E.hopPay(14), E.hopPay(33), E.hopPay(66)], [15, 15, 30, 30]);
+{
+  let wrong = 0, wins = {easy:0, hard:0}, total = 0;
+  for(const n of E.HOP_NUMBERS) for(let a=1;a<=6;a++) for(let b=1;b<=6;b++){
+    const r = roll(st(6,[{type:'hop',amount:10,number:n}]), a, b), e = r.events[0];
+    const hit = E.hopNumber(a,b) === n;
+    total++;
+    if(hit){ wins[E.hopIsHard(n) ? 'hard' : 'easy']++; if(e.result !== 'win' || e.flatNet !== 10 * E.hopPay(n) || e.credit !== 10 + 10 * E.hopPay(n) || e.ratio[0] !== E.hopPay(n) || e.ratio[1] !== 1) wrong++; }
+    else if(e.result !== 'lose' || e.flatNet !== -10 || e.credit !== 0) wrong++;
+    if(r.state.bets.length !== 0) wrong++;      // a hop is a one-roll bet: gone after the roll, win or lose
+  }
+  check('all 21 hops x 36 rolls: win only on the exact pair (either order), pay 15:1 / 30:1, and the bet is always taken down', [wrong, total], [0, 21 * 36]);
+  check('each easy hop has 2 ways in 36 and each pair 1 way', [wins.easy / 15, wins.hard / 6], [2, 1]);
+}
+near('Hop (two different dice, 15:1) = 1/9 = 11.11%', edgeOf(st(6,[{type:'hop',amount:A,number:25}]), A, 6), 1/9);
+near('Hop 1-6 = 11.11%', edgeOf(st(null,[{type:'hop',amount:A,number:16}]), A), 1/9);
+near('Hard hop (a pair, 30:1) = 5/36 = 13.89%', edgeOf(st(6,[{type:'hop',amount:A,number:33}]), A, 6), 5/36);
+near('Hard hop 6-6 = 13.89%', edgeOf(st(null,[{type:'hop',amount:A,number:66}]), A), 5/36);
+check('a hop edge is read from its own ledger rows', [E.ledgerKey('hop',25), E.ledgerKey('hop',33), E.ledgerKey('hop',null), E.LEDGER_BY_KEY.hopeasy.edge, E.LEDGER_BY_KEY.hophard.edge], ['hopeasy','hophard','hopeasy',1/9,5/36]);
+check('a hard hop is a pair, so it matches the Aces / Boxcars price', [E.LEDGER_BY_KEY.hophard.edge, E.LEDGER_BY_KEY.aces.edge, E.LEDGER_BY_KEY.boxcars.edge], [5/36,5/36,5/36]);
+{
+  let g = E.placeBet(E.newState(), 'hop', 5, 25); check('placing a hop works on the come-out and while a point is on', [g.ok, g.state.bets[0].type, g.state.bets[0].number], [true,'hop',25]);
+  g = E.placeBet(g.state, 'hop', 5, 25); check('the same hop twice stacks', [g.ok, g.state.bets.length, g.state.bets[0].amount], [true,1,10]);
+  g = E.placeBet(g.state, 'hop', 5, 33); check('a different hop is its own bet', [g.ok, g.state.bets.length], [true,2]);
+  const withPoint = st(8, []); check('a hop can be made with a point on', E.canPlace(withPoint,'hop',5,16).ok, true);
+  for(const bad of [0, 7, 10, 17, 21, 31, 32, 61, 77, 100, null, undefined, "25", 2.5]) check('a hop on ' + JSON.stringify(bad) + ' is refused', E.canPlace(E.newState(),'hop',5,bad).ok, false);
+  check('validState accepts a hop and rejects a made-up one', [E.validState(st(6,[{type:'hop',amount:5,number:25}])), E.validState(st(6,[{type:'hop',amount:5,number:61}])), E.validState(st(6,[{type:'hop',amount:5,number:null}]))], [true,false,false]);
+  check('hops are listed among the one-roll bets', [E.TYPES.indexOf('hop') >= 0, E.ONE_ROLL.indexOf('hop') >= 0], [true,true]);
+}
 
 console.log('\n=== validState rejects junk (so a corrupted save can never crash the table) ===');
 const good = st(6, [{type:'pass',amount:10,odds:20},{type:'place',amount:30,number:6}]);

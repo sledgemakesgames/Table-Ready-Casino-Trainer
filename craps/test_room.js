@@ -30,10 +30,17 @@ async function desk(browser, w, h){
   ok(!hit(b['.rd-pill'], b['#die-0']) && !hit(b['.rd-pill'], b['#die-1']), 'the dice total does not cover the dice', [b['.rd-pill'], b['#die-0'], b['#die-1']]);
   ok(!hit(b['.rd-pill'], b['.dice-pick']), 'and does not cover the dice colour button', [b['.rd-pill'], b['.dice-pick']]);
   ok(!hit(b['#stick-call'], b['#die-0']) && !hit(b['#stick-call'], b['#die-1']), 'the stickman\'s call does not cover the dice either', [b['#stick-call'], b['#die-0'], b['#die-1']]);
-  const nums = ['.num[data-number="4"]', '.num[data-number="6"]', '.num[data-number="8"]'];
-  ok(nums.every(n => !hit(b['#puck'], b[n])), 'the puck sits above the number boxes, not on them', [b['#puck'], b['.num[data-number="6"]']]);
-  const puckCx = await p.evaluate(() => { const pk = document.getElementById('puck').getBoundingClientRect(), n = document.querySelector('.num[data-number="' + G.table.point + '"]').getBoundingClientRect(); return Math.abs((pk.left + pk.right) / 2 - (n.left + n.right) / 2); });
-  ok(puckCx < 2, 'and is centred over the point (off by ' + puckCx.toFixed(1) + 'px)');
+  // the puck rides on the top corner of the point's box: it sits inside that box, never over a number, and never in the next box
+  const pk = await p.evaluate(() => {
+    const r = e => { const b = e.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom }; };
+    const puck = r(document.getElementById('puck')), box = r(document.querySelector('.num[data-number="' + G.table.point + '"]'));
+    const labels = Array.from(document.querySelectorAll('.num .num-label')).map(r);
+    return { puck, box, labels };
+  });
+  ok(pk.labels.every(l => !hit(pk.puck, l)), 'the puck does not cover any of the numbers', pk);
+  ok(pk.puck.l >= pk.box.l - 1 && pk.puck.r <= pk.box.r + 1, 'it stays inside the point\'s own box, not the next one', pk);
+  ok(pk.puck.t <= pk.box.t + 6 && pk.puck.b > pk.box.t, 'and sits on the top edge of that box', pk);
+  ok(pk.puck.l > (pk.box.l + pk.box.r) / 2, 'on the right-hand corner, clear of the number', pk);
   const kids = await p.evaluate(() => Array.from(document.querySelectorAll('#roll-strip .rp')).filter(e => e.offsetWidth).length);
   ok(kids <= 10 && kids >= 3, 'the roll strip shows the last ten rolls (' + kids + ')');
 

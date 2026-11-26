@@ -11,6 +11,7 @@
 //   Field                 3,4,9,10,11 pay 1:1, 2 pays 2:1, 12 pays 3:1, 5,6,7,8 lose (one roll)
 //   Hardways 4,6,8,10     win if rolled as a pair before a 7 or the "easy way"; 7:1 on 4/10, 9:1 on 6/8; OFF on come-out
 //   One-roll props        Any 7 (4:1), Any Craps (7:1), Yo-eleven (15:1), Aces (30:1), Boxcars (30:1), Ace-Deuce (15:1)
+//   Hops                  One roll, exact dice: a pair such as 3-3 (a hard hop) pays 30:1, two different dice such as 2-5 pay 15:1 (either die can show either number)
 // Come/Don't Come odds are OFF on a come-out roll (the standard house default); a 7 on the come-out takes
 // the flat part of a Come bet and returns the odds.
 // Payouts that don't divide evenly are rounded DOWN to whole dollars, exactly as a casino pays them.
@@ -24,8 +25,8 @@
 
 var POINTS = [4,5,6,8,9,10];
 var HARD_NUMBERS = [4,6,8,10];
-var TYPES = ['pass','dontpass','come','dontcome','place','buy','field','hard','any7','anycraps','yo','aces','boxcars','acedeuce'];
-var ONE_ROLL = ['field','any7','anycraps','yo','aces','boxcars','acedeuce'];
+var TYPES = ['pass','dontpass','come','dontcome','place','buy','field','hard','any7','anycraps','yo','aces','boxcars','acedeuce','hop'];
+var ONE_ROLL = ['field','any7','anycraps','yo','aces','boxcars','acedeuce','hop'];
 
 // Ways to roll each total with two dice (out of 36).
 var WAYS = {2:1,3:2,4:3,5:4,6:5,7:6,8:5,9:4,10:3,11:2,12:1};
@@ -35,6 +36,14 @@ var ODDS_PAY  = {4:[2,1],10:[2,1],5:[3,2],9:[3,2],6:[6,5],8:[6,5]};          // 
 var LAY_PAY   = {4:[1,2],10:[1,2],5:[2,3],9:[2,3],6:[5,6],8:[5,6]};          // lay (against) is the reverse
 var HARD_PAY  = {4:7,10:7,6:9,8:9};
 var PROP_PAY  = {any7:4, anycraps:7, yo:15, aces:30, boxcars:30, acedeuce:15};
+var HOP_PAY   = {easy:15, hard:30};
+// A hop is named by its two dice, low die first, as a two-digit number: 25 is a 2 and a 5, 33 is a pair of threes.
+var HOP_NUMBERS = [];
+(function(){ for(var a=1;a<=6;a++){ for(var b=a;b<=6;b++){ HOP_NUMBERS.push(a*10+b); } } })();
+function hopDice(number){ return [Math.floor(number/10), number%10]; }
+function hopIsHard(number){ var d = hopDice(number); return d[0]===d[1]; }
+function hopPay(number){ return hopIsHard(number) ? HOP_PAY.hard : HOP_PAY.easy; }
+function hopNumber(d1, d2){ return Math.min(d1,d2)*10 + Math.max(d1,d2); }
 
 // Max free odds as a multiple of the flat bet, by the table's odds rule.
 var ODDS_RULES = {
@@ -63,8 +72,10 @@ var LEDGER = [
   {key:'hard410',  label:'Hard 4 or 10',      edge:1/9,         blurb:'Pays 7:1 but is beaten by 8 of every 9 resolving rolls.'},
   {key:'yo',       label:'Yo (11)',           edge:1/9,         blurb:'One roll. Pays 15:1 when the true odds are 17:1.'},
   {key:'acedeuce', label:'Ace-Deuce (3)',     edge:1/9,         blurb:'One roll. Pays 15:1 when the true odds are 17:1.'},
+  {key:'hopeasy',  label:'Hop (two different dice)', edge:1/9,   blurb:'One roll. Wins only on that exact pair of dice, in either order (2 ways in 36). Pays 15:1 when the true odds are 17:1.'},
   {key:'aces',     label:'Aces (2)',          edge:5/36,        blurb:'One roll. Pays 30:1 when the true odds are 35:1.'},
   {key:'boxcars',  label:'Boxcars (12)',      edge:5/36,        blurb:'One roll. Pays 30:1 when the true odds are 35:1.'},
+  {key:'hophard',  label:'Hard hop (a pair)', edge:5/36,        blurb:'One roll. Wins only on that exact pair, such as 3-3 (1 way in 36). Pays 30:1 when the true odds are 35:1.'},
   {key:'any7',     label:'Any Seven',         edge:1/6,         blurb:'The single worst bet on the table. Pays 4:1 when the true odds are 5:1.'}
 ];
 var LEDGER_BY_KEY = {};
@@ -76,12 +87,13 @@ function ledgerKey(type, number){
   if(type==='place') return (number===6||number===8) ? 'place68' : (number===5||number===9) ? 'place59' : 'place410';
   if(type==='buy') return (number===6||number===8) ? 'buy68' : (number===5||number===9) ? 'buy59' : 'buy410';
   if(type==='hard') return (number===6||number===8) ? 'hard68' : 'hard410';
+  if(type==='hop') return (typeof number==='number' && hopIsHard(number)) ? 'hophard' : 'hopeasy';
   return type; // field, any7, anycraps, yo, aces, boxcars, acedeuce
 }
 
 var BET_LABEL = {
   pass:'Pass Line', dontpass:"Don't Pass", come:'Come', dontcome:"Don't Come", place:'Place', buy:'Buy', field:'Field',
-  hard:'Hardway', any7:'Any Seven', anycraps:'Any Craps', yo:'Yo (11)', aces:'Aces', boxcars:'Boxcars', acedeuce:'Ace-Deuce'
+  hard:'Hardway', any7:'Any Seven', anycraps:'Any Craps', yo:'Yo (11)', aces:'Aces', boxcars:'Boxcars', acedeuce:'Ace-Deuce', hop:'Hop'
 };
 
 function defaultOpts(){
@@ -124,6 +136,7 @@ function canPlace(state, type, amount, number){
   if(type==='place' && POINTS.indexOf(number) < 0) return {ok:false, reason:'Place bets go on 4, 5, 6, 8, 9 or 10.'};
   if(type==='buy' && POINTS.indexOf(number) < 0) return {ok:false, reason:'Buy bets go on 4, 5, 6, 8, 9 or 10.'};
   if(type==='hard' && HARD_NUMBERS.indexOf(number) < 0) return {ok:false, reason:'Hardways are 4, 6, 8 and 10.'};
+  if(type==='hop' && HOP_NUMBERS.indexOf(number) < 0) return {ok:false, reason:'A hop is two dice, each from 1 to 6.'};
   if(type==='place' && hasBetAt(state, 'buy', number)) return {ok:false, reason:'You have a Buy bet on the '+number+'. Take it down to switch to Place.'};
   if(type==='buy' && hasBetAt(state, 'place', number)) return {ok:false, reason:'You have a Place bet on the '+number+'. Take it down to switch to Buy.'};
   return {ok:true};
@@ -131,7 +144,7 @@ function canPlace(state, type, amount, number){
 
 function sameSpot(b, type, number){
   if(b.type !== type) return false;
-  if(type==='place' || type==='buy' || type==='hard') return b.number === number;
+  if(type==='place' || type==='buy' || type==='hard' || type==='hop') return b.number === number;
   if(type==='come' || type==='dontcome') return b.number === null; // only the not-yet-traveled one
   return true;
 }
@@ -140,7 +153,7 @@ function placeBet(state, type, amount, number){
   var chk = canPlace(state, type, amount, number);
   if(!chk.ok) return {ok:false, reason:chk.reason, state:state};
   var s = clone(state);
-  var num = (type==='place' || type==='buy' || type==='hard') ? number : null;
+  var num = (type==='place' || type==='buy' || type==='hard' || type==='hop') ? number : null;
   for(var i=0;i<s.bets.length;i++){
     if(sameSpot(s.bets[i], type, num)){ s.bets[i].amount += amount; return {ok:true, state:s, betId:s.bets[i].id}; }
   }
@@ -384,6 +397,7 @@ function resolveRoll(state, d1, d2){
     else if(t === 'aces'){ if(s===2) ev(bet,'win','none',{winFlat:bet.amount*PROP_PAY.aces, ratio:[PROP_PAY.aces,1]}); else ev(bet,'lose','none'); }
     else if(t === 'boxcars'){ if(s===12) ev(bet,'win','none',{winFlat:bet.amount*PROP_PAY.boxcars, ratio:[PROP_PAY.boxcars,1]}); else ev(bet,'lose','none'); }
     else if(t === 'acedeuce'){ if(s===3) ev(bet,'win','none',{winFlat:bet.amount*PROP_PAY.acedeuce, ratio:[PROP_PAY.acedeuce,1]}); else ev(bet,'lose','none'); }
+    else if(t === 'hop'){ if(hopNumber(d1,d2) === bet.number) ev(bet,'win','none',{winFlat:bet.amount*hopPay(bet.number), ratio:[hopPay(bet.number),1]}); else ev(bet,'lose','none'); }
     else { keep.push(bet); }
   }
 
@@ -427,6 +441,7 @@ function validState(st){
       if(!isInt(b.odds) || b.odds < 0) return false;
       if(b.type==='place' || b.type==='buy'){ if(POINTS.indexOf(b.number) < 0) return false; }
       else if(b.type==='hard'){ if(HARD_NUMBERS.indexOf(b.number) < 0) return false; }
+      else if(b.type==='hop'){ if(HOP_NUMBERS.indexOf(b.number) < 0) return false; }
       else if(b.type==='come' || b.type==='dontcome'){ if(!(b.number === null || POINTS.indexOf(b.number) >= 0)) return false; }
       else { if(b.number !== null) return false; }
       if(b.odds > 0){
@@ -442,6 +457,7 @@ function validState(st){
 return {
   POINTS:POINTS, HARD_NUMBERS:HARD_NUMBERS, TYPES:TYPES, ONE_ROLL:ONE_ROLL, WAYS:WAYS,
   PLACE_PAY:PLACE_PAY, ODDS_PAY:ODDS_PAY, LAY_PAY:LAY_PAY, HARD_PAY:HARD_PAY, PROP_PAY:PROP_PAY,
+  HOP_PAY:HOP_PAY, HOP_NUMBERS:HOP_NUMBERS, hopDice:hopDice, hopIsHard:hopIsHard, hopPay:hopPay, hopNumber:hopNumber,
   ODDS_RULES:ODDS_RULES, LEDGER:LEDGER, LEDGER_BY_KEY:LEDGER_BY_KEY, BET_LABEL:BET_LABEL,
   BUY_VIG_RATE:BUY_VIG_RATE, buyVig:buyVig, buyWin:buyWin, hasBetAt:hasBetAt,
   ledgerKey:ledgerKey, newState:newState, defaultOpts:defaultOpts, clone:clone,
