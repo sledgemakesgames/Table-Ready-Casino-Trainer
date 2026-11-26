@@ -1405,9 +1405,9 @@ async function playHand(t, o){
     {
       const t = await boot();
       await oneHand(t);
-      t.w.rig(['2S', '4D', '3H', '5S']);
-      t.doc.getElementById('btn-rebet-deal').click(); await wait(20);
-      ok(t.w.G.phase !== 'betting' && t.w.G.bets.banker === 50, 'Rebet & Deal: the same bet, dealt');
+      ok(!t.doc.getElementById('btn-rebet-deal'), 'there is no Rebet & Deal button: one tap rebets, Deal deals');
+      t.doc.getElementById('btn-rebet').click(); await wait(10);
+      ok(t.w.G.phase === 'betting' && t.w.G.bets.banker === 50, 'Rebet puts the same $50 back, and the hand waits for Deal');
       noErr(t); t.w.close();
     }
     // side bets that are switched off are not put back

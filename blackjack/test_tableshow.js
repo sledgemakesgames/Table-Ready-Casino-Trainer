@@ -3501,9 +3501,9 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       const t = await boot();
       t.w.rig(['10S', '10H', '9D', '6C', '10D']); t.w.deal(25); await toPlayer(t); await stand(t); await toBetting(t); await wait(20);
       t.w.setBet(0); await wait(10);
-      t.w.rig(['9S', '10H', '8D', '7C', '3D']);
-      $(t, 'btn-rebet-deal').click(); await wait(20);
-      ok(t.w.G.phase !== 'betting' && t.w.G.hands[0].bet === 25, 'Rebet & Deal: the same bet, dealt');
+      ok(!t.doc.getElementById('btn-rebet-deal'), 'there is no Rebet & Deal button: one tap rebets, Deal deals');
+      $(t, 'btn-rebet').click(); await wait(10);
+      ok(t.w.G.phase === 'betting' && t.w.betOf(0) === 25, 'Rebet puts the same $25 back, and the hand waits for Deal');
       noErr(t); close(t);
     }
     // Rebet with two hands and a side bet

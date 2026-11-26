@@ -715,7 +715,6 @@ body.rebet-on #btn-deal{margin-left:0 !important}
 .rebet-btn{font:600 13px/1 var(--font-ui, inherit);padding:9px 12px;border-radius:999px;border:1px solid var(--line, rgba(255,255,255,.18));background:rgba(255,255,255,.06);color:var(--text, #eee);cursor:pointer;white-space:nowrap;transition:transform .12s cubic-bezier(.3,1.4,.5,1), background .15s, border-color .15s}
 .rebet-btn:hover{background:rgba(255,255,255,.12);border-color:var(--brass, #d6a94b)}
 .rebet-btn:active{transform:scale(.94)}
-#btn-rebet-deal{background:rgba(214,169,75,.16);border-color:rgba(214,169,75,.55);color:var(--brass-bright, #f0c46b)}
 @media (max-width:520px){ .rebet-grp{width:100%;justify-content:flex-start;margin-left:0} body.rebet-on #btn-deal{margin-left:auto !important} }
 @media (prefers-reduced-motion: reduce){ .rebet-btn{transition:none} .rebet-btn:active{transform:none} }
 #skip-hint{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center;font:600 12px/1.3 var(--font-ui, inherit);letter-spacing:.02em;color:var(--text, #eee);background:rgba(8,12,12,.78);border:1px solid var(--line, rgba(255,255,255,.14));padding:7px 14px;border-radius:999px;opacity:0;animation:hintIn .45s ease .9s forwards}
@@ -7057,11 +7056,10 @@ var Show = (function(){
   function buildRebet(){
     var deal = $('btn-deal'); if(!deal || !deal.parentNode || $('rebet-grp')) return;
     var g = document.createElement('span'); g.id = 'rebet-grp'; g.className = 'rebet-grp'; g.style.display = 'none';
-    g.innerHTML = '<button type="button" id="btn-rebet" class="rebet-btn"></button><button type="button" id="btn-rebet-deal" class="rebet-btn">Rebet &amp; Deal</button>';
+    g.innerHTML = '<button type="button" id="btn-rebet" class="rebet-btn"></button>';
     deal.parentNode.insertBefore(g, deal);
     deal.title = 'Deal — or press Space';
     $('btn-rebet').addEventListener('click', guard('rebet', function(){ rebet(); }));
-    $('btn-rebet-deal').addEventListener('click', guard('rebet deal', function(){ if(rebet()) dealKey(); }));
   }
   function updateRebet(){
     var g = $('rebet-grp'); if(!g) return;

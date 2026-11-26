@@ -1044,7 +1044,6 @@ body{--gut:16px;}
   #jump{display:none !important;}
   .dice-stage{--s:calc(38px + 34px * var(--f));--h:calc(var(--s) / 2);height:calc(94px + 160px * var(--f));}
   .die-shadow{left:calc(var(--s) * -.57);width:calc(var(--s) * 1.13);height:calc(var(--s) * .27);bottom:calc(var(--s) * -.23);}
-  .puck-lane{height:calc(22px + 16px * var(--f));margin-bottom:calc(0px + 5px * var(--f));}
   .num{min-height:calc(119px + 47px * var(--f));padding:calc(5px + 5px * var(--f)) 6px calc(4px + 5px * var(--f));}
   .num .num-label{font-size:calc(20px + 8px * var(--f));}
   .num .num-sub{margin-top:1px;}
@@ -1098,9 +1097,20 @@ body{--gut:16px;}
   .side-panels #ledger-wrap + .foot-note{display:none;}
 }
 @media (min-width:1320px) and (min-height:600px){
-  .felt-main{position:relative;}
-  .felt-main > .hint-line{position:absolute;left:210px;right:250px;top:0;height:30px;margin:0;padding:2px 10px;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1.25;z-index:7;text-wrap:balance;overflow:hidden;}
-  .felt-main > .hint-line[style*="display: none"]{display:none !important;}
+  /* Notices (welcome back, tips, messages) take the callout's own row under the dice while they show, so they never sit on the top bar or on the dice. */
+  .top-block > .hint-line{grid-column:1 / -1;grid-row:3;align-self:stretch;margin:calc(3px + 9px * var(--f)) 0 0;min-height:calc(22px + 8px * var(--f));height:auto;padding:0 14px;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1.25;z-index:7;text-wrap:balance;overflow:hidden;border-radius:999px;}
+  .top-block > .hint-line[style*="display: none"],.top-block > .hint-line[style*="display:none"]{display:none !important;}
+  .top-block:has(> .hint-line:not([style*="display: none"]):not([style*="display:none"])) > .callout{visibility:hidden;}
+  /* The dice total sits in the top corner beside the dice colour button, so it never covers the dice however short the tray is. */
+  .readout{justify-content:flex-start;padding-left:54px;top:calc(6px + 4px * var(--f));}
+  .readout .d2{--d:calc(18px + 6px * var(--f));}
+  .rd-tot{font-size:calc(20px + 4px * var(--f));}
+  .roll-strip .rp:nth-last-child(n+11){display:none;}
+  /* The stickman's call comes up under the dice, where the tray is empty, instead of over their tops. */
+  .stick-call{top:auto;bottom:calc(5px + 3px * var(--f));}
+  /* The puck is sized to its lane, so it never sits on top of the number it marks. */
+  .puck-lane{height:calc(32px + 6px * var(--f));margin-bottom:calc(0px + 4px * var(--f));}
+  .puck{width:calc(27px + 7px * var(--f));height:calc(27px + 7px * var(--f));top:2px;font-size:9px;}
   .line-bets .spot.has-bet .spot-pay{display:none;}
   .odds-row.show{padding-right:0;margin-top:4px;gap:6px;}
   .line-bets .spot.has-bet .spot-chips{top:8px;bottom:auto;right:10px;}
@@ -1230,6 +1240,8 @@ body{--gut:16px;}
 <div class="table-felt" id="felt">
 <div class="felt-main">
 
+
+
   <p class="hint-line" id="resume-notice" style="display:none;background:rgba(101,199,163,0.1);border-color:rgba(101,199,163,0.3);color:var(--sage-bright);">Welcome back — we restored the bets you had on the table.</p>
   <p class="hint-line" id="bankruptcy-notice" style="display:none;background:rgba(214,169,75,0.1);border-color:rgba(214,169,75,0.3);color:var(--brass-bright);">You ran out of chips — resetting your bankroll to $1,000.</p>
   <p class="hint-line" id="table-msg" role="status" style="display:none;"></p>
@@ -1278,6 +1290,7 @@ body{--gut:16px;}
     <div class="big" id="callout-big">Place a bet and roll</div>
     <div class="sub" id="callout-sub">Start with a Pass Line bet.</div>
   </div>
+
   <div class="roll-strip" id="roll-strip" aria-label="Recent rolls"></div>
   <nav class="jump" id="jump" aria-label="Jump to a kind of bet">
     <button type="button" data-target="grp-lines">Line</button>
@@ -2236,7 +2249,7 @@ function renderPuck(){
   puck.className='puck on'; puck.textContent='ON';
   var box=document.querySelector('.num[data-number="'+t.point+'"]');
   var x=0;
-  if(box && lane.offsetWidth){ x=box.offsetLeft+box.offsetWidth/2-18; }
+  if(box && lane.offsetWidth){ x=box.offsetLeft+box.offsetWidth/2-(puck.offsetWidth||36)/2; }
   puck.style.transform='translateX('+Math.max(0,Math.round(x))+'px)';
 }
 function canRemoveBet(table, bet){ return !!bet && E.canRemove(table, bet) && G.phase==='betting'; }
@@ -3654,7 +3667,7 @@ function renderPuckAfterRoll(res){
   // move the puck right away so it travels while the chips flash
   var t=G.table, puck=$('puck'), lane=$('puck-lane');
   if(t.point===null){ puck.className='puck'; puck.textContent='OFF'; puck.style.transform='translateX(0px)'; }
-  else { puck.className='puck on'; puck.textContent='ON'; var box=document.querySelector('.num[data-number="'+t.point+'"]'); puck.style.transform='translateX('+Math.max(0,Math.round(box.offsetLeft+box.offsetWidth/2-18))+'px)'; }
+  else { puck.className='puck on'; puck.textContent='ON'; var box=document.querySelector('.num[data-number="'+t.point+'"]'); puck.style.transform='translateX('+Math.max(0,Math.round(box.offsetLeft+box.offsetWidth/2-(puck.offsetWidth||36)/2))+'px)'; }
   $('lane-label').style.opacity=t.point===null?'1':'0';
 }
 function finishRoll(res){
@@ -4042,6 +4055,23 @@ function wirePhone(){
 }
 
 /* ============ START ============ */
+/* On a roomy desktop the notices (welcome back, tips, messages) take the callout's row under the dice, so they need to sit inside the top block's grid; on a phone they float fixed above the dock, which only works outside that (blurred, sticky) block. */
+(function noticeSlot(){
+  var mq = window.matchMedia && window.matchMedia('(min-width:1320px) and (min-height:600px)');
+  var tb = document.getElementById('top-block'), co = document.getElementById('callout');
+  if(!mq || !tb || !co || !tb.parentNode) return;
+  var fm = tb.parentNode, ids = ['resume-notice', 'bankruptcy-notice', 'table-msg'];
+  function place(){
+    var anchor = co.nextSibling;
+    ids.forEach(function(id){
+      var e = document.getElementById(id); if(!e) return;
+      if(mq.matches){ if(e.parentNode !== tb) tb.insertBefore(e, anchor); }
+      else if(e.parentNode !== fm) fm.insertBefore(e, tb);
+    });
+  }
+  place();
+  if(mq.addEventListener) mq.addEventListener('change', place); else if(mq.addListener) mq.addListener(place);
+})();
 (function init(){
   applyTheme('graphite');
   buildDiceSwatches();
