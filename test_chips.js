@@ -1,4 +1,5 @@
-// The chips, in a real browser (Playwright): Baccarat, Pai Gow and Ultimate Texas Hold'em share Blackjack's chip look and movements; Craps keeps its own.
+// The chips, in a real browser (Playwright): Baccarat, Pai Gow and Ultimate Texas Hold'em share Blackjack's chip look; Craps keeps its own.
+// Nothing flies: a chip you place drops onto its stack, a lost bet comes off the table, what a bet won or lost floats up from it, and the bankroll is right at once.
 // Run from the site folder:  node test_chips.js [game]
 const { chromium } = require('playwright');
 const path = require('path');
@@ -10,6 +11,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function open(browser, game, opts){
   const ctx = await browser.newContext(Object.assign({ viewport: { width: 1440, height: 900 } }, opts || {}));
+  // every animation of a chip-looking element that moves it a long way is logged: there must be none
+  await ctx.addInitScript(() => {
+    window.__fl = []; const orig = Element.prototype.animate;
+    const num = s => { const m = /translate\(\s*(-?[\d.]+)px[ ,]+(-?[\d.]+)px/.exec(s || ''); return m ? [+m[1], +m[2]] : null; };
+    Element.prototype.animate = function(kf, o){
+      try{
+        const cls = String(this.className || '');
+        if(/chip|pchip|tr-fly|\bbk\b|coin|\bcg\b/i.test(cls)){
+          const t = (Array.isArray(kf) ? kf : []).map(f => num(f.transform)).filter(Boolean);
+          if(t.length >= 2){ const d = Math.hypot(t[t.length - 1][0] - t[0][0], t[t.length - 1][1] - t[0][1]); if(d > 60) window.__fl.push({ cls: cls.slice(0, 40), d: Math.round(d) }); }
+        }
+      }catch(e){}
+      return orig.apply(this, arguments);
+    };
+  });
   await ctx.addInitScript(() => { try{ localStorage.setItem('house_edge_experience_v1', JSON.stringify({ level: 'pro', updated: Date.now() })); localStorage.setItem('soft17_sound', 'off'); }catch(e){} });
   const p = await ctx.newPage(); const errs = [];
   p.on('pageerror', e => errs.push(String(e)));
@@ -105,9 +121,10 @@ async function run(browser, game){
   }
   for(let i = 0; i < 30; i++){ seen = Math.max(seen, await p.evaluate(() => document.querySelectorAll('.tr-fly,.pchip').length)); await sleep(150); }
   ok(done, 'the hand was played to its result');
-  ok(seen > 0, 'the dealer settled it with chips (pays, a sweep, or a push)', seen);
+  ok(seen === 0, 'nothing flies: no chip is ever in the air while the hand is settled', seen);
+  ok(await p.evaluate(() => window.__fl.length === 0), 'and no chip travelled anywhere across the whole hand (placing, drag, take-back, pay, sweep)', await p.evaluate(() => window.__fl));
   const aft = await p.evaluate(() => ({ bank: G.bankroll, shown: parseInt(String((document.getElementById('bankroll-amount') || {}).textContent).replace(/[^\d-]/g, ''), 10), fly: document.querySelectorAll('.tr-fly,.pchip').length, floats: document.querySelectorAll('.tr-float').length }));
-  ok(aft.shown === aft.bank, 'the bankroll on screen counts up to what the game says it is', aft);
+  ok(aft.shown === aft.bank, 'the bankroll on screen is what the game says it is', aft);
   ok(aft.fly === 0 && aft.floats === 0, 'and no chip is left in the air', aft);
   ok(aft.bank !== before || true, 'the money is the game\'s own (the chips only show it)');
   // the next hand starts clean

@@ -237,8 +237,8 @@ async function playHand(t, sc, plan, o){
     ok(await playHand(t, FLUSH_WIN, ['check', 'check', 'bet1'], { trips: 1 }), 'plays to the result');
     ok(t.w.G.bankroll === 1262, 'the money: +25 +37 +25 +175 = 1262 (got ' + t.w.G.bankroll + ')');
     ok(JSON.stringify(t.S.cmpSpots.map(x => [x.spot, x.kind, x.amount])) === JSON.stringify([['ante', 'win', 25], ['blind', 'win', 37], ['play', 'win', 25], ['trips', 'win', 175]]), 'four payouts, one per bet, in order, each the real winnings: ' + JSON.stringify(t.S.cmpSpots));
-    ok(wt.pchips >= 5, 'chips came out of his tray (' + wt.pchips + ')');
-    ok(await waitFor(() => t.doc.querySelectorAll('.pchip').length === 0, 8000, 'chips gone'), 'they clean themselves up');
+    ok(wt.pchips === 0, 'nothing flies: no chip leaves his tray (' + wt.pchips + ')');
+    ok(t.doc.querySelectorAll('.pchip').length === 0, 'and no chip is left on the felt');
     ok(await waitFor(() => t.w.Show._L.blind.concat(t.w.Show._L.tripsHit).some(s => wt.said.indexOf(s) >= 0), 3000, 'blind line'), 'he says the Blind or the Trips paid');
     ok(wt.moods.indexOf('wow') >= 0, 'his face shows it');
     ok(await waitFor(() => asked.indexOf('chime') >= 0, 3000, 'chime'), 'and a chime rings for the big win');
@@ -250,8 +250,8 @@ async function playHand(t, sc, plan, o){
     ok(await playHand(l, DEALER_WINS, ['check', 'check', 'bet1'], { trips: 1 }), 'plays to the result');
     ok(l.w.G.bankroll === 1000 - 25 - 25 - 25 - 25, 'a loss on all four (' + l.w.G.bankroll + ')');
     ok(JSON.stringify(l.S.cmpSpots.map(x => [x.spot, x.kind, x.amount])) === JSON.stringify([['ante', 'loss', 25], ['blind', 'loss', 25], ['play', 'loss', 25], ['trips', 'loss', 25]]), 'he takes all four: ' + JSON.stringify(l.S.cmpSpots));
-    ok(await waitFor(() => ['ante', 'blind', 'play', 'trips'].every(k => $(l, 'chips-' + k).style.visibility === 'hidden'), 4000, 'stacks leave'), 'the stack of every lost bet leaves its spot (it is on its way to his tray)');
-    ok(await waitFor(() => l.doc.querySelectorAll('.pchip').length === 0, 8000, 'chips gone'), 'and the chips in the air are gone again');
+    ok(await waitFor(() => ['ante', 'blind', 'play', 'trips'].every(k => $(l, 'chips-' + k).style.visibility === 'hidden'), 4000, 'stacks leave'), 'the stack of every lost bet comes off its spot (he takes it)');
+    ok(wl.pchips === 0 && l.doc.querySelectorAll('.pchip').length === 0, 'and no chip flew to do it');
     ok(await waitFor(() => said(l, wl, 'loss'), 3000, 'loss line'), 'he has a line for it');
     wl.stop(); noErr(l);
 
@@ -292,11 +292,10 @@ async function playHand(t, sc, plan, o){
     const p0 = wt.pchips;
     click(t, $(t, 'btn-bet'));
     ok(t.w.G.bets.play === 100, 'the bet is down: $100');
-    ok($(t, 'chips-play').style.visibility === 'hidden', 'its stack is in the air (hidden on the spot) while your chips fly there');
+    ok($(t, 'chips-play').style.visibility === '', 'its stack is simply there (no chip flies out to it)');
     ok(t.S.mood === 'surp', 'he looks surprised at once (and he gets to, before the cards come: ' + t.S.mood + ')');
     await wait(5);
-    ok(wt.pchips - p0 === 1, 'one chip flies for $100');
-    ok(await waitFor(() => $(t, 'chips-play').style.visibility === '', 5000, 'chips land'), 'when they land the stack is back');
+    ok(wt.pchips - p0 === 0, 'no chip flies for $100');
     ok(await waitFor(() => wt.said.some(s => t.w.Show._L.bet4.indexOf(s) >= 0), 3000, 'bet line'), 'he comments on a 4x bet');
     ok(await waitFor(() => phase(t) === 'flop-deal' || phase(t) === 'showdown-pending' && t.doc.querySelectorAll('#board-cards .pc').length > 0, 6000, 'board'), 'then the board is dealt');
     wt.stop();
@@ -396,11 +395,11 @@ async function playHand(t, sc, plan, o){
   }
 
   // ---------------------------------------------------------------- hands in a row
-  section('Play Again while his chips are still moving, and three hands in a row');
+  section('Play Again while the result is still showing, and three hands in a row');
   {
     const t = await boot({ k: 1, gk: 0.05 });
     ok(await playHand(t, FLUSH_WIN, ['check', 'check', 'bet1'], { trips: 1 }), 'a hand');
-    ok(t.S.pay.length > 0, 'chips are moving');
+    ok(t.doc.querySelectorAll('.pchip').length === 0, 'no chip is moving: nothing flies');
     click(t, $(t, 'btn-again'));
     ok(t.S.pay.length === 0 && t.doc.querySelectorAll('.pchip').length === 0, 'Play Again takes every chip off the felt at once');
     ok(['ante', 'blind', 'play', 'trips'].every(k => $(t, 'chips-' + k).style.visibility === ''), 'and every stack is back where it belongs');
@@ -843,19 +842,18 @@ async function playHand(t, sc, plan, o){
     const withHim = await pause();
     ok(withHim >= 380, 'with the dealer on, the comparison gets time before the result (' + withHim + 'ms)');
   }
-  section('the payouts come one bet at a time, and the lost bets leave the table');
+  section('the payouts are settled one bet at a time, and the lost bets leave the table: nothing flies');
   {
     const t = await boot({ k: 0.5, gk: 0.05 });
     const times = [];
     const mo = new t.w.MutationObserver(list => list.forEach(m => m.addedNodes.forEach(n => { if(n.nodeType === 1 && n.classList.contains('pchip')) times.push(Date.now()); })));
     mo.observe($(t, 'show-layer'), { childList: true });
-    let tc = 0; const iv = setInterval(() => { if(!tc && t.S.stats.compares >= 1) tc = Date.now(); }, 2);
     ok(await playHand(t, FLUSH_WIN, ['check', 'check', 'bet1'], { trips: 1 }), 'a hand where all four bets win');
-    await waitFor(() => t.doc.querySelectorAll('.pchip').length === 0, 8000, 'chips gone');
-    clearInterval(iv); mo.disconnect();
-    const after = times.filter(x => x >= tc - 5);
-    ok(tc > 0 && after.length >= 4 && after[after.length - 1] - after[0] >= 350, 'four bets are paid one after the other, not all at the same moment (' + (after.length ? after[after.length - 1] - after[0] : 0) + 'ms from the first chip to the last)');
+    await wait(600);
+    mo.disconnect();
+    ok(times.length === 0 && t.doc.querySelectorAll('.pchip').length === 0, 'no chip is made to fly (' + times.length + ')');
     ok(['ante', 'blind', 'play', 'trips'].every(k => $(t, 'chips-' + k).style.visibility === ''), 'and when you win, your own chips stay where they are');
+    ok(t.S.stats.pays === 4 && t.S.cmpSpots.length === 4, 'four bets were each settled in turn (' + t.S.stats.pays + ')');
   }
   section('he does not hurry you when it is not your turn');
   {

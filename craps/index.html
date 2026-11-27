@@ -1389,7 +1389,7 @@ body{--gut:16px;}
   <button type="button" id="btn-edge" class="toggle-btn" aria-pressed="true" title="Show or hide the house edge on every bet"><span class="dot"></span>House edge</button>
   <a href="#" id="btn-manners" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Table manners</a>
   <a href="/learn/glossary/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
-  <a href="/report/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">My report</a>
+  <a href="/report/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">My Report</a>
 </div>
 
 <div class="panel" id="settings-panel" style="display:none;">
@@ -3897,16 +3897,6 @@ function rollDice(d1,d2){
   sfxRoll();
   throwDice(d1,d2,function(){ afterSettle(res); });
 }
-function flyChip(fromEl,toEl){
-  if(G.settings.turbo || reducedMotion || !fromEl || !toEl || typeof fromEl.animate!=='function') return;
-  var felt=$('felt'), fr=fromEl.getBoundingClientRect(), tr=toEl.getBoundingClientRect(), pr=felt.getBoundingClientRect();
-  var c=document.createElement('i'); c.className='pchip c25'; c.style.cssText='position:absolute;z-index:8;pointer-events:none;left:'+(fr.left-pr.left+fr.width/2-14)+'px;top:'+(fr.top-pr.top+fr.height/2-14)+'px;bottom:auto;';
-  felt.appendChild(c);
-  var dx=(tr.left+tr.width/2)-(fr.left+fr.width/2), dy=(tr.top+tr.height/2)-(fr.top+fr.height/2);
-  var a=c.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate('+(dx*0.5)+'px,'+(dy*0.5-34)+'px) scale(1.25)',offset:.5},{transform:'translate('+dx+'px,'+dy+'px) scale(1)'}],{duration:620,easing:'cubic-bezier(.3,.7,.3,1)'});
-  var rm=function(){ if(c.parentNode) c.parentNode.removeChild(c); };
-  a.onfinish=rm; setTimeout(rm, 900);
-}
 function eventTarget(e){
   if(e.type==='hop') return $('btn-hops');
   if(e.type==='place' || e.type==='buy' || e.type==='hard'){
@@ -3966,9 +3956,6 @@ function afterSettle(res){
         f.innerHTML=(n===0?'Push':signedMoney(n))+(fm?'<small>'+esc(fm)+'</small>':'');
         el.appendChild(f); setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); }, 1350);
       }
-    } else if(e.result==='travel'){
-      var from=document.querySelector('.spot[data-key="'+e.type+'"]'), to=document.querySelector('.num[data-number="'+e.number+'"]');
-      flyChip(from,to);
     }
   });
   renderPuckAfterRoll(res);

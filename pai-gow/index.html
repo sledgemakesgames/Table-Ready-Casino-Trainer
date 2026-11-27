@@ -405,7 +405,6 @@ body.phase-betting .ds-shoe:not(:hover) .shoe-card{animation:dsShoeHint 3.2s eas
 .fc-in{position:absolute;inset:0;transform-style:preserve-3d;}
 .fc-face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;}
 .fc-card{position:absolute;inset:0;border-radius:11px;background:var(--back-img) center/100% 100% no-repeat;box-shadow:0 6px 14px -6px rgba(0,0,0,0.6);}
-.pchip{position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;border:2px dashed rgba(255,255,255,0.55);box-shadow:0 3px 6px -2px rgba(0,0,0,0.6),inset 0 0 0 2px rgba(0,0,0,0.18);will-change:transform;pointer-events:none;}
 .pfloat{position:absolute;z-index:3;font:700 15px/1 'Space Grotesk',sans-serif;letter-spacing:.2px;padding:5px 11px;border-radius:999px;pointer-events:none;white-space:nowrap;box-shadow:0 6px 14px -6px rgba(0,0,0,0.6);opacity:0;}
 .pfloat.win{background:#1F5A47;color:#C9F5E2;border:1px solid rgba(101,199,163,.6);}
 .pfloat.loss{background:#5A241C;color:#FFD3C9;border:1px solid rgba(225,93,69,.6);}
@@ -1149,7 +1148,7 @@ details.src p{margin:6px 0 0;}
     <button id="btn-toggle-settings" aria-expanded="false" aria-controls="settings-panel">Table settings</button>
     <button type="button" class="mini-link" id="btn-manners" aria-haspopup="dialog">Table manners</button>
     <a href="/learn/glossary/" class="mini-link">Glossary</a>
-    <a href="/report/" class="mini-link">My report</a>
+    <a href="/report/" class="mini-link">My Report</a>
   </div>
 </header>
 <button type="button" id="m-menu-btn" class="m-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" aria-controls="m-menu"><i></i><i></i><i></i></button>
@@ -4307,43 +4306,17 @@ var Show = (function(){
     if(G.phase === 'resolved') later(function(){ if(on() && G.phase === 'resolved' && !big && now() - S.lastSay > 3200) sayIt(pick(L.again, 'again'), 1600, true); }, 3600);
   }
 
-  /* ---------- the chips move ---------- */
+  /* ---------- the money: nothing flies. A lost bet comes off the table, and what it won or lost floats up from it ---------- */
   function layerPt(el){ return rectInLayer(el); }
-  function chipFlyer(d){
-    var c = D.createElement('i'); c.className = 'pchip ' + chipColorClass(d); c.setAttribute('aria-hidden', 'true'); c.textContent = d >= 1000 ? (d / 1000) + 'K' : String(d);
-    S.layer.appendChild(c); return c;
-  }
   function payChips(kind, bet){
-    if(!S.layer || !S.tray) return;
-    var spot = $('spot-ante'), from, to;
-    var tp = layerPt(S.tray), sp = layerPt(spot);
-    var chips = computeChipBreakdown(bet), n = chips.length;
+    if(!S.layer) return;
+    var sp = layerPt($('spot-ante'));
     S.stats.pays++;
     var gen = S.gen;
-    if(kind === 'loss'){ var sc = $('chips-ante'); if(sc) sc.style.visibility = 'hidden'; }
-    chips.forEach(function(d, i){
-      var c = chipFlyer(d), rec = {el: c};
-      S.pay.push(rec);
-      var a = kind === 'win' ? {x: tp.x + (i - n / 2) * 6, y: tp.y - 6} : {x: sp.x + (i - n / 2) * 8, y: sp.y + 2};
-      var b = kind === 'win' ? {x: sp.x + (i - n / 2) * 8, y: sp.y + 4} : {x: tp.x + (i - n / 2) * 6, y: tp.y - 6};
-      var dly = 120 + i * 85;
-      c.style.transform = 'translate(' + (a.x - 11) + 'px,' + (a.y - 11) + 'px) scale(.6)'; c.style.opacity = '0';
-      later(function(){
-        if(gen !== S.gen){ if(c.parentNode) c.parentNode.removeChild(c); return; }
-        sfxCoin(i);
-        try{
-          var an = c.animate([
-            {transform: 'translate(' + (a.x - 11) + 'px,' + (a.y - 11) + 'px) scale(.6)', opacity: 0, offset: 0},
-            {transform: 'translate(' + ((a.x + b.x) / 2 - 11) + 'px,' + ((a.y + b.y) / 2 - 30) + 'px) scale(1.1)', opacity: 1, offset: 0.5},
-            {transform: 'translate(' + (b.x - 11) + 'px,' + (b.y - 11) + 'px) scale(1)', opacity: 1, offset: 1}
-          ], {duration: Math.round(520 * tk()), easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards'});
-          an.onfinish = function(){
-            if(kind === 'win'){ later(function(){ try{ c.animate([{opacity: 1}, {opacity: 0}], {duration: 260 * tk(), fill: 'forwards'}).onfinish = function(){ if(c.parentNode) c.parentNode.removeChild(c); }; }catch(e){ if(c.parentNode) c.parentNode.removeChild(c); } }, 520); }
-            else if(c.parentNode) c.parentNode.removeChild(c);
-          };
-        }catch(e){ if(c.parentNode) c.parentNode.removeChild(c); }
-      }, dly);
-    });
+    if(kind === 'loss'){
+      var sc = $('chips-ante'); if(sc) sc.style.visibility = 'hidden';
+      later(function(){ if(gen === S.gen){ try{ if(W.TRChips && TRChips.on()) TRChips.pay([{k: 'ante', bet: bet, net: -bet, legacy: 1}], 0); }catch(e){ err('chips loss', e); } sfxCoin(0); } }, 120);
+    }
     later(function(){
       if(gen !== S.gen) return;
       floatText(sp.x, sp.y - 34, (kind === 'win' ? '+' : '−') + formatMoney(bet), kind);
@@ -4359,7 +4332,6 @@ var Show = (function(){
   }
   function clearPay(){
     try{ if(W.TRChips) TRChips.clear(); }catch(e){}
-    S.pay.splice(0).forEach(function(r){ if(r.el && r.el.parentNode) r.el.parentNode.removeChild(r.el); });
     [].forEach.call(D.querySelectorAll('.pfloat'), function(t){ if(t.parentNode) t.parentNode.removeChild(t); });
     var sc = $('chips-ante'); if(sc) sc.style.visibility = '';
   }
@@ -5450,7 +5422,8 @@ window.TRPractice = (function(){
 <script id="tr-chips">
 /* Table Ready: one set of chips.
    Blackjack's table chips, shared with Baccarat, Pai Gow and Ultimate Texas Hold'em: a rack of the chips you can afford, a stack of the chips you put on each bet,
-   chips that fly (and can be dragged), and a dealer who pays from his tray, sweeps your losses and slides a push back to you.
+   and chips you can drag from the rack onto a bet (or off a bet, to take it back). Nothing flies across the table: a chip you place drops into its stack,
+   a lost bet is taken off the table, and what a bet won or lost floats up from it.
    It reads the bets from G and calls the game's own functions; it never changes a rule, a bet or a result. */
 (function(){
   'use strict';
@@ -5471,7 +5444,7 @@ window.TRPractice = (function(){
   var DENOMS = [5, 10, 25, 50, 100, 500, 1000];
   var CAN_ANIM = typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
   var S = { spots: [], by: {}, rack: null, layer: null, cd: null, nextDrop: null, takeUntil: 0, suppress: 0, lastChip: 25, built: false,
-            timers: [], els: [], pay: null, holdNum: null, bankRecs: null, bankLater: null };
+            timers: [], els: [], pay: null };
 
   /* ---------- the look (Blackjack's, as it is there) ---------- */
   var CSS = [
@@ -5519,22 +5492,15 @@ window.TRPractice = (function(){
     '.tr-on .spot-amt:empty::before{content:\'\\200b\';}',
     '.tr-on .spot-amt:not(:empty){background:var(--panel);border-color:var(--line);color:var(--text);}',
     'body:not(.phase-betting).tr-hide-off .tr-bc{display:none;}',
-    /* the chip in your hand while you drag it, and the ones that fly */
+    /* the chip in your hand while you drag it */
     '.cg{position:fixed;left:0;top:0;z-index:70;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;box-sizing:border-box;background:var(--c);border:2px solid rgba(255,255,255,0.3);color:var(--tx,#fff);display:flex;align-items:center;justify-content:center;font:700 12px \'Space Grotesk\',sans-serif;pointer-events:none;will-change:transform;box-shadow:0 3px 8px -3px rgba(0,0,0,0.5);filter:drop-shadow(0 12px 8px rgba(0,0,0,0.4));}',
     '.cg.lifted{filter:drop-shadow(0 18px 11px rgba(0,0,0,0.45));}',
     '.cg.chip-500{border-color:rgba(0,0,0,0.25);}',
     '#tr-chip-layer{position:fixed;left:0;top:0;width:100%;height:100%;z-index:66;pointer-events:none;}',
-    '.tr-fly{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;box-sizing:border-box;border-radius:50%;background:var(--c);border:2px dashed rgba(255,255,255,.6);box-shadow:inset 0 0 0 3px rgba(0,0,0,.16),0 3px 7px -2px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font:800 11px \'Space Grotesk\',sans-serif;color:var(--tx,#fff);pointer-events:none;will-change:transform;}',
-    '.tr-fly.chip-500{border-color:rgba(0,0,0,.3);}',
-    '.pchip{width:34px;height:34px;margin:-6px 0 0 -6px;box-sizing:border-box;border-radius:50%;background:var(--c);border:2px dashed rgba(255,255,255,.6);box-shadow:inset 0 0 0 3px rgba(0,0,0,.16),0 3px 7px -2px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font:800 11px \'Space Grotesk\',sans-serif;color:var(--tx,#fff);}',
-    '.pchip.chip-500{border-color:rgba(0,0,0,.3);}',
-    '.tr-ring{position:absolute;left:0;top:0;width:56px;height:56px;margin:-28px 0 0 -28px;box-sizing:border-box;border-radius:50%;border:2px solid rgba(240,196,107,.8);pointer-events:none;}',
     '.tr-float{position:absolute;z-index:3;padding:3px 10px;border-radius:999px;font:800 14px \'Space Grotesk\',sans-serif;pointer-events:none;white-space:nowrap;box-shadow:0 6px 14px -6px rgba(0,0,0,.6);}',
     '.tr-float.win{background:var(--sage-bright,#7FD1A6);color:#0B1F17;}',
     '.tr-float.lose{background:var(--coral,#E5726B);color:#fff;}',
     '.tr-float.push{background:var(--brass-bright);color:#241A05;}',
-    '.bankroll-pill.tr-bump{animation:trBump 520ms cubic-bezier(.3,1.5,.5,1);}',
-    '@keyframes trBump{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,196,107,0);}30%{transform:scale(1.07);box-shadow:0 0 0 6px rgba(240,196,107,.22),0 0 22px rgba(240,196,107,.35);}100%{transform:none;box-shadow:0 0 0 0 rgba(240,196,107,0);}}',
     /* a shorter window: the rack and the bets give up a little height so the whole table still fits */
     '@media (min-width:641px) and (max-height:940px){',
     '  .tr-rack{min-height:0;padding:8px 14px;}',
@@ -5576,7 +5542,7 @@ window.TRPractice = (function(){
     '  .tr-bc{--chip:30px;--ring:46px;}',
     '  .tr-bc.sm{--chip:24px;--ring:36px;}',
     '}',
-    '@media (prefers-reduced-motion: reduce){ .tr-bc .bk,.tr-bc .bc-ring,.tr-rack .chip{animation:none !important;} .bankroll-pill.tr-bump{animation:none !important;} }'
+    '@media (prefers-reduced-motion: reduce){ .tr-bc .bk,.tr-bc .bc-ring,.tr-rack .chip{animation:none !important;} }'
   ].join('\n');
 
   /* ---------- small helpers ---------- */
@@ -5585,7 +5551,6 @@ window.TRPractice = (function(){
   function fx(){ try{ return motionOk() && !!(W.TRDealer && TRDealer.fx && TRDealer.fx()); }catch(e){ return false; } }
   function snd(name, o){ try{ if(W.G && G.soundOn && W.TRSound && TRSound.play) TRSound.play(name, o); }catch(e){} }
   function sfxClack(){ snd('chip'); } function sfxLand(){ snd('land'); } function sfxPick(){ snd('chipLight', {v:.6}); } function sfxTick(){ snd('chipLight', {v:.3}); }
-  function sfxCoin(i){ snd('chipLight', {v:.55 + (i % 5) * .05}); }
   function money(n){ try{ return W.formatMoney ? formatMoney(n) : '$' + n; }catch(e){ return '$' + n; } }
   function label(d){ return d >= 1000 ? (d / 1000) + 'K' : String(d); }
   function colorClass(d){ try{ if(W.chipColorClass) return chipColorClass(d); }catch(e){} return 'chip-' + d; }
@@ -5672,65 +5637,32 @@ window.TRPractice = (function(){
     sp.val = v;
     return true;
   }
-  function ringPoint(sp, idx){
-    var r = rect(sp.ring); if(!r || r.width <= 0) return null;
-    return {x: r.left + r.width / 2, y: r.top + r.height / 2 - (idx || 0) * 3};
-  }
   function makeGhost(d){
     var g = D.createElement('div'); g.className = 'cg ' + colorClass(d); g.textContent = label(d);
     g.style.transform = 'translate(-300px,-300px)'; D.body.appendChild(g); return g;
   }
   function dropGhost(g){ if(g && g.parentNode) g.parentNode.removeChild(g); }
   function xf(x, y, s, r){ return 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + s + ') rotate(' + (r || 0).toFixed(1) + 'deg)'; }
-  function ghostFly(g, kf, dur, ease, done){
-    try{
-      var a = g.animate(kf, {duration: dur, easing: ease, fill: 'forwards'});
-      a.onfinish = function(){ dropGhost(g); if(done) done(); };
-      return a;
-    }catch(e){ err('ghost', e); dropGhost(g); if(done) done(); }
-  }
   function ripple(sp){
     if(!motionOk() || !sp.bc) return;
     var r = D.createElement('div'); r.className = 'bc-rip'; sp.bc.appendChild(r);
     setTimeout(function(){ if(r.parentNode) r.parentNode.removeChild(r); }, 560);
   }
-  function landGhost(sp, nd, idx){
-    var to = ringPoint(sp, idx); if(!to){ dropGhost(nd.ghost); return; }
-    var g = nd.ghost, x0, y0, tilt0 = 0, sc0 = 1.1, k = 34 / 40;
-    if(g){ x0 = nd.x; y0 = nd.y; tilt0 = nd.tilt || 0; }
-    else if(nd.el && shown(nd.el)){ var r = rect(nd.el); x0 = r.left + r.width / 2; y0 = r.top + r.height / 2; g = makeGhost(nd.d); sc0 = 1; }
-    else return;
-    var arc = nd.ghost ? 8 : 46 + Math.min(40, Math.abs(to.x - x0) * 0.12);
-    var kf = nd.ghost
-      ? [{transform: xf(x0, y0, sc0, tilt0)}, {transform: xf(to.x, to.y, k, 0)}]
-      : [{transform: xf(x0, y0, 1, 0), offset: 0}, {transform: xf((x0 + to.x) / 2, Math.min(y0, to.y) - arc, 1.16, 150), offset: .5}, {transform: xf(to.x, to.y, k, 0), offset: 1}];
-    ghostFly(g, kf, nd.delay || 300, nd.ghost ? 'cubic-bezier(.4,0,.8,.6)' : 'cubic-bezier(.3,.55,.4,1)');
-    setTimeout(function(){ ripple(sp); sfxLand(); }, nd.delay || 300);
-  }
   function renderStack(sp, nd){
     var st = sp.stack, chips = sp.chips, kids = st.children, k = 0;
     while(k < kids.length && k < chips.length && +kids[k].getAttribute('data-d') === chips[k]) k++;
-    var removed = kids.length > k ? +kids[kids.length - 1].getAttribute('data-d') : 0;
-    var topPt = (kids.length > k) ? ringPoint(sp, kids.length - 1) : null;
+    var removed = kids.length > k;
     while(kids.length > k) st.removeChild(st.lastChild);
     var animate = motionOk() && sp.init && shown(sp.bc);
     for(var i = k; i < chips.length; i++){
       var el = D.createElement('i');
       el.className = 'bk ' + colorClass(chips[i]); el.setAttribute('data-d', chips[i]); el.style.setProperty('--n', i); el.textContent = label(chips[i]);
-      if(animate){ el.classList.add('drop'); el.style.animationDelay = (nd ? nd.delay : (i - k) * 42) + 'ms'; }
+      if(animate){ el.classList.add('drop'); el.style.animationDelay = ((i - k) * 42) + 'ms'; }   // (a short drop onto the stack, where it is)
       st.appendChild(el);
     }
     sp.init = true;
-    if(nd){
-      if(animate && chips.length > k) landGhost(sp, nd, chips.length - 1);
-      else dropGhost(nd.ghost);
-    }
-    // a chip taken back goes home to the rack
-    if(removed && topPt && motionOk() && now() < S.takeUntil && S.rack && shown(S.rack)){
-      var b = rackPoint(removed), g = makeGhost(removed);
-      ghostFly(g, [{transform: xf(topPt.x, topPt.y, .85, 0), opacity: 1}, {transform: xf(b.x, b.y, .9, -20), opacity: 0}], 260, 'cubic-bezier(.4,0,.8,.6)');
-      sfxPick();
-    }
+    if(nd && animate && chips.length > k){ ripple(sp); sfxLand(); }
+    if(removed && motionOk() && now() < S.takeUntil && S.rack && shown(S.rack)) sfxPick();     // a chip taken back with a button
   }
   function updateSpot(sp, nd){
     reconcile(sp, betOf(sp.k));
@@ -5743,26 +5675,16 @@ window.TRPractice = (function(){
     if(!S.built || syncing || !W.G) return;
     syncing = true;
     try{
-      if(betting() && (S.pay || S.holdNum != null)) clear();
+      if(betting() && S.pay) clear();
       updateRack();
       var nd = S.nextDrop; S.nextDrop = null;
-      if(nd && now() - nd.t > 700){ dropGhost(nd.ghost); nd = null; }
-      var used = false;
-      S.spots.forEach(function(sp){
-        var mine = (nd && nd.spot === sp.k) ? nd : null;
-        if(mine) used = true;
-        updateSpot(sp, mine);
-      });
-      if(nd && !used) dropGhost(nd.ghost);
+      if(nd && now() - nd.t > 700) nd = null;
+      S.spots.forEach(function(sp){ updateSpot(sp, (nd && nd.spot === sp.k) ? nd : null); });
     }catch(e){ err('sync', e); }
     syncing = false;
   }
 
   /* ---------- dragging chips: rack -> a bet to place it, a bet -> rack to take one back ---------- */
-  function rackPoint(d){
-    var c = chipBtn(d), r = rect(c && !c.classList.contains('rk-off') && shown(c) ? c : S.rack);
-    return r ? {x: r.left + r.width / 2, y: r.top + r.height / 2} : {x: 40, y: 40};
-  }
   function spotAt(x, y, pad){
     var best = null, bd = 1e9;
     S.spots.forEach(function(sp){
@@ -5840,36 +5762,31 @@ window.TRPractice = (function(){
     clearHot(); S.rack.classList.remove('armed', 'hot');
     if(!cd.moved) return;
     S.suppress = now() + 450;
-    var hit = !cancelled && cd.hot && betting(), g = cd.g, anim = motionOk();
+    var hit = !cancelled && cd.hot && betting();
+    dropGhost(cd.g);                                                    // the chip in your hand is set down where you let go: nothing flies
     if(cd.src === 'rack'){
       cd.el.classList.remove('ghosted');
-      var sp = hit ? S.by[cd.hotK] : null, placed = false;
+      var sp = hit ? S.by[cd.hotK] : null;
       if(sp && cd.d <= avail()){
         S.lastChip = cd.d;
-        S.nextDrop = {t: now(), d: cd.d, ghost: g, x: cd.gx, y: cd.gy, tilt: cd.tilt, delay: anim ? 170 : 0, spot: sp.k};
+        S.nextDrop = {t: now(), d: cd.d, spot: sp.k};
+        var placed = false;
         try{ placed = place(sp.k, cd.d); }catch(e){ err('place', e); }
         if(placed) sync();
-        if(!placed){ S.nextDrop = null; goHome(cd, g, anim); }
-        else if(S.nextDrop){ dropGhost(S.nextDrop.ghost); S.nextDrop = null; }
-      } else goHome(cd, g, anim);
+        S.nextDrop = null;
+      }
     } else {
       var sp2 = S.by[cd.spot];
       if(hit){
         S.takeUntil = 0;
         try{ take(cd.spot, cd.d); }catch(e){ err('take', e); }
         sync();
-        if(anim && g){ var b2 = rackPoint(cd.d); ghostFly(g, [{transform: xf(cd.gx, cd.gy, 1.14, cd.tilt), opacity: 1}, {transform: xf(b2.x, b2.y, .9, -20), opacity: 0}], 260, 'cubic-bezier(.4,0,.8,.6)'); } else dropGhost(g);
         sfxPick();
       } else {
         var top = sp2 && sp2.stack.lastChild;
-        if(anim && g && sp2){ var p = ringPoint(sp2, Math.max(0, sp2.chips.length - 1)); if(p) ghostFly(g, [{transform: xf(cd.gx, cd.gy, 1.14, cd.tilt)}, {transform: xf(p.x, p.y, .85, 0)}], 230, 'cubic-bezier(.3,.7,.3,1)', function(){ if(top) top.style.visibility = ''; }); else { dropGhost(g); if(top) top.style.visibility = ''; } }
-        else { dropGhost(g); if(top) top.style.visibility = ''; }
+        if(top) top.style.visibility = '';
       }
     }
-  }
-  function goHome(cd, g, anim){
-    if(anim && g){ var b = rackPoint(cd.d); ghostFly(g, [{transform: xf(cd.gx, cd.gy, 1.14, cd.tilt), opacity: 1}, {transform: xf(b.x, b.y, 1, 0), opacity: .95}], 240, 'cubic-bezier(.3,.7,.3,1)'); }
-    else dropGhost(g);
   }
   function onDown(e){
     if(!betting() || S.cd || !S.rack) return;
@@ -5910,60 +5827,22 @@ window.TRPractice = (function(){
     var t = e.target;
     if(S.suppress > now() && t && t.closest && (t.closest('#tr-rack') || S.spots.some(function(s){ return s.el.contains(t); }))){ e.stopPropagation(); e.preventDefault(); return; }
     if(!betting() || !t || !t.closest) return;
-    // a click on a bet places the chip you are holding: it flies there from the rack
+    // a click on a bet places the chip you are holding: it drops onto that bet's stack
     var spEl = t.closest('.bet-spot, .side-spot'), sp = null;
     if(spEl) S.spots.forEach(function(s){ if(s.el === spEl) sp = s; });
     if(sp && canPlace(sp)){
       var d = DENOMS.indexOf(G.activeChip) >= 0 ? G.activeChip : 0;
-      S.nextDrop = {t: now(), d: d || 25, el: d ? chipBtn(d) : null, delay: 300, spot: sp.k};
+      S.nextDrop = {t: now(), d: d || 25, spot: sp.k};
     }
   }
   function onTake(){ S.takeUntil = now() + 500; }
 
-  /* ---------- the dealer pays: from his tray, onto your bet; your chips are swept; a push comes back to you ---------- */
-  function trayPoint(){
-    var t = D.querySelector('#dealer-stage .ds-tray'), r = rect(t);
-    if(r && r.width > 0) return {x: r.left + r.width / 2, y: r.top + r.height / 2};
-    var st = D.getElementById('dealer-stage'), s = rect(st);
-    return s ? {x: s.left + s.width / 2, y: s.top + s.height * .8} : {x: 200, y: 100};
-  }
-  function pillPoint(){
-    var e = $('bankroll-chip-stack'), r = rect(e);
-    if(!(r && r.width > 0)){ e = $('bankroll-amount'); r = rect(e); }
-    if(!r) return {x: 100, y: 22};
-    return {x: clamp(r.left + r.width / 2, 16, Math.max(16, (W.innerWidth || 1000) - 16)), y: Math.max(22, r.top + r.height / 2)};
-  }
+  /* ---------- the money: nothing flies. A lost bet is taken off the table; what a bet won or lost floats up from it ---------- */
   function anchorOf(sp){
     var r = shown(sp.bc) ? rect(sp.ring) : null;
     if(r && r.width > 0) return {x: r.left + r.width / 2, y: r.top + r.height / 2};
     r = rect(sp.amt); if(r && r.width > 0) return {x: r.left + r.width / 2, y: r.top + r.height / 2};
     r = rect(sp.el); return r ? {x: r.left + r.width / 2, y: r.top + r.height / 2} : {x: 200, y: 300};
-  }
-  function chipFly(d){
-    var c = D.createElement('i'); c.className = 'tr-fly ' + colorClass(d); c.textContent = label(d);
-    layer().appendChild(c); S.els.push(c); return c;
-  }
-  function pathChip(el, a, b, o){
-    o = o || {};
-    var dist = Math.sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y)), dur = Math.max(1, Math.round(o.dur || 420)), delay = Math.round(o.delay || 0);
-    var arc = o.arc == null ? Math.min(46, 14 + dist * 0.12) : o.arc, s0 = o.s0 == null ? .8 : o.s0, s1 = o.s1 == null ? 1 : o.s1, o1 = o.o1 == null ? 1 : o.o1;
-    function tf(x, y, sc){ return 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + sc.toFixed(3) + ')'; }
-    el.style.transform = tf(a.x, a.y, s0);
-    var xm = a.x + (b.x - a.x) * .5, ym = a.y + (b.y - a.y) * .5 - arc;
-    function fin(){ el.style.transform = tf(b.x, b.y, s1); el.style.opacity = String(o1); if(o.done){ try{ o.done(); }catch(e){ err('chip done', e); } } }
-    try{
-      var an = el.animate([{transform: tf(a.x, a.y, s0), offset: 0}, {transform: tf(xm, ym, (s0 + s1) / 2 * 1.1), offset: .5}, {transform: tf(b.x, b.y, s1), opacity: o1, offset: 1}],
-        {duration: dur, delay: delay, easing: o.ease || 'cubic-bezier(.3,.6,.4,1)', fill: 'both'});
-      an.onfinish = fin; return an;
-    }catch(e){ err('chip', e); fin(); return null; }
-  }
-  function ringRip(x, y){
-    if(!motionOk()) return;
-    var rg = D.createElement('div'); rg.className = 'tr-ring'; layer().appendChild(rg); S.els.push(rg);
-    function tf(sc){ return 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + sc + ')'; }
-    rg.style.transform = tf(.8);
-    var gone = function(){ if(rg.parentNode) rg.parentNode.removeChild(rg); };
-    try{ rg.animate([{transform: tf(.8), opacity: .85}, {transform: tf(2), opacity: 0}], {duration: 640, easing: 'ease-out', fill: 'forwards'}).onfinish = gone; }catch(e){ gone(); }
   }
   function floatText(x, y, text, cls){
     if(GAME === 'uth') return;                                          // (each bet there already wears a tag with what it did)
@@ -5972,143 +5851,48 @@ window.TRPractice = (function(){
     var gone = function(){ if(f.parentNode) f.parentNode.removeChild(f); };
     try{ f.animate([{transform: 'translate(-50%,-30%) scale(.8)', opacity: 0, offset: 0}, {transform: 'translate(-50%,-70%) scale(1.06)', opacity: 1, offset: .18}, {transform: 'translate(-50%,-70%) scale(1)', opacity: 1, offset: .7}, {transform: 'translate(-50%,-110%) scale(1)', opacity: 0, offset: 1}], {duration: 1700, easing: 'ease-out', fill: 'forwards'}).onfinish = gone; }catch(e){ gone(); }
   }
-  /* what one bet's money does; returns when the last chip of it has arrived */
-  function paySpot(sp, bet, net, at, rec, legacy){
-    var mine = breakdown(bet).slice(0, 3);
-    function RP(){ return anchorOf(sp); }
-    function lift(){
-      sp.bc.classList.add('pay-hide');
-      var rp = RP();
-      return mine.map(function(d, n){ var c = chipFly(d); c._dx = 0; c._dy = n * 4; c.style.transform = 'translate(' + rp.x.toFixed(1) + 'px,' + (rp.y - c._dy).toFixed(1) + 'px)'; return c; });
-    }
-    function toPill(c, t, k, cb){
-      later(function(){
-        if(!c.parentNode) return;
-        var rp = RP(), from = {x: rp.x + c._dx, y: rp.y - c._dy};
-        pathChip(c, from, pillPoint(), {dur: 560, arc: 12, s0: 1, s1: .55, o1: 0, ease: 'cubic-bezier(.5,.05,.75,.45)', done: function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
-      }, t);
-    }
-    if(net < 0){                                                         // lost: swept to his tray
-      var cs = [];
-      later(function(){ cs = lift(); }, at);
-      mine.forEach(function(d, k){
-        later(function(){
-          var c = cs[k]; if(!c || !c.parentNode) return; var rp = RP();
-          pathChip(c, {x: rp.x, y: rp.y - k * 4}, trayPoint(), {dur: 520, arc: 10, s0: 1, s1: .7, o1: 0, ease: 'cubic-bezier(.5,.05,.75,.45)', done: function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k === 0) sfxClack(); }});
-        }, at + 220 + k * 55);
-      });
-      later(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, '−' + money(bet), 'lose'); }, at + 260);
-      return at + 220 + (mine.length - 1) * 55 + 520;
-    }
-    if(net > 0){                                                         // won: paid from his tray, a beat, then it all goes to you
-      var pays = breakdown(Math.round(net)).slice(0, 4), base = [], pc = [], landed = at;
-      later(function(){ base = lift(); }, at);
-      pays.forEach(function(d, n){
-        later(function(){
-          var rp = RP(), tray = trayPoint(), c = chipFly(d); c._dx = 34 + (n % 2) * 4; c._dy = Math.floor(n / 2) * 4; pc.push(c);
-          if(legacy){ c.style.transform = 'translate(' + (rp.x + c._dx).toFixed(1) + 'px,' + (rp.y - c._dy).toFixed(1) + 'px)'; return; }   // (the game's own chips have just landed there)
-          pathChip(c, tray, {x: rp.x + c._dx, y: rp.y - c._dy}, {dur: 430, arc: Math.min(52, 20 + Math.abs(tray.y - rp.y) * .1), s0: .75, s1: 1, done: function(){ sfxClack(); }});
-        }, at + (legacy ? 0 : n * 70));
-        landed = Math.max(landed, at + (legacy ? 0 : n * 70 + 430));
-      });
-      var t0 = landed + 300, n0 = mine.length + pays.length, arrive = t0 + (n0 - 1) * 45 + 560;
-      if(!legacy) later(function(){ var rp = RP(); floatText(rp.x + 20, rp.y - 30, '+' + money(Math.round(net)), 'win'); }, landed - 120);
-      for(var k = 0; k < n0; k++) (function(k){
-        later(function(){
-          var c = base.concat(pc)[k]; if(!c || !c.parentNode) return;
-          var rp = RP(), from = {x: rp.x + c._dx, y: rp.y - c._dy};
-          pathChip(c, from, pillPoint(), {dur: 560, arc: 12, s0: 1, s1: .55, o1: 0, ease: 'cubic-bezier(.5,.05,.75,.45)', done: function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
-        }, t0 + k * 45);
-      })(k);
-      rec.firstArrive = Math.min(rec.firstArrive, t0 + 560);
-      return arrive;
-    }
-    var back = [];                                                       // a push: your chips slide back to you
-    later(function(){ back = lift(); }, at);
-    later(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, 'Push', 'push'); }, at + 120);
-    mine.forEach(function(d, k){ later(function(){ var c = back[k]; if(c && c.parentNode){ var rp = RP(); pathChip(c, {x: rp.x, y: rp.y - c._dy}, pillPoint(), {dur: 560, arc: 12, s0: 1, s1: .55, o1: 0, ease: 'cubic-bezier(.5,.05,.75,.45)', done: function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }}); } }, at + 380 + k * 45); });
-    rec.firstArrive = Math.min(rec.firstArrive, at + 380 + 560);
-    return at + 380 + (mine.length - 1) * 45 + 560;
+  /* what one bet's money does; returns when it is done */
+  function paySpot(sp, bet, net, at, quiet){
+    function say(text, cls, dx){ if(!quiet) later(function(){ var rp = anchorOf(sp); floatText(rp.x + (dx || 0), rp.y - 30, text, cls); }, at + 40); }
+    if(net < 0){                                                         // lost: the dealer takes it
+      later(function(){ sp.bc.classList.add('pay-hide'); sfxClack(); }, at);
+      say('−' + money(bet), 'lose');
+    } else if(net > 0) say('+' + money(Math.round(net)), 'win', 20);   // won
+    else say('Push', 'push');                                           // a push: your bet stays yours
+    return at + 200;
   }
   /* items: [{k, bet, net}] in the order they should be settled; start: ms from now */
   function pay(items, start){
     if(!S.built || !fx() || !items || !items.length) return 0;
-    if(!S.pay) S.pay = {firstArrive: 1e9, end: 0, t0: now()};
-    var off = now() - S.pay.t0, rec = {firstArrive: 1e9}, end = 0, base = (start || 0), i = 0;
+    if(!S.pay) S.pay = {end: 0, t0: now()};
+    var off = now() - S.pay.t0, end = 0, base = (start || 0), i = 0;
     items.forEach(function(it){
+      if(it.legacy && !(it.net < 0)) return;                             // (the game's own dealer says what a win or a push did; a lost bet still comes off the table)
       var sp = S.by[it.k]; if(!sp || !(it.bet > 0)) return;
-      var t = paySpot(sp, it.bet, it.net, base + (it.legacy ? 0 : 260) + i * 230, rec, !!it.legacy); i++;
-      end = Math.max(end, t);
+      end = Math.max(end, paySpot(sp, it.bet, it.net, base + (it.legacy ? 0 : 260) + i * 230, !!it.legacy)); i++;
     });
-    if(rec.firstArrive < 1e9) S.pay.firstArrive = Math.min(S.pay.firstArrive, off + rec.firstArrive);
     S.pay.end = Math.max(S.pay.end, off + end);
     return end;
-  }
-  /* your own chips go out onto a bet (the Play bet in Ultimate Texas Hold'em) */
-  function put(k, amt){
-    var sp = S.by[k]; if(!S.built || !sp || !fx()) return false;
-    var cs = breakdown(amt).slice(0, 4), from = pillPoint();
-    cs.forEach(function(d, i){
-      later(function(){
-        var c = chipFly(d), rp = anchorOf(sp);
-        pathChip(c, from, {x: rp.x + (i - cs.length / 2) * 7, y: rp.y - i * 3}, {dur: 520, arc: 40, s0: .6, s1: 1, done: function(){ sfxClack(); if(i === cs.length - 1) ringRip(rp.x, rp.y); later(function(){ if(c.parentNode) c.parentNode.removeChild(c); }, 140); }});
-        sfxCoin(i);
-      }, 80 + i * 80);
-    });
-    return true;
   }
   function clear(){
     S.timers.splice(0).forEach(clearTimeout);
     S.els.splice(0).forEach(function(e){ if(e.parentNode) e.parentNode.removeChild(e); });
     S.pay = null;
     S.spots.forEach(function(sp){ sp.bc.classList.remove('pay-hide'); });
-    var run = S.bankLater; S.bankLater = null;
-    if(S.holdNum != null || S.bankRecs){ S.bankRecs = null; S.holdNum = null; try{ if(typeof W.renderBankroll === 'function') renderBankroll(); }catch(e){} }
-    if(run){ try{ run(true); }catch(e){} }
-  }
-
-  /* ---------- the bankroll counts up as the chips reach it ---------- */
-  function bump(){
-    var pill = D.querySelector('.bankroll-pill'); if(!pill) return;
-    pill.classList.remove('tr-bump'); void pill.offsetWidth; pill.classList.add('tr-bump');
-    setTimeout(function(){ pill.classList.remove('tr-bump'); }, 540);
-  }
-  function bankDelay(){ return (S.pay && S.pay.firstArrive < 1e9) ? Math.max(0, S.pay.firstArrive - (now() - S.pay.t0)) : 0; }
-  function holdBank(){ if(GAME === 'bac' && S.holdNum == null && fx()){ var e = $('bankroll-amount'); S.holdNum = e ? (parseInt(String(e.textContent).replace(/[^\d-]/g, ''), 10) || 0) : null; } }
-  function writeBank(n){ var e = $('bankroll-amount'); if(e) e.textContent = money(n); }
-  function tweenBank(to, ms, delay){
-    if(S.holdNum == null) return;
-    var from = S.holdNum, steps = Math.max(4, Math.min(16, Math.round(ms / 45)));
-    S.bankRecs = [];
-    function finish(){ S.holdNum = null; S.bankRecs = null; try{ renderBankroll(); }catch(e){ writeBank(to); } }
-    if(from === to){ finish(); return; }
-    for(var i = 1; i <= steps; i++) (function(i){
-      S.bankRecs.push(later(function(){
-        if(i === steps){ finish(); return; }
-        var q = 1 - Math.pow(1 - i / steps, 3); S.holdNum = Math.round(from + (to - from) * q); writeBank(S.holdNum);
-      }, (delay || 0) + ms * i / steps));
-    })(i);
-    later(bump, delay || 0);
   }
 
   /* ---------- the games call these ---------- */
   var TR = {
     on: function(){ return !!S.built && fx(); },
-    sync: sync, pay: pay, put: put, clear: clear, bankDelay: bankDelay,
+    sync: sync, pay: pay, clear: clear,
     /* Baccarat: the hand is settled. begin() runs just before the bankroll takes the winnings, go() just after the screen is redrawn. */
-    begin: function(){ try{ holdBank(); }catch(e){ err('begin', e); } },
+    begin: function(){},
     go: function(net, bets){
       try{
-        if(!S.built || !fx()){ S.holdNum = null; return; }
+        if(!S.built || !fx()) return;
         var items = [];
         ['player', 'banker', 'tie', 'dragon7', 'panda8', 'dragonP', 'dragonB'].forEach(function(k){ var b = +bets[k] || 0; if(b > 0) items.push({k: k, bet: b, net: net[k] || 0}); });
-        var end = pay(items, 0);
-        if(S.holdNum != null){
-          var to = W.G.bankroll, from = (S.pay && S.pay.firstArrive < 1e9) ? S.pay.firstArrive : Math.max(300, end - 200);
-          tweenBank(to, Math.max(500, end - from + 560), from);
-          end = Math.max(end, from + 700);
-        }
-        if(S.pay) S.pay.end = end;
+        pay(items, 0);
       }catch(e){ err('go', e); }
     },
     _S: S
@@ -6140,29 +5924,6 @@ window.TRPractice = (function(){
       mo.observe(D.body, {attributes: true, attributeFilter: ['class']});
     }catch(e){ err('observer', e); }
     W.addEventListener('blur', abortDrag);
-    // the bankroll in Baccarat shows what it showed while the chips are on their way
-    if(GAME === 'bac' && typeof W.renderBankroll === 'function'){
-      var rb = W.renderBankroll;
-      W.renderBankroll = function(){ var r = rb.apply(this, arguments); try{ if(S.holdNum != null) writeBank(S.holdNum); }catch(e){ err('hold', e); } return r; };
-    }
-    // Pai Gow and Ultimate Texas Hold'em count the pill up after a result: let the chips get there first
-    if(GAME !== 'bac' && typeof W.setShown === 'function'){
-      var ss = W.setShown;
-      W.setShown = function(n, animate){
-        var self = this, args = arguments;
-        if(animate && fx()){
-          var run = function(now_){
-            S.bankLater = null;
-            if(now_ !== true){ var d = bankDelay(); if(d > 30){ S.bankLater = run; later(function(){ if(S.bankLater === run) run(true); }, d); return; } }
-            ss.apply(self, args); if(now_ !== true) bump();
-          };
-          S.bankLater = run;
-          setTimeout(function(){ if(S.bankLater === run) run(); }, 0);
-          return;
-        }
-        return ss.apply(this, arguments);
-      };
-    }
     sync();
   }
   if(D.readyState === 'loading') D.addEventListener('DOMContentLoaded', start); else start();

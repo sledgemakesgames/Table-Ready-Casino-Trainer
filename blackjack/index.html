@@ -1584,7 +1584,7 @@ details.src p{margin:6px 0 0;}
     <button id="btn-toggle-settings">Table settings</button>
     <a href="#" id="btn-manners" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Table manners</a>
     <a href="/learn/glossary/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">Glossary</a>
-    <a href="/report/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">My report</a>
+    <a href="/report/" style="font-size:11.5px;color:var(--text-muted);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">My Report</a>
   </div>
 </header>
 <button type="button" id="m-menu-btn" class="m-menu-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false" aria-controls="m-menu"><i></i><i></i><i></i></button>
@@ -5415,50 +5415,18 @@ var Show = (function(){
       });
     });
   }
-  function chipSource(hi){
-    var cand = [document.querySelector('.dbl-handle .dh-chip'), document.querySelector('.hb-act-btn.act-double'), $('chip-stack')], i, e, r;
-    for(i = 0; i < cand.length; i++){ e = cand[i]; if(!e) continue; r = e.getBoundingClientRect(); if(r.width > 0 || r.height > 0) return rectInLayer(e); }
-    var rp = ringPoint(hi); return rp ? {x:rp.x, y:rp.y + 90} : {x:0, y:0};
-  }
   function onDouble(h){
     if(!S.dbl || !S.ready || !S.built || !on() || !fx() || !S.layer) return;
     var hi = G.hands.indexOf(h); if(hi < 0) return;
     S.stats.doubles++;
     if(h.freeDoubleBonus) return;                                    // a free double puts no chip down
-    var old = Math.round(h.bet / 2), rp = ringPoint(hi); if(!rp) return;
-    S.chipHold[hi] = old;                                            // the pile on the ring stays as it was until the chip is there
-    bankHoldStart();
-    var chips = computeChipBreakdown(old).slice(0, 3), src = chipSource(hi), left = chips.length;
-    chips.forEach(function(d, n){
-      var c = chipEl(d); S.layer.appendChild(c);
-      pathChip(c, src, {x:rp.x + n*3, y:rp.y - n*4}, {dur:430, delay:n*60, s0:.8, s1:.95, done:function(){
-        sfxClack();
-        if(c.parentNode) c.parentNode.removeChild(c);
-        if(--left === 0){ delete S.chipHold[hi]; try{ updateSignalUi(); }catch(e){ err('pile', e); } ringRip(rp.x, rp.y); ringPulse(handBoxEl(hi)); bankTween(G.bankroll, 380); }
-      }});
-    });
-    sfxCoin(2);
+    var rp = ringPoint(hi); if(!rp) return;
+    sfxClack(); sfxCoin(2);                                          // the chip goes down on the pile where it is: nothing flies
+    try{ updateSignalUi(); }catch(e){ err('pile', e); }
+    ringRip(rp.x, rp.y); ringPulse(handBoxEl(hi));
   }
 
-  /* ---------- chips: one chip along an arc; a ring that spreads; a number that counts ---------- */
-  function chipEl(d, label){ var c = document.createElement('i'); c.className = 'pchip ' + chipColorClass(d); c.textContent = label === undefined ? chipLabel(d) : label; return c; }
-  function pathChip(el, a, b, o){
-    o = o || {};
-    var dist = Math.sqrt((b.x-a.x)*(b.x-a.x) + (b.y-a.y)*(b.y-a.y));
-    var dur = Math.max(1, Math.round((o.dur || 420) * S.k * qf())), delay = Math.round((o.delay || 0) * S.k * qf());
-    var arc = o.arc == null ? Math.min(46, 14 + dist*0.12) : o.arc, s0 = o.s0 == null ? .8 : o.s0, s1 = o.s1 == null ? 1 : o.s1, o1 = o.o1 == null ? 1 : o.o1;
-    function tf(x, y, sc){ return 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+sc.toFixed(3)+')'; }
-    el.style.transform = tf(a.x, a.y, s0);
-    var xm = a.x + (b.x - a.x)*.5, ym = a.y + (b.y - a.y)*.5 - arc;
-    var an;
-    function fin(){ el.style.transform = tf(b.x, b.y, s1); el.style.opacity = String(o1); if(o.done){ try{ o.done(); }catch(e){ err('chip done', e); } } }
-    try{
-      an = el.animate([{transform:tf(a.x, a.y, s0), offset:0}, {transform:tf(xm, ym, (s0+s1)/2*1.1), offset:.5}, {transform:tf(b.x, b.y, s1), opacity:o1, offset:1}],
-        {duration:dur, delay:delay, easing:o.ease || 'cubic-bezier(.3,.6,.4,1)', fill:'both'});
-      an.onfinish = fin;
-    }catch(e){ err('chip', e); fin(); return null; }
-    return an;
-  }
+  /* ---------- chips: a ring that spreads; a number ---------- */
   function ringRip(x, y){
     if(!S.layer || !fx()) return;
     var rg = document.createElement('div'); rg.className = 'ring-rip'; S.layer.appendChild(rg);
@@ -5468,24 +5436,6 @@ var Show = (function(){
     try{ var a = rg.animate([{transform:tf(.8), opacity:.85}, {transform:tf(2), opacity:0}], {duration:Math.max(1, Math.round(640*S.k)), easing:'ease-out', fill:'forwards'}); a.onfinish = gone; }catch(e){ gone(); }
   }
   function bankNum(){ var e = $('bankroll-val'); return e ? (parseInt(String(e.textContent).replace(/[^\d-]/g, ''), 10) || 0) : 0; }
-  function bankHoldStart(){ if(S.bankHold == null) S.bankHold = bankNum(); }
-  /* the bankroll shows what it showed, then counts to what it is */
-  function bankTween(to, ms, delay){
-    var e = $('bankroll-val'); if(!e){ S.bankHold = null; return; }
-    var from = S.bankHold != null ? S.bankHold : bankNum();
-    if(S.bankRec){ S.bankRec.forEach(unlater); } S.bankRec = [];
-    function finish(){ S.bankHold = null; S.bankRec = null; e.textContent = String(G.bankroll); }
-    if(!fx() || from === to){ finish(); return; }
-    var steps = Math.max(4, Math.min(16, Math.round(ms / 45)));
-    for(var i = 1; i <= steps; i++) (function(i){
-      S.bankRec.push(later(function(){
-        if(i === steps){ finish(); return; }
-        var q = 1 - Math.pow(1 - i/steps, 3); S.bankHold = Math.round(from + (to - from)*q); e.textContent = String(S.bankHold);
-      }, ((delay || 0) + ms * i / steps) * qf()));
-    })(i);
-    var pill = e.closest ? e.closest('.bankroll-pill') : null;
-    if(pill){ later(function(){ pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); later(function(){ pill.classList.remove('bump'); }, 520); }, delay || 0); }
-  }
   function launch(f, from){
     var el = targetEl(f), card = cardFor(f);
     if(!el || !card || !S.layer){ land(f); return; }
@@ -6093,19 +6043,8 @@ var Show = (function(){
   }
 
   /* ---------- payouts you can follow ----------
-     A win: the dealer pays from his rack onto your bet, and the lot slides to your bankroll, which counts up to match.
-     A loss: your chips are swept across to his rack. A push: your bet slides back to you. All of it can be skipped (tap the felt, Space). */
-  function rackPoint(){
-    if(S.tray && S.tray.getBoundingClientRect().width > 0) return rectInLayer(S.tray);
-    var db = $('dealer-box'); return db ? rectInLayer(db) : {x:0, y:0};
-  }
-  function pillPoint(){
-    var e = $('chip-stack') || $('bankroll-val'); if(!e) return {x:0, y:0};
-    var lr = S.layer.getBoundingClientRect(), r = e.getBoundingClientRect();
-    var cx = r.left + r.width/2, cy = r.top + r.height/2;
-    cx = clamp(cx, 16, Math.max(16, (W.innerWidth || 1000) - 16)); if(cy < 22) cy = 22;     // the pill is off the top of the screen: chips go to the edge of it
-    return {x:cx - lr.left, y:cy - lr.top};
-  }
+     Nothing flies. A loss: the dealer takes your pile off the table. A win: what it won floats up from your bet. A push: your bet stays yours.
+     The bankroll is right at once. All of it can be skipped (tap the felt, Space). */
   function ringAnchor(i){
     var hb = handBoxEl(i); if(!hb) return null;
     var ring = hb.querySelector('.hb-ring'), rr = ring && ring.getBoundingClientRect();
@@ -6120,100 +6059,35 @@ var Show = (function(){
     var gone = function(){ if(f.parentNode) f.parentNode.removeChild(f); };
     try{ var a = f.animate([{transform:'translate(-50%,-30%) scale(.8)', opacity:0, offset:0}, {transform:'translate(-50%,-70%) scale(1.06)', opacity:1, offset:.18}, {transform:'translate(-50%,-70%) scale(1)', opacity:1, offset:.7}, {transform:'translate(-50%,-150%) scale(1)', opacity:0, offset:1}], {duration:Math.max(1, Math.round(1250*S.k)), easing:'ease-out', fill:'forwards'}); a.onfinish = gone; }catch(e){ gone(); }
   }
-  /* what one hand's money does; returns when the last chip of it has arrived.
+  /* what one hand's money does; returns when it is done.
      Positions are read when each step happens, not when it is planned: the table has settled by then (the action buttons are gone, the box is a different height). */
   function payHand(i, h, profit, ret, at){
     var last = ringAnchor(i); if(!last || !S.layer) return at;
-    var hbEl = handBoxEl(i), bet = hbEl && hbEl.querySelector('.hb-bet');
-    var mine = computeChipBreakdown(h.bet).slice(0, 3), bj = h.status === 'bj';
+    var hbEl = handBoxEl(i), bet = hbEl && hbEl.querySelector('.hb-bet'), bj = h.status === 'bj';
     function RP(){ var r = ringAnchor(i); if(r) last = r; return last; }
-    function add(c){ S.layer.appendChild(c); S.pay.els.push(c); return c; }
-    function put(c, x, y){ c.style.transform = 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'; }
-    // your own chips lift off the ring: a copy takes the pile's place and the pile itself is hidden
-    function lift(){
-      var rp = RP(); if(bet) bet.classList.add('pay-hide');
-      return mine.map(function(d, n){ var c = add(chipEl(d)); c._dx = 0; c._dy = n*4; put(c, rp.x, rp.y - c._dy); return c; });
+    if(ret === 0){                                                    // lost: the dealer takes it
+      payLater(function(){ if(bet) bet.classList.add('pay-hide'); sfxClack(); }, at);
+      payLater(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, '−' + money(h.bet), 'lose'); }, at + 40);
+    } else if(profit > 0){                                            // won (a blackjack has its own tag)
+      payLater(function(){ sfxCoin(0); }, at);
+      if(!bj) payLater(function(){ var rp = RP(); floatText(rp.x + 20, rp.y - 30, '+' + money(profit), 'win'); }, at + 40);
+    } else {                                                          // a push (or half a bet taken): your bet stays yours
+      payLater(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, profit < 0 ? '−' + money(-profit) : 'Push', profit < 0 ? 'lose' : 'push'); }, at + 40);
     }
-    function toPill(cs, t0){
-      cs.forEach(function(c, k){
-        payLater(function(){
-          if(!c.parentNode) return;
-          var rp = RP(), from = {x:rp.x + c._dx, y:rp.y - c._dy};
-          pathChip(c, from, pillPoint(), {dur:560, arc:12, s0:1, s1:.55, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
-        }, t0 + k*45);
-      });
-      return t0 + (cs.length - 1)*45 + 560;
-    }
-    if(ret === 0){                                                    // lost: the dealer sweeps it to his rack
-      var cs = [];
-      payLater(function(){ cs = lift(); }, at);
-      mine.forEach(function(d, k){
-        payLater(function(){ var c = cs[k]; if(!c || !c.parentNode) return; var rp = RP();
-          pathChip(c, {x:rp.x, y:rp.y - k*4}, rackPoint(), {dur:520, arc:10, s0:1, s1:.7, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k === 0) sfxClack(); }}); }, at + 220 + k*55);
-      });
-      payLater(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, '−' + money(h.bet), 'lose'); }, at + 260);
-      return at + 220 + (mine.length - 1)*55 + 520;
-    }
-    if(profit > 0){                                                   // won: paid from his rack, a beat, then it all goes to you
-      var pays = computeChipBreakdown(profit).slice(0, 4), base = [], pc = [], landed = at;
-      payLater(function(){ base = lift(); }, at);
-      pays.forEach(function(d, n){
-        payLater(function(){
-          var rp = RP(), rack = rackPoint(), c = add(chipEl(d)); c._dx = 34 + (n % 2)*4; c._dy = Math.floor(n/2)*4; pc.push(c);
-          pathChip(c, rack, {x:rp.x + c._dx, y:rp.y - c._dy}, {dur:430, arc:Math.min(52, 20 + Math.abs(rack.y - rp.y)*.1), s0:.75, s1:1, done:function(){ sfxClack(); }});
-        }, at + n*70);
-        landed = Math.max(landed, at + n*70 + 430);
-      });
-      var t0 = landed + 300, all = function(){ return base.concat(pc); };
-      if(!bj) payLater(function(){ var rp = RP(); floatText(rp.x + 20, rp.y - 30, '+' + money(profit), 'win'); }, landed - 120);
-      // they leave in the order they were laid down: yours first, then what he paid
-      var n0 = mine.length + pays.length, arrive = t0 + (n0 - 1)*45 + 560;
-      for(var k = 0; k < n0; k++) (function(k){
-        payLater(function(){
-          var c = all()[k]; if(!c || !c.parentNode) return;
-          var rp = RP(), from = {x:rp.x + c._dx, y:rp.y - c._dy};
-          pathChip(c, from, pillPoint(), {dur:560, arc:12, s0:1, s1:.55, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
-        }, t0 + k*45);
-      })(k);
-      S.pay.firstArrive = Math.min(S.pay.firstArrive, t0 + 560);
-      return arrive;
-    }
-    // a push (or half a bet back): your chips slide back to you
-    var back = [];
-    payLater(function(){ back = lift(); }, at);
-    payLater(function(){ var rp = RP(); floatText(rp.x, rp.y - 30, profit < 0 ? '−' + money(-profit) : 'Push', profit < 0 ? 'lose' : 'push'); }, at + 120);
-    var arr = at + 380 + (mine.length - 1)*45 + 560;
-    mine.forEach(function(d, k){
-      payLater(function(){
-        var c = back[k]; if(!c || !c.parentNode) return;
-        var rp = RP(), from = {x:rp.x, y:rp.y - c._dy};
-        pathChip(c, from, pillPoint(), {dur:560, arc:12, s0:1, s1:.55, o1:0, ease:'cubic-bezier(.5,.05,.75,.45)', done:function(){ if(c.parentNode) c.parentNode.removeChild(c); if(k % 2 === 0) sfxCoin(k); }});
-      }, at + 380 + k*45);
-    });
-    S.pay.firstArrive = Math.min(S.pay.firstArrive, at + 380 + 560);
-    return arr;
+    return at + 1800;                                                 // (the amount takes about that long to float away)
   }
   function payout(results){
     payFinish();
     if(!S.motion || !fx() || !S.layer || !results) return 0;
-    S.pay = {recs:[], els:[], firstArrive:1e9, end:0};
-    var before = bankNum(), end = 0;
+    S.pay = {recs:[], els:[], end:0};
+    var end = 0;
     G.hands.forEach(function(h, i){
       var res = results[i]; if(!res) return;
-      var t = payHand(i, h, res.amount, res.amount + h.bet, 260 + i*230);
-      end = Math.max(end, t);
+      end = Math.max(end, payHand(i, h, res.amount, res.amount + h.bet, 120 + i*230));
     });
     S.pay.end = end;
-    // the bankroll shows what it showed, and counts up as the first chips reach it
-    if(before !== G.bankroll){
-      S.bankHold = before;
-      var from = S.pay.firstArrive < 1e9 ? S.pay.firstArrive : Math.max(300, end - 200);
-      bankTween(G.bankroll, Math.max(500, end - from + 560), from);
-      end = Math.max(end, from + 700);
-    }
-    S.pay.end = end;
     payLater(function(){ payFinish(); }, end + 80);
-    return end;
+    return 0;                                                         // (nothing to wait for: the hand does not stay up for it)
   }
   /* put everything where it will be: chips gone, the number right, no pile hidden */
   function payFinish(restore){
@@ -6397,9 +6271,7 @@ var Show = (function(){
       S.drag = null;
       if(hit){
         var rr = ring.getBoundingClientRect();
-        try{
-          g.animate([{transform:g.style.transform},{transform:'translate('+(rr.left+rr.width/2)+'px,'+(rr.top+rr.height/2)+'px) scale(.62)', opacity:.9}], {duration:150, easing:'ease-out', fill:'forwards'}).onfinish = function(){ if(g.parentNode) g.parentNode.removeChild(g); };
-        }catch(_){ if(g.parentNode) g.parentNode.removeChild(g); }
+        if(g.parentNode) g.parentNode.removeChild(g);
         signalFx('double', rr.left+rr.width/2, rr.top+rr.height/2 - 6); sfxCoin(1); buzz(12);
         later(function(){ if(canSignal()) doAction('D'); }, fx() ? 120 : 0);
       } else if(!cancelled && !drag.moved){
@@ -6407,10 +6279,7 @@ var Show = (function(){
         if(ring){ ring.classList.add('hot'); setTimeout(function(){ ring.classList.remove('hot'); }, 900); }
         if(g.parentNode) g.parentNode.removeChild(g);
       } else {
-        var hb = handle.getBoundingClientRect();
-        try{
-          g.animate([{transform:g.style.transform},{transform:'translate('+(hb.left+24)+'px,'+(hb.top+hb.height/2)+'px)', opacity:.2}], {duration:200, easing:'ease-in', fill:'forwards'}).onfinish = function(){ if(g.parentNode) g.parentNode.removeChild(g); };
-        }catch(_){ if(g.parentNode) g.parentNode.removeChild(g); }
+        if(g.parentNode) g.parentNode.removeChild(g);
       }
     }
     function up(ev){ fin(ev, false); } function cn(ev){ fin(ev, true); }
@@ -6514,10 +6383,6 @@ var Show = (function(){
     S.rack.classList.toggle('empty', shown === 0);
     S.rack.setAttribute('data-msg', totalBets() > 0 ? 'All your chips are in' : 'Press All in to bet what’s left');
   }
-  function stackPoint(sp, idx){
-    var r = sp.stack.getBoundingClientRect();
-    return {x:r.left + r.width/2, y:r.bottom - (idx*3 + 23)};
-  }
   function makeGhost(d){
     var g = document.createElement('div'); g.className = 'cg ' + chipColorClass(d); g.textContent = chipLabel(d);
     g.style.transform = 'translate(-300px,-300px)';
@@ -6526,33 +6391,10 @@ var Show = (function(){
   }
   function dropGhost(g){ if(g && g.parentNode) g.parentNode.removeChild(g); }
   function ghostXf(x, y, sx, sy, r){ return 'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+sx+','+sy+') rotate('+r.toFixed(1)+'deg)'; }
-  function ghostFly(g, kf, dur, ease, done){
-    try{
-      var a = g.animate(kf, {duration:dur, easing:ease, fill:'forwards'});
-      a.onfinish = function(){ dropGhost(g); if(done) done(); };
-      return a;
-    }catch(e){ err('ghost', e); dropGhost(g); if(done) done(); }
-  }
   function ripple(sp){
     if(!fxUi() || !sp.bc) return;
     var r = document.createElement('div'); r.className = 'bc-rip'; sp.bc.appendChild(r);
     setTimeout(function(){ if(r.parentNode) r.parentNode.removeChild(r); }, 560);
-  }
-  function landGhost(sp, nd, idx){
-    var to = stackPoint(sp, idx), g = nd.ghost, x0, y0, tilt0 = 0, sc0 = 1;
-    if(g){ x0 = nd.x; y0 = nd.y; tilt0 = nd.tilt || 0; sc0 = 1.14; }
-    else if(nd.el){
-      var r = nd.el.getBoundingClientRect(); x0 = r.left + r.width/2; y0 = r.top + r.height/2;
-      g = makeGhost(nd.d);
-    } else return;
-    var dur = nd.delay, arc = nd.ghost ? 8 : 46 + Math.min(40, Math.abs(to.x - x0) * 0.12);
-    var kf = nd.ghost ?
-      [{transform:ghostXf(x0, y0, sc0, sc0, tilt0)}, {transform:ghostXf(to.x, to.y, 1, 1, 0)}] :
-      [{transform:ghostXf(x0, y0, 1, 1, 0), offset:0},
-       {transform:ghostXf((x0 + to.x)/2, Math.min(y0, to.y) - arc, 1.16, 1.0, 150), offset:0.5},
-       {transform:ghostXf(to.x, to.y, 1, 1, 0), offset:1}];
-    ghostFly(g, kf, dur, nd.ghost ? 'cubic-bezier(.4,0,.8,.6)' : 'cubic-bezier(.3,.55,.4,1)');
-    setTimeout(function(){ ripple(sp); sfxLand(); }, dur);
   }
   function renderStack(sp, nd){
     var st = sp.stack, chips = sp.chips, kids = st.children, k = 0;
@@ -6565,14 +6407,11 @@ var Show = (function(){
       el.setAttribute('data-d', chips[i]);
       el.style.setProperty('--n', i);
       el.textContent = chipLabel(chips[i]);
-      if(animate){ el.classList.add('drop'); el.style.animationDelay = (nd ? nd.delay : (i - k) * 42) + 'ms'; }
+      if(animate){ el.classList.add('drop'); el.style.animationDelay = ((i - k) * 42) + 'ms'; }          // (a short drop onto the pile, where it is)
       st.appendChild(el);
     }
     sp.init = true;
-    if(nd){
-      if(animate && chips.length > k) landGhost(sp, nd, chips.length - 1);
-      else dropGhost(nd.ghost);
-    }
+    if(nd && animate && chips.length > k){ ripple(sp); sfxLand(); }
   }
   function updateCircle(sp, nd){
     if(!sp.bc) return;
@@ -6590,8 +6429,8 @@ var Show = (function(){
     updateRack();
     try{ updateRebet(); }catch(e){ err('rebet', e); }
     var nd = S.nextDrop; S.nextDrop = null;
-    if(nd && now() - nd.t > 500){ dropGhost(nd.ghost); nd = null; }
-    var used = false, firstSide = true;
+    if(nd && now() - nd.t > 500) nd = null;
+    var firstSide = true;
     S.spots.forEach(function(sp){
       if(!sp.side || !sp.bc) return;
       var on = sideOn(sp.side);
@@ -6600,11 +6439,8 @@ var Show = (function(){
       if(on) firstSide = false;
     });
     shownSpots().forEach(function(sp){
-      var mine = (nd && (nd.spot|0) === sp.i) ? nd : null;
-      if(mine) used = true;
-      updateCircle(sp, mine);
+      updateCircle(sp, (nd && (nd.spot|0) === sp.i) ? nd : null);
     });
-    if(nd && !used) dropGhost(nd.ghost);
   }
   function addChip(i, d){
     var sp = S.spots[i];
@@ -6620,10 +6456,6 @@ var Show = (function(){
     putBet(i, Math.max(0, betN(i) - d));
   }
   /* dragging chips: rack -> a circle to bet, circle -> rack to take one back */
-  function rackChipPoint(d){
-    var c = $('chip-'+d), r = (c && !c.classList.contains('rk-off') ? c : S.rack).getBoundingClientRect();
-    return {x:r.left + r.width/2, y:r.top + r.height/2};
-  }
   function renderGhostPos(cd){
     if(cd.g) cd.g.style.transform = ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt);
   }
@@ -6682,7 +6514,7 @@ var Show = (function(){
     if(!cd.moved) return;
     S.suppressClick = now() + 450;
     var hit = !cancelled && cd.hot && G.phase === 'betting' && tblOn();
-    var g = cd.g, animate = fxUi();
+    dropGhost(cd.g);                                                   // the chip in your hand is set down where you let go: nothing flies
     if(cd.src === 'rack'){
       if(cd.el) cd.el.classList.remove('ghosted');
       if(hit && cd.d <= availChips() && !fitsLimit(cd.hotSpot, cd.d)){ try{ limitNote('max', 'Table max is ' + money(limMax()) + '.'); }catch(e){ err('limit drop', e); } }
@@ -6690,28 +6522,18 @@ var Show = (function(){
         var to = cd.hotSpot;
         if(to < 2 && spotN() === 2 && selSpot() !== to) W.selectSpot(to);   // the bet you just dropped on becomes the one the chips and buttons act on
         S.lastChip = cd.d;
-        S.nextDrop = {t:now(), d:cd.d, ghost:g, x:cd.gx, y:cd.gy, tilt:cd.tilt, delay:animate ? 170 : 0, spot:to};
+        S.nextDrop = {t:now(), d:cd.d, spot:to};
         addChip(to, cd.d);
-        if(S.nextDrop){ dropGhost(S.nextDrop.ghost); S.nextDrop = null; }
-      } else if(animate && g){
-        var b = rackChipPoint(cd.d);
-        ghostFly(g, [{transform:ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt), opacity:1}, {transform:ghostXf(b.x, b.y, 1, 1, 0), opacity:.95}], 240, 'cubic-bezier(.3,.7,.3,1)');
-      } else dropGhost(g);
+        S.nextDrop = null;
+      }
     } else {
       var sp = S.spots[cd.spot];
       if(hit){
         removeTop(cd.spot, cd.d);
-        if(animate && g){
-          var b2 = rackChipPoint(cd.d);
-          ghostFly(g, [{transform:ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt), opacity:1}, {transform:ghostXf(b2.x, b2.y, .9, .9, -20), opacity:0}], 260, 'cubic-bezier(.4,0,.8,.6)');
-        } else dropGhost(g);
         sfxPick();
       } else {
         var top = sp.stack.lastChild;
-        if(animate && g){
-          var p = stackPoint(sp, Math.max(0, sp.chips.length - 1));
-          ghostFly(g, [{transform:ghostXf(cd.gx, cd.gy, 1.14, 1.14, cd.tilt)}, {transform:ghostXf(p.x, p.y, 1, 1, 0)}], 230, 'cubic-bezier(.3,.7,.3,1)', function(){ if(top) top.style.visibility = ''; });
-        } else { dropGhost(g); if(top) top.style.visibility = ''; }
+        if(top) top.style.visibility = '';
         if(cd.el) cd.el.style.visibility = '';
       }
     }
@@ -6757,8 +6579,7 @@ var Show = (function(){
     var av = availChips(), d = 0;
     DENOMS.forEach(function(x){ if(x <= S.lastChip && x <= av) d = x; });
     if(!d) return;
-    var el = $('chip-' + d);
-    S.nextDrop = {t:now(), d:d, el:(el && !el.classList.contains('rk-off')) ? el : null, delay:300, spot:sp.i};
+    S.nextDrop = {t:now(), d:d, spot:sp.i};
     addChip(sp.i, d);
     if(S.nextDrop){ S.nextDrop = null; }
   }
@@ -6782,7 +6603,7 @@ var Show = (function(){
     S.rack.addEventListener('click', guard('rack click', function(e){
       if(S.suppressClick > now()){ e.stopPropagation(); e.preventDefault(); return; }
       var chip = e.target && e.target.closest ? e.target.closest('.chip') : null;
-      if(chip && tblOn()){ S.lastChip = parseInt(chip.id.slice(5), 10); S.nextDrop = {t:now(), d:S.lastChip, el:chip, delay:300, spot:selSpot()}; }
+      if(chip && tblOn()){ S.lastChip = parseInt(chip.id.slice(5), 10); S.nextDrop = {t:now(), d:S.lastChip, spot:selSpot()}; }
     }), true);
     ['bet-amount','bet-amount-2','sb-pp-amt','sb-tp-amt','sb-tl-amt','sb-bb-amt'].forEach(function(id){
       var e = $(id); if(e) e.addEventListener('input', guard('bet input', function(){ if(tblOn()) updateBetUi(); }));
@@ -7097,12 +6918,6 @@ var Show = (function(){
       reconcile(sp, betN(i));
       if(!sp.chips.length) continue;
       var d = sp.chips[sp.chips.length - 1];
-      if(S.motion && fxUi() && S.rack && sp.stack && sp.stack.lastChild){
-        try{
-          var p = stackPoint(sp, sp.chips.length - 1), b = rackChipPoint(d), g = makeGhost(d);
-          ghostFly(g, [{transform:ghostXf(p.x, p.y, 1, 1, 0), opacity:1}, {transform:ghostXf(b.x, b.y, .9, .9, -20), opacity:0}], 240, 'cubic-bezier(.4,0,.8,.6)');
-        }catch(e){ err('undo ghost', e); }
-      }
       removeTop(i, d); sfxPick();
       S.lastPlaced = null;
       return true;

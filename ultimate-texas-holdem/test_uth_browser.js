@@ -282,23 +282,20 @@ async function playWhole(page, o){
   }
 
   // ---------------------------------------------------------------- your Play bet
-  section('your Play bet: the chips come from your bankroll, not from his tray');
+  section('your Play bet: its chips are simply on the Play spot, nothing flies');
   if(!FAST){
     const { page, errs, ctx } = await open(browser, { vp: { width: 1280, height: 900 } });
     await startHand(page);
     await tap(page, '#btn-deal');
     await look(page);
     const g = await page.evaluate(() => {
-      const lay = document.getElementById('show-layer').getBoundingClientRect(), ctr = e => { const b = e.getBoundingClientRect(); return { x: b.left + b.width / 2 - lay.left, y: b.top + b.height / 2 - lay.top, w: b.width, h: b.height }; };
-      const stack = ctr(document.getElementById('bankroll-chip-stack')), tray = ctr(document.querySelector('.ds-tray'));
       const n0 = document.querySelectorAll('.pchip').length;
       document.getElementById('btn-bet').click();
-      const chips = [...document.querySelectorAll('.pchip')].slice(n0).map(c => { const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(c.style.transform); return m ? { x: +m[1] + 11, y: +m[2] + 11 } : null; }).filter(Boolean);
-      return { stack, tray, chips };
+      return { made: document.querySelectorAll('.pchip').length - n0, bet: G.bets.play, stack: document.querySelectorAll('#spot-play .tr-bc .bk').length };
     });
-    ok(g.stack.w > 0 && g.stack.h > 0 && g.chips.length >= 1, 'your Play bet puts chips in the air (' + g.chips.length + ') from a stack that is on screen');
-    const d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-    ok(g.chips.length > 0 && g.chips.every(ch => d(ch, g.stack) < 40 && d(ch, g.stack) < d(ch, g.tray)), 'and they start at your bankroll stack, not at his tray (' + g.chips.map(ch => Math.round(d(ch, g.stack)) + 'px from your stack, ' + Math.round(d(ch, g.tray)) + 'px from his tray').join('; ') + ')');
+    await page.waitForTimeout(500);
+    ok(g.bet > 0 && g.made === 0, 'your Play bet puts no chip in the air (' + g.made + ')');
+    ok(await page.evaluate(() => document.querySelectorAll('#spot-play .tr-bc .bk').length >= 1), 'its chips are simply on the Play spot');
     ok(errs.length === 0, 'no page errors: ' + JSON.stringify(errs.slice(0, 2)));
     await ctx.close();
   }

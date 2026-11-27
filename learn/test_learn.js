@@ -311,7 +311,7 @@ await runWith('https://tableready.xyz/learn/', null, async (window, document) =>
   const hd = document.querySelector('header.top');
   check('the site header is there, with the brand pointing home', [!!hd, hd.querySelector('a.brand').getAttribute('href')], [true, '/']);
   const nav = [...hd.querySelectorAll('nav a')];
-  check('the nav has Learn to play (current page), Glossary and My report', nav.map(a => [a.getAttribute('href'), a.getAttribute('aria-current')]), [['/learn/', 'page'], ['/learn/glossary/', null], ['/report/', null]]);
+  check('the nav has Learn to play (current page), Glossary and My Report', nav.map(a => [a.getAttribute('href'), a.getAttribute('aria-current'), a.textContent]), [['/learn/', 'page', 'Learn to play'], ['/learn/glossary/', null, 'Glossary'], ['/report/', null, 'My Report']]);
   check('four table themes in the header, Graphite pressed by default', [...hd.querySelectorAll('.themes button')].map(b => b.dataset.th + ':' + b.getAttribute('aria-pressed')), ['graphite:true', 'emerald:false', 'midnight:false', 'crimson:false']);
   check('the bankroll pill shows the shared starting bankroll', document.getElementById('bankroll-amount').textContent, '$1,000');
   check('and stores it under the same key the tables use', JSON.parse(window.localStorage.getItem('house_edge_bankroll_v1')).balance, 1000);

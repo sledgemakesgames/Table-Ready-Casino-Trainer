@@ -1504,9 +1504,9 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
     ok(kidsOf(t, 'bet-circle').join() === '25,25,100' && kidsOf(t, 'bet-circle-2').length === 0 && t.doc.querySelector('#bet-circle .bc-amt').textContent === '150', 'chips land on the first circle');
     $(t, 'bet-amount-2').dispatchEvent(new t.w.Event('focus'));
     ok($(t, 'bet-circle-2').classList.contains('sel'), 'clicking into the second bet selects its circle');
-    $(t, 'chip-50').click();
-    ok(!!t.doc.querySelector('.cg'), 'the chip you clicked is seen flying to the selected circle');
-    await wait(20); $(t, 'chip-10').click(); await wait(20);
+    $(t, 'chip-50').click(); await wait(20);
+    ok(!t.doc.querySelector('.cg') && kidsOf(t, 'bet-circle-2').join() === '50', 'the chip you clicked does not fly: it is on the selected circle at once');
+    $(t, 'chip-10').click(); await wait(20);
     ok(kidsOf(t, 'bet-circle-2').join() === '50,10' && kidsOf(t, 'bet-circle').join() === '25,25,100' && t.doc.querySelector('#bet-circle-2 .bc-amt').textContent === '60', 'now they land on the second, the first is untouched');
     $(t, 'bet-double').click(); await wait(20);
     ok(kidsOf(t, 'bet-circle-2').join() === '50,10,50,10' && kidsOf(t, 'bet-circle').join() === '25,25,100', '2x doubles the selected stack only');
@@ -3125,7 +3125,7 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       ok(!t.doc.querySelector('[data-bust]') && t.S.stats.busts === 0, 'no bust moment for 21');
       noErr(t); close(t);
     }
-    // a double: the card goes down on its side, the second chip goes onto the ring, the bankroll counts down
+    // a double: the card goes down on its side, the second chip is simply on the ring, the bankroll is right at once
     {
       const t = await mboot();
       t.w.rig(['6H', '10D', '5C', '7S', '10S', '5H']); t.w.deal(25); await toPlayer(t);
@@ -3136,18 +3136,18 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       ok(pile() === '25' && String(before) === bankEl.textContent, 'start: a 25 bet on the ring');
       actBtn(t, /^Double/).click();
       ok(t.w.G.hands[0].dblIdx === 2, 'the doubled card is marked (' + t.w.G.hands[0].dblIdx + ')');
-      ok(S.chipHold[0] === 25 && pile() === '25', 'the ring still shows the old bet while the chip is on its way');
-      ok(bankEl.textContent === String(before), 'and so does the bankroll: ' + bankEl.textContent);
-      ok(rec.filter(r => /pchip/.test(r.cls)).length >= 1, 'a chip is thrown onto the bet');
+      ok(S.chipHold[0] === undefined && pile() === '50', 'the ring says 50 at once: no chip is on its way');
+      ok(bankEl.textContent === String(t.w.G.bankroll), 'and so is the bankroll: ' + bankEl.textContent);
+      ok(rec.filter(r => /pchip/.test(r.cls)).length === 0, 'no chip is thrown onto the bet');
       await waitFor(() => t.w.G.hands[0].cards.length === 3 && S.rolls.length === 0 && S.flights.length === 0, 4000, 'double to land'); await wait(30);
       ok(pile() === '50' && pileSeen.indexOf('50') >= 0 && S.chipHold[0] === undefined, 'when it lands the ring says 50');
       const c3 = box.children[1].children[0].children[2];
       ok(c3.classList.contains('dbl') && c3.style.getPropertyValue('--r') === '90deg', 'the third card is on its side');
       ok(!box.children[1].children[0].children[0].classList.contains('dbl'), 'the others are not');
       const fly = rec.filter(r => /fc-sc/.test(r.cls)).pop(); ok(fly && /rotate\(90(\.0)?deg\)/.test(fly.kf[fly.kf.length - 1].transform), 'it flew in turning onto its side: ' + (fly && fly.kf[fly.kf.length - 1].transform));
-      ok(rec.filter(r => /ring-rip/.test(r.cls)).length >= 1, 'a ring spreads where the chip landed');
+      ok(rec.filter(r => /ring-rip/.test(r.cls)).length >= 1, 'a ring spreads where the second chip went down');
       ok(bankEl.textContent === String(t.w.G.bankroll) && S.bankHold === null, 'the bankroll ends on the real number: ' + bankEl.textContent);
-      ok(shown.length >= 1 && +shown[shown.length - 1] === t.w.G.bankroll, 'having counted down to it: ' + shown.join(','));
+      ok(shown.length >= 1 && +shown[shown.length - 1] === t.w.G.bankroll, 'having gone straight to it: ' + shown.join(','));
       ok(S.stats.doubles === 1, 'counted');
       await settled(t); await toBetting(t); await wait(20);
       noErr(t); close(t);
@@ -3210,7 +3210,7 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
   }
 
   // ---------------------------------------------------------------- payouts
-  section('payouts: paid from his rack, swept to it, slid back; the bankroll counts; all of it can be cut short');
+  section('payouts: nothing flies (the amount floats up, a lost pile comes off the table, the bankroll is right at once); all of it can be cut short');
   {
     const actBtn = (t, re) => [...t.doc.querySelectorAll('#actions-row button')].find(b => re.test(b.textContent));
     const floats = t => [...t.doc.querySelectorAll('.pay-float')].map(f => f.className.replace('pay-float ', '') + ':' + f.textContent);
@@ -3241,43 +3241,40 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       const r = await play(t, ['10S', '10H', '9D', '6C', '10D'], [/^Stand/], 25);
       ok(r.final === r.before + 50, 'won 25: ' + r.before + ' → ' + r.final);
       ok(r.sawFloat.indexOf('win:+$25') >= 0, 'a "+$25" floats up: ' + r.sawFloat.join(' '));
-      ok(r.nChips >= 2, 'your chip and the dealer\'s payment are both there as chips (' + r.nChips + ')');
-      ok(r.hide, 'the pile on the ring is replaced by them while they move');
-      ok(r.atResult.shown === String(r.before) && r.atResult.G === r.before + 50, 'the bankroll still shows the old number when the result is announced: ' + r.atResult.shown + ' (real ' + r.atResult.G + ')');
-      ok(r.shown === String(r.final) && t.S.bankHold === null && t.S.pay === null, 'and ends on the real one, nothing left held: ' + r.shown);
-      const nums = r.seen.filter(x => /^\d+$/.test(x)).map(Number), up = nums.slice(nums.lastIndexOf(r.before));
-      ok(up[up.length - 1] === r.final && up.every((x, i) => i === 0 || x >= up[i - 1]), 'it counts up: ' + up.join(','));
-      ok(r.atResult.pause >= 8, 'the pause is long enough to watch it');
-      ok(r.rec.filter(x => /pchip/.test(x.cls)).length >= 3, 'chips travel (paid out, then to the bankroll): ' + r.rec.filter(x => /pchip/.test(x.cls)).length + ' flights');
+      ok(r.nChips === 0, 'no chip is made to fly (' + r.nChips + ')');
+      ok(!r.hide, 'and your pile stays on the ring');
+      ok(r.atResult.shown === String(r.atResult.G) && r.atResult.G === r.before + 50, 'the bankroll is right the moment the result is announced: ' + r.atResult.shown + ' (real ' + r.atResult.G + ')');
+      ok(r.shown === String(r.final) && t.S.bankHold === null && t.S.pay === null, 'and nothing is left held: ' + r.shown);
+      ok(r.rec.filter(x => /pchip/.test(x.cls)).length === 0, 'no chip animation at all: ' + r.rec.filter(x => /pchip/.test(x.cls)).length);
       ok(!t.doc.querySelector('.pchip, .pay-float'), 'none left over');
       noErr(t); close(t);
     }
-    // a loss: swept to the rack, the bankroll does not move at the end
+    // a loss: the pile comes off the table, the bankroll does not move at the end
     {
       const t = await mboot();
       const r = await play(t, ['10H', '10C', '6D', '7S'], [/^Stand/], 25);
       ok(r.final === r.before && r.sawFloat.indexOf('lose:−$25') >= 0, 'lost 25: "' + r.sawFloat.join(' ') + '"');
-      ok(r.nChips >= 1 && r.hide, 'his chips leave the ring');
+      ok(r.nChips === 0 && r.hide, 'your pile comes off the ring (he takes it) and no chip flies');
       ok(r.shown === String(r.final) && t.S.pay === null, 'bankroll is right: ' + r.shown);
       noErr(t); close(t);
     }
-    // a push: your bet comes back to you
+    // a push: your bet stays yours
     {
       const t = await mboot();
       const r = await play(t, ['10H', '10C', '8D', '8S'], [/^Stand/], 25);
       ok(r.final === r.before + 25 && r.sawFloat.indexOf('push:Push') >= 0, 'push: ' + r.sawFloat.join(' '));
-      ok(r.atResult.shown === String(r.before) && r.shown === String(r.final), 'bankroll waits, then shows ' + r.shown);
+      ok(r.atResult.shown === String(r.atResult.G) && r.shown === String(r.final), 'the bankroll shows ' + r.shown + ' at once');
       noErr(t); close(t);
     }
-    // blackjack: chips, but the existing tag carries the amount
+    // blackjack: the existing tag carries the amount
     {
       const t = await mboot();
       t.w.rig(['AH', '9C', 'KD', '7S']); t.w.deal(100);
       await waitFor(() => t.w.G.phase === 'result', 9000, 'blackjack result');
       const bank = $(t, 'bankroll-val');
-      ok(bank.textContent === '900' && t.w.G.bankroll === 1150, 'blackjack: the number waits at 900 while the real one is 1150 (' + bank.textContent + ')');
+      ok(bank.textContent === '1150' && t.w.G.bankroll === 1150, 'blackjack: the number is the real one, 1150 (' + bank.textContent + ')');
       await toBetting(t); await wait(40);
-      ok(bank.textContent === '1150', 'then 1150');
+      ok(bank.textContent === '1150', 'and stays 1150');
       noErr(t); close(t);
     }
     // two hands: each gets its own
@@ -3299,11 +3296,11 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       t.S.k = 0.5; t.w.RESULT_PAUSE = 4000;
       t.w.rig(['10S', '10H', '9D', '6C', '10D']); t.w.deal(25); await toPlayer(t);
       actBtn(t, /^Stand/).click();
-      await waitFor(() => t.w.G.phase === 'result' && t.S.pay && t.doc.querySelector('.pchip'), 20000, 'chips moving');
-      ok(t.doc.querySelectorAll('.pchip').length >= 1 && t.doc.getElementById('bankroll-val').textContent === '975', 'mid-payout: chips are out and the bankroll has not moved yet (' + t.doc.querySelectorAll('.pchip').length + ' chips, ' + t.doc.getElementById('bankroll-val').textContent + ')');
+      await waitFor(() => t.w.G.phase === 'result' && t.S.pay, 20000, 'the payout under way');
+      ok(t.doc.querySelectorAll('.pchip').length === 0 && t.doc.getElementById('bankroll-val').textContent === '1025', 'mid-payout: no chip is out and the bankroll is already right (' + t.doc.querySelectorAll('.pchip').length + ' chips, ' + t.doc.getElementById('bankroll-val').textContent + ')');
       ok(t.w.skipResult() === true, 'skipResult says it did something');
       ok(t.w.G.phase === 'betting', 'back to betting');
-      ok(!t.doc.querySelector('.pchip, .pay-float, .hb-bet.pay-hide') && t.S.pay === null && t.S.bankHold === null, 'every chip and float is gone and nothing is held');
+      ok(!t.doc.querySelector('.pchip, .pay-float, .hb-bet.pay-hide') && t.S.pay === null && t.S.bankHold === null, 'every float is gone and nothing is held');
       ok(t.doc.getElementById('bankroll-val').textContent === String(t.w.G.bankroll) && t.w.G.bankroll === 1025, 'the bankroll shows the real number at once: ' + t.doc.getElementById('bankroll-val').textContent);
       ok(t.w.skipResult() === false, 'nothing to skip now');
       await wait(60); ok(t.S.errors.length === 0, 'no late timer upset it: ' + JSON.stringify(t.S.errors));
@@ -3340,9 +3337,9 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       const t = await mboot();
       t.S.k = 0.5; t.w.RESULT_PAUSE = 4000;
       t.w.rig(['10S', '10H', '9D', '6C', '10D']); t.w.deal(25); await toPlayer(t);
-      actBtn(t, /^Stand/).click(); await waitFor(() => t.w.G.phase === 'result' && t.S.pay && t.doc.querySelector('.pchip'), 20000, 'chips moving');
+      actBtn(t, /^Stand/).click(); await waitFor(() => t.w.G.phase === 'result' && t.S.pay, 20000, 'the payout under way');
       const sw = $(t, 'set-tableshow'); sw.checked = false; sw.dispatchEvent(new t.w.Event('change', { bubbles: true })); await wait(20);
-      ok(!t.doc.querySelector('.pchip, .pay-float') && t.S.bankHold === null && t.doc.getElementById('bankroll-val').textContent === '1025', 'show off mid-payout: chips gone, bankroll 1025');
+      ok(!t.doc.querySelector('.pchip, .pay-float') && t.S.bankHold === null && t.doc.getElementById('bankroll-val').textContent === '1025', 'show off mid-payout: the float is gone, bankroll 1025');
       ok(!t.doc.querySelector('.hb-bet.pay-hide'), 'and the pile is back');
       noErr(t); close(t);
     }
@@ -3709,14 +3706,14 @@ const noErr = (t, what) => { ok(t.S.errors.length === 0, (what || 'show') + ' ra
       noErr(t); close(t);
     }
     {
-      // a double is the one piece that stays: the card goes down on its side, a second chip flies onto the bet, and nothing else of the set comes with it
+      // a double is the one piece that stays: the card goes down on its side, the second chip is on the bet (nothing flies), and nothing else of the set comes with it
       const t = await boot();
       t.w.rig(['6H', '10D', '5C', '7S', '10S', '5H']); t.w.deal(25); await toPlayer(t);
       const o = seen(t); actBtn(t, /^Double/).click();
       const bet = t.w.G.hands[0].bet;
       await waitFor(() => t.w.G.phase === 'result', 9000, 'the result'); await wait(40); o.stop();
       ok(o.dbl && t.S.stats.doubles === 1, 'a double: the card is on its side (' + o.dbl + ', ' + t.S.stats.doubles + ')');
-      ok(o.chip, 'and the second chip flies onto the bet');
+      ok(!o.chip, 'and no chip flies onto the bet');
       ok(!o.landed && !o.rolling && !o.bust, 'with no landing squash, count-up or bust effect around it');
       ok(t.S.bankHold === null && t.S.chipHold[0] === undefined, 'nothing is left held afterwards');
       ok(bet === 50, 'the bet is doubled (' + bet + ')');

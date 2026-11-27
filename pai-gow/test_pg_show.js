@@ -210,7 +210,7 @@ async function finishHand(t, how){
     ok(await waitFor(() => phase(t) === 'resolved', 20000, 'resolved'), 'resolves');
     ok(order[0] === 'low' && order.indexOf('high') > 0, 'Low is judged first, then High: ' + order.join(','));
     ok(t.w.G.result === 'win' && t.w.G.bankroll === 1050, 'a win paid 1:1 (bankroll ' + t.w.G.bankroll + ')');
-    ok(t.S.stats.pays === 1 && wt.pchips >= 1, 'chips came out of his tray (' + wt.pchips + ')');
+    ok(t.S.stats.pays === 1 && wt.pchips === 0, 'he pays it without a chip leaving his tray: nothing flies (' + wt.pchips + ')');
     ok(await waitFor(() => wt.floats >= 1, 2000, 'a float'), 'a +$50 floats up');
     ok(await waitFor(() => t.doc.querySelectorAll('.pchip').length === 0 && t.doc.querySelectorAll('.pfloat').length === 0, 6000, 'chips gone'), 'the chips and the floating amount clean themselves up');
     ok(t.w.Show._L.win.indexOf(t.doc.querySelector('.ds-say').textContent) >= 0 || !t.doc.querySelector('.ds-say').classList.contains('on'), 'he took the loss with a line');
@@ -222,8 +222,8 @@ async function finishHand(t, how){
     await finishHand(l);
     ok(l.w.G.result === 'loss', 'a loss');
     ok(l.S.stats.pays === 1, 'his chips are paid out for a loss: he takes yours');
-    ok(await waitFor(() => l.doc.querySelectorAll('.pchip').length === 0, 6000, 'chips gone'), 'and they are gone again');
-    ok(l.doc.getElementById('chips-ante').style.visibility === 'hidden', 'your stack is hidden while it is taken (it is in the air)');
+    ok(wl.pchips === 0 && l.doc.querySelectorAll('.pchip').length === 0, 'and no chip flew to do it');
+    ok(l.doc.getElementById('chips-ante').style.visibility === 'hidden', 'your stack is taken off the table');
     // a push
     const p = await boot();
     await toArranging(p, { player: [c('A','s'),c('A','h'),c('K','d'),c('Q','c'),c('J','s'),c('9','h'),c('8','d')], dealer: [c('2','s'),c('7','h'),c('J','d'),c('4','c'),c('9','s'),c('K','h'),c('3','d')] });
@@ -270,16 +270,16 @@ async function finishHand(t, how){
     ok(phase(t) === 'arranging', 'still arranging');
     wt.stop(); noErr(t);
   }
-  section('Play Again while his chips are still moving');
+  section('Play Again while the result is still showing');
   {
     const t = await boot({ k: 1 });
     await toArranging(t, { player: [c('A','s'),c('A','h'),c('A','d'),c('K','c'),c('K','s'),c('9','h'),c('8','d')], dealer: [c('2','s'),c('7','h'),c('J','d'),c('4','c'),c('9','s'),c('K','h'),c('3','d')] });
     click(t, $(t, 'btn-autoset')); click(t, $(t, 'btn-confirm'));
     ok(phase(t) === 'revealing', 'he is comparing');
     ok(await waitFor(() => phase(t) === 'resolved', 20000, 'resolved'), 'it resolves');
-    ok(t.S.pay.length > 0, 'chips are moving');
+    ok(t.doc.querySelectorAll('.pchip').length === 0, 'no chip is moving: nothing flies');
     click(t, $(t, 'btn-again'));
-    ok(t.S.pay.length === 0 && t.doc.querySelectorAll('.pchip, .pfloat').length === 0, 'Play Again takes every chip and amount off the felt at once');
+    ok(t.S.pay.length === 0 && t.doc.querySelectorAll('.pchip, .pfloat').length === 0, 'Play Again takes every amount off the felt at once');
     ok(t.doc.getElementById('chips-ante').style.visibility === '', 'and your stack is back');
     await wait(900);
     ok(t.doc.querySelectorAll('.pchip, .pfloat').length === 0, 'nothing drifts in afterwards');
